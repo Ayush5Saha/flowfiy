@@ -1,10 +1,29 @@
 import Razorpay from "razorpay";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-export const razorpay = new (require("razorpay"))({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-}) as InstanceType<typeof Razorpay>;
+// Lazy singleton — won't throw at import time if keys aren't set yet.
+// Call getRazorpay() inside route handlers; it throws a clear error if unconfigured.
+let _razorpay: InstanceType<typeof Razorpay> | null = null;
+
+export function getRazorpay(): InstanceType<typeof Razorpay> {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error("Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.");
+  }
+  if (!_razorpay) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _razorpay = new (require("razorpay"))({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    }) as InstanceType<typeof Razorpay>;
+  }
+  return _razorpay;
+}
+
+/** @deprecated use getRazorpay() inside route handlers */
+export const razorpay = {
+  get subscriptions() { return getRazorpay().subscriptions; },
+  get customers()     { return getRazorpay().customers; },
+  get orders()        { return getRazorpay().orders; },
+};
 
 // Prices in INR (Razorpay native currency).
 // USD reference shown in UI only. INR amounts = USD * ~83.

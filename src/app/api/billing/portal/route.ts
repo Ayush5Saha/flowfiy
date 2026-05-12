@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { razorpay, PLANS } from "@/lib/razorpay";
+import { getRazorpay, PLANS } from "@/lib/razorpay";
 
 const schema = z.object({ organizationId: z.string().uuid() });
 
@@ -32,8 +32,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No active subscription" }, { status: 404 });
   }
 
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return NextResponse.json({ error: "Billing is not configured." }, { status: 503 });
+  }
+
   // false = cancel at end of current billing cycle (not immediately)
-  await razorpay.subscriptions.cancel(organization.razorpaySubscriptionId, false);
+  await getRazorpay().subscriptions.cancel(organization.razorpaySubscriptionId, false);
 
   await prisma.organization.update({
     where: { id: organizationId },

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { razorpay, PLANS, type PlanKey } from "@/lib/razorpay";
+import { getRazorpay, PLANS, type PlanKey } from "@/lib/razorpay";
 
 const schema = z.object({
   organizationId: z.string().uuid(),
@@ -39,36 +39,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Guard: Razorpay keys not yet set (billing coming soon)
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return NextResponse.json(
+      { error: "Billing is not available yet. Please contact support@flowfiy.com." },
+      { status: 503 }
+    );
+  }
+
+  const rzp = getRazorpay();
+
   // ── Create or reuse Razorpay Customer ────────────────────────────────────────
   let customerId = organization.razorpayCustomerId;
 
   if (!customerId) {
-    // Build a display name: use org name, fall back to email prefix
     const customerName = organization.name || user.email?.split("@")[0] || "Customer";
-
     try {
-      const customer = await razorpay.customers.create({
+      const customer = await rzp.customers.create({
         name: customerName,
         email: user.email ?? "",
-        fail_existing: "0", // don't error if email already exists — reuse
+        fail_existing: "0",
       });
       customerId = customer.id;
-
       await prisma.organization.update({
         where: { id: organizationId },
         data: { razorpayCustomerId: customerId },
       });
     } catch (err) {
-      // Non-fatal — subscription can be created without a customer ID
       console.error("[billing] Failed to create Razorpay customer:", err);
     }
   }
 
   // ── Create Razorpay Subscription ──────────────────────────────────────────────
-  const subscription = await razorpay.subscriptions.create({
+  const subscription = await rzp.subscriptions.create({
     plan_id: planConfig.razorpayPlanId,
     customer_notify: 1,
-    total_count: 120,        // 10 years — effectively perpetual
+    total_count: 120,
     ...(customerId ? { customer_id: customerId } : {}),
     notes: {
       organizationId,
@@ -89,7 +95,6 @@ export async function POST(req: NextRequest) {
     keyId: process.env.RAZORPAY_KEY_ID,
     planName: planConfig.name,
     priceInr: planConfig.priceInr,
-    // Prefill data for the checkout modal
     prefill: {
       name: organization.name,
       email: user.email ?? "",
