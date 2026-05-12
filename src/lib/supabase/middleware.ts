@@ -1,7 +1,45 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Routes that are always public — never need an auth check
+function isPublicRoute(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname === "/home" ||
+    pathname.startsWith("/about") ||
+    pathname.startsWith("/blog") ||
+    pathname.startsWith("/vs") ||
+    pathname.startsWith("/use-cases") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/refund") ||
+    pathname.startsWith("/contact") ||
+    pathname.startsWith("/changelog") ||
+    pathname.startsWith("/sitemap") ||
+    pathname.startsWith("/api")
+  );
+}
+
+// Routes only accessible when NOT logged in
+function isAuthOnlyRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/onboarding")
+  );
+}
+
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ── Fast path: public routes need zero auth work ──────────────────────────
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next({ request });
+  }
+
+  // ── All other routes need a session check ────────────────────────────────
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -18,54 +56,29 @@ export async function updateSession(request: NextRequest) {
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              options as Parameters<typeof supabaseResponse.cookies.set>[2]
+            )
           );
         },
       },
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const url = request.nextUrl.clone();
-
-  // Never intercept API routes — let route handlers return proper JSON responses
-  if (url.pathname.startsWith("/api")) {
-    return supabaseResponse;
-  }
-
-  const isAuthRoute =
-    url.pathname.startsWith("/login") ||
-    url.pathname.startsWith("/signup") ||
-    url.pathname.startsWith("/auth") ||
-    url.pathname.startsWith("/demo") ||
-    url.pathname.startsWith("/forgot-password") ||
-    url.pathname.startsWith("/onboarding");
-
-  const isLandingPage = url.pathname === "/" || url.pathname === "/home";
-
-  const isMarketingRoute =
-    url.pathname.startsWith("/about") ||
-    url.pathname.startsWith("/blog") ||
-    url.pathname.startsWith("/vs") ||
-    url.pathname.startsWith("/use-cases") ||
-    url.pathname.startsWith("/privacy") ||
-    url.pathname.startsWith("/terms") ||
-    url.pathname.startsWith("/refund") ||
-    url.pathname.startsWith("/contact") ||
-    url.pathname.startsWith("/changelog") ||
-    url.pathname.startsWith("/sitemap");
-
-  // Redirect unauthenticated users to login for all protected routes
-  if (!user && !isAuthRoute && !isLandingPage && !isMarketingRoute) {
+  // Logged-out user hitting a protected route → send to login
+  if (!user && !isAuthOnlyRoute(pathname)) {
+    const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
-  if (user && isAuthRoute) {
+  // Logged-in user hitting an auth-only route → send to dashboard
+  if (user && isAuthOnlyRoute(pathname)) {
+    const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
