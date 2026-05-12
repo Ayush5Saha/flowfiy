@@ -22,7 +22,7 @@ export function MarketingFooter() {
             <div>
               <p className="font-medium text-zinc-300 mb-3">Product</p>
               <ul className="space-y-2">
-                {[["Features", "/#features"], ["How it works", "/#how-it-works"], ["Pricing", "/#pricing"], ["Changelog", "/changelog"]].map(([l, h]) => (
+                {[["Features", "/#features"], ["How it works", "/#how-it-works"], ["Pricing", "/#pricing"], ["Blog", "/blog"]].map(([l, h]) => (
                   <li key={l}><Link href={h} className="text-zinc-500 hover:text-zinc-300 transition-colors">{l}</Link></li>
                 ))}
               </ul>
