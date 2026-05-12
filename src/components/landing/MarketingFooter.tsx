@@ -46,7 +46,7 @@ export function MarketingFooter() {
             <div>
               <p className="font-medium text-zinc-300 mb-3">Legal</p>
               <ul className="space-y-2">
-                {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Security", "/#features"]].map(([l, h]) => (
+                {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Refund Policy", "/refund"], ["Contact Us", "/contact"]].map(([l, h]) => (
                   <li key={l}><Link href={h} className="text-zinc-500 hover:text-zinc-300 transition-colors">{l}</Link></li>
                 ))}
               </ul>

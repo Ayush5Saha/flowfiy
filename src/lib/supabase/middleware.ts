@@ -53,6 +53,8 @@ export async function updateSession(request: NextRequest) {
     url.pathname.startsWith("/use-cases") ||
     url.pathname.startsWith("/privacy") ||
     url.pathname.startsWith("/terms") ||
+    url.pathname.startsWith("/refund") ||
+    url.pathname.startsWith("/contact") ||
     url.pathname.startsWith("/changelog") ||
     url.pathname.startsWith("/sitemap");
 
