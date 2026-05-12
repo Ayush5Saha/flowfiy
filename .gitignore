@@ -41,5 +41,8 @@ coverage/
 # Vercel
 .vercel
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Claude Code worktrees
 .claude/
