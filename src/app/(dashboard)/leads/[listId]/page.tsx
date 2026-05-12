@@ -1,0 +1,109 @@
+import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail } from "lucide-react";
+import { LeadTableClient } from "@/components/leads/LeadTableClient";
+
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+  params: Promise<{ listId: string }>;
+}
+
+export default async function LeadListPage({ params }: PageProps) {
+  const { listId } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const membership = await prisma.organizationMember.findFirst({
+    where: { userId: user.id },
+    include: { organization: true },
+  });
+  if (!membership) redirect("/onboarding");
+
+  const leadList = await prisma.leadList.findFirst({
+    where: { id: listId, organizationId: membership.organization.id },
+    include: {
+      leads: {
+        include: {
+          research: true,
+          outreachCopies: { orderBy: { createdAt: "desc" }, take: 1 },
+        },
+        orderBy: [{ qualificationScore: "desc" }, { createdAt: "asc" }],
+      },
+    },
+  });
+
+  if (!leadList) notFound();
+
+  const isProcessing = ["QUEUED", "RESEARCHING"].includes(leadList.status);
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/leads" className="text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+        <div>
+          <h1 className="text-xl font-semibold">{leadList.name}</h1>
+          {leadList.description && (
+            <p className="text-muted-foreground text-sm">{leadList.description}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {[
+          { label: "Total", value: leadList.totalLeads, icon: Users, color: "text-foreground" },
+          { label: "Qualified", value: leadList.qualifiedLeads, icon: CheckCircle, color: "text-green-400" },
+          { label: "Disqualified", value: leadList.totalLeads - leadList.qualifiedLeads, icon: XCircle, color: "text-muted-foreground" },
+          { label: "Contacted", value: leadList.leads.filter((l) => l.status === "CONTACTED").length, icon: Mail, color: "text-blue-400" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
+            <Icon className={`w-4 h-4 ${color} shrink-0`} />
+            <div>
+              <p className="font-mono text-sm font-medium">{value}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Processing state */}
+      {isProcessing && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-5 mb-6">
+          <div className="flex items-center gap-3">
+            <Clock className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" />
+            <div>
+              <p className="text-sm font-medium text-blue-400">
+                {leadList.status === "QUEUED" ? "Queued for research..." : "AI research in progress..."}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {leadList.jobStatus?.replace(/_/g, " ")} — This takes 2–5 minutes. This page auto-refreshes.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Failed state */}
+      {leadList.status === "FAILED" && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 mb-6">
+          <p className="text-sm text-destructive font-medium">Research failed</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{leadList.jobError}</p>
+        </div>
+      )}
+
+      {/* Lead table */}
+      <LeadTableClient
+        leads={leadList.leads as Parameters<typeof LeadTableClient>[0]["leads"]}
+        isProcessing={isProcessing}
+        organizationId={membership.organization.id}
+        listId={listId}
+      />
+    </div>
+  );
+}
