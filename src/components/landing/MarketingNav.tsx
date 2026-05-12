@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
-import { Zap, Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -54,11 +55,8 @@ export function MarketingNav() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-white text-sm">Flowfiy</span>
+        <Link href="/" className="flex items-center shrink-0">
+          <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} priority />
         </Link>
 
         {/* Desktop nav */}

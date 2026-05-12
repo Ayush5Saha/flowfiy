@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Zap, Twitter, Linkedin, Github, Mail } from "lucide-react";
+import Image from "next/image";
+import { Twitter, Linkedin, Github, Mail } from "lucide-react";
 
 const footerLinks = [
   {
@@ -54,11 +55,8 @@ export function MarketingFooter() {
 
           {/* Brand */}
           <div className="lg:w-72 shrink-0">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold text-white text-base">Flowfiy</span>
+            <Link href="/" className="inline-flex mb-4">
+              <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
               AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.

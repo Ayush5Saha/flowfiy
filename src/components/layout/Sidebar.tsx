@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -9,7 +10,6 @@ import {
   Plug,
   CreditCard,
   Settings,
-  Zap,
   LogOut,
   BarChart2,
 } from "lucide-react";
@@ -57,11 +57,8 @@ export function Sidebar({ organization }: SidebarProps) {
     <aside className="hidden md:flex w-56 border-r border-border bg-sidebar flex-col h-full shrink-0">
       {/* Logo */}
       <div className="px-4 py-4 border-b border-border">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <Zap className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold text-sm">Flowfiy</span>
+        <Link href="/dashboard" className="flex items-center">
+          <Image src="/logo.svg" alt="Flowfiy" width={100} height={30} priority />
         </Link>
       </div>
 
