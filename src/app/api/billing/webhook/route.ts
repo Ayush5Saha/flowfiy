@@ -121,7 +121,9 @@ export async function POST(req: NextRequest) {
       // ── Payment failed — Razorpay will retry, access stays active ──────────
       case "payment.failed": {
         if (!payment) break;
-        const subId = (payment.subscription_id ?? payment.invoice?.subscription_id) as string | undefined;
+        const p = payment as Record<string, unknown>;
+        const inv = p.invoice as Record<string, unknown> | undefined;
+        const subId = (p.subscription_id ?? inv?.subscription_id) as string | undefined;
         if (!subId) break;
         const org = await prisma.organization.findFirst({
           where: { razorpaySubscriptionId: subId },

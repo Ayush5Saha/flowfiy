@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       const customer = await rzp.customers.create({
         name: customerName,
         email: user.email ?? "",
-        fail_existing: "0",
+        fail_existing: 0,
       });
       customerId = customer.id;
       await prisma.organization.update({
