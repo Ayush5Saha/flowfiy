@@ -41,7 +41,8 @@ export async function updateSession(request: NextRequest) {
     url.pathname.startsWith("/signup") ||
     url.pathname.startsWith("/auth") ||
     url.pathname.startsWith("/demo") ||
-    url.pathname.startsWith("/forgot-password");
+    url.pathname.startsWith("/forgot-password") ||
+    url.pathname.startsWith("/onboarding");
 
   const isLandingPage = url.pathname === "/" || url.pathname === "/home";
 
