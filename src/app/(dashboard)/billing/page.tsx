@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { PLANS } from "@/lib/razorpay";
 import { BillingClient } from "@/components/billing/BillingClient";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,16 @@ export default async function BillingPage() {
     },
   });
 
+  const plans = Object.entries(PLANS).map(([key, value]) => ({
+    key,
+    name: value.name,
+    priceUsd: value.priceUsd,
+    priceInr: value.priceInr,
+    generationLimit: value.generationLimit,
+    seats: value.seats,
+    features: value.features,
+  }));
+
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
@@ -34,24 +45,22 @@ export default async function BillingPage() {
         <p className="text-muted-foreground text-sm mt-1">Manage your subscription and usage</p>
       </div>
 
-      <BillingClient
-        organization={{
-          id: organization.id,
-          plan: organization.plan,
-          generationCount: organization.generationCount,
-          generationLimit: organization.generationLimit,
-          subscriptionStatus: organization.subscriptionStatus,
-          razorpaySubscriptionId: organization.razorpaySubscriptionId,
-        }}
-        usageThisMonth={usageThisMonth}
-        plans={Object.entries(PLANS).map(([key, value]) => ({
-          key,
-          name: value.name,
-          price: value.price,
-          generationLimit: value.generationLimit,
-          seats: value.seats,
-        }))}
-      />
+      {/* Suspense needed because BillingClient uses useSearchParams */}
+      <Suspense fallback={<div className="h-96 bg-card border border-border rounded-xl animate-pulse" />}>
+        <BillingClient
+          organization={{
+            id: organization.id,
+            name: organization.name,
+            plan: organization.plan,
+            generationCount: organization.generationCount,
+            generationLimit: organization.generationLimit,
+            subscriptionStatus: organization.subscriptionStatus,
+            razorpaySubscriptionId: organization.razorpaySubscriptionId,
+          }}
+          usageThisMonth={usageThisMonth}
+          plans={plans}
+        />
+      </Suspense>
     </div>
   );
 }
