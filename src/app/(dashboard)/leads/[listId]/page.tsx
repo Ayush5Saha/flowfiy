@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail } from "lucide-react";
 import { LeadTableClient } from "@/components/leads/LeadTableClient";
+import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,14 +13,10 @@ interface PageProps {
 
 export default async function LeadListPage({ params }: PageProps) {
   const { listId } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Cache hits — layout already fetched these this request
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
-
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    include: { organization: true },
-  });
+  const membership = await getOrgMembership(user.id);
   if (!membership) redirect("/onboarding");
 
   const leadList = await prisma.leadList.findFirst({

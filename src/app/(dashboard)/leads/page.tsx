@@ -1,21 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, ArrowRight, Plug, FileText, Zap, Upload } from "lucide-react";
 import { GenerateLeadsButton } from "@/components/leads/GenerateLeadsButton";
+import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
 export default async function LeadsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Cache hits — layout already fetched these this request
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
-
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    include: { organization: true },
-  });
+  const membership = await getOrgMembership(user.id);
   if (!membership) redirect("/onboarding");
 
   const { organization } = membership;

@@ -1,22 +1,14 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
+import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // Check if user has an organization — if not, redirect to onboarding
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    include: { organization: true },
-  });
-
+  const membership = await getOrgMembership(user.id);
   if (!membership) redirect("/onboarding");
 
   const { organization } = membership;

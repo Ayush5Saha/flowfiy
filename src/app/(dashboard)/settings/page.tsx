@@ -1,19 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { SettingsClient } from "./SettingsClient";
+import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Cache hits — layout already fetched these this request
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    include: { organization: { include: { _count: { select: { members: true } } } } },
-  });
+  // getOrgMembership includes _count.members — no extra query needed
+  const membership = await getOrgMembership(user.id);
   if (!membership) redirect("/onboarding");
 
   const { organization } = membership;

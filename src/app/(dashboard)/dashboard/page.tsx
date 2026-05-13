@@ -1,21 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, Mail, Calendar, TrendingUp, Plus, ArrowRight } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // These are cache hits — layout already called them this request
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
-
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    include: { organization: true },
-  });
+  const membership = await getOrgMembership(user.id);
   if (!membership) redirect("/onboarding");
 
   const { organization } = membership;
