@@ -12,7 +12,8 @@ import {
   useMotionTemplate,
 } from "framer-motion";
 import Link from "next/link";
-import { Zap, ArrowRight, Check, Star, ChevronDown, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Check, Star, ChevronDown, Menu, X } from "lucide-react";
 
 // ─── Scroll Progress Bar ──────────────────────────────────────────────────────
 
@@ -338,11 +339,8 @@ function Navbar() {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-white text-sm">Flowfiy</span>
+        <Link href="/" className="flex items-center shrink-0">
+          <Image src="/logo.svg" alt="Flowfiy" width={110} height={32} priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -577,9 +575,7 @@ function Hero() {
             <div className="flex" style={{ minHeight: 340 }}>
               <div className="w-44 border-r border-white/5 bg-zinc-950/60 p-3 flex flex-col gap-1 shrink-0">
                 <div className="flex items-center gap-2 px-2 py-2 mb-3">
-                  <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                    <Zap className="w-3 h-3 text-white" />
-                  </div>
+                  <Image src="/icon.svg" alt="Flowfiy" width={22} height={22} className="rounded-md" />
                   <span className="text-xs font-bold text-white">Flowfiy</span>
                 </div>
                 {["Dashboard", "Leads", "Campaigns", "Integrations"].map((item, i) => (
@@ -998,9 +994,9 @@ function FinalCTA() {
             <motion.div
               animate={{ rotate: [0, 360] }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary flex items-center justify-center"
+              className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary flex items-center justify-center overflow-hidden"
             >
-              <Zap className="w-8 h-8 text-white" />
+              <Image src="/icon.svg" alt="" width={44} height={44} />
             </motion.div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Your pipeline won&apos;t<br />fill itself.
@@ -1024,52 +1020,85 @@ function FinalCTA() {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
+const FOOTER_LINKS = [
+  {
+    heading: "Product",
+    links: [
+      { label: "Features", href: "/#features" },
+      { label: "How it works", href: "/#how-it-works" },
+      { label: "Pricing", href: "/#pricing" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Blog", href: "/blog" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    heading: "Account",
+    links: [
+      { label: "Sign in", href: "/login" },
+      { label: "Sign up", href: "/signup" },
+      { label: "Dashboard", href: "/dashboard" },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Refund Policy", href: "/refund" },
+    ],
+  },
+];
+
 function Footer() {
   return (
-    <footer className="bg-[#030305] border-t border-white/5 py-12 px-4 sm:px-6">
+    <footer className="bg-[#030305] border-t border-white/5 pt-16 pb-10 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-12">
-          <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold text-white">Flowfiy</span>
+        <div className="flex flex-col lg:flex-row gap-12 mb-14">
+          {/* Brand */}
+          <div className="lg:w-64 shrink-0">
+            <Link href="/" className="inline-flex mb-4">
+              <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
-            <p className="text-sm text-zinc-500 leading-relaxed">
-              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, send personalized outreach.
+            <p className="text-sm text-zinc-500 leading-relaxed mb-5">
+              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-8 text-sm">
-            <div>
-              <p className="font-medium text-zinc-300 mb-3">Product</p>
-              <ul className="space-y-2">
-                {[["Features", "#features"], ["How it works", "#how-it-works"], ["Pricing", "#pricing"]].map(([l, h]) => (
-                  <li key={l}><a href={h} className="text-zinc-500 hover:text-zinc-300 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="font-medium text-zinc-300 mb-3">Account</p>
-              <ul className="space-y-2">
-                {[["Sign in", "/login"], ["Sign up", "/signup"], ["Dashboard", "/dashboard"]].map(([l, h]) => (
-                  <li key={l}><Link href={h} className="text-zinc-500 hover:text-zinc-300 transition-colors">{l}</Link></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="font-medium text-zinc-300 mb-3">Legal</p>
-              <ul className="space-y-2">
-                {[["Privacy", "#"], ["Terms", "#"], ["Security", "#"]].map(([l, h]) => (
-                  <li key={l}><a href={h} className="text-zinc-500 hover:text-zinc-300 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
+
+          {/* Link columns */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm">
+            {FOOTER_LINKS.map(({ heading, links }) => (
+              <div key={heading}>
+                <p className="font-semibold text-zinc-300 mb-3">{heading}</p>
+                <ul className="space-y-2.5">
+                  {links.map(({ label, href }) => (
+                    <li key={label}>
+                      <Link href={href} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+
+        {/* Bottom bar */}
+        <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
-          <p className="text-xs text-zinc-600">Built with Claude AI · Powered by Anthropic</p>
+          <div className="flex items-center gap-4 text-xs text-zinc-600">
+            <span>Built with Claude AI · Powered by Anthropic</span>
+            <span className="hidden sm:inline">·</span>
+            <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">
+              support@flowfiy.com
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
