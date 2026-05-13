@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // ── All other routes need a session check ────────────────────────────────
+  // ── Build the Supabase client (needed for cookie refresh) ─────────────────
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -67,7 +67,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // ── Fast session check (reads cookie, zero network calls) ─────────────────
+  // getSession() decodes the JWT from the cookie locally — no round-trip to
+  // Supabase. We use this for redirect decisions 99% of the time.
+  // The Server Component layout will call getUser() (server-validated) for
+  // real security checks and will also handle token refresh there.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+
+  // ── Token refresh: only call getUser() when token is close to expiry ──────
+  // Access tokens are valid for 3600s (1 hour). Only hit Supabase's server
+  // if the token expires within the next 5 minutes — this happens once/hour
+  // maximum instead of on every single request.
+  const expiresAt = session?.expires_at ?? 0; // Unix timestamp in seconds
+  const fiveMinutesFromNow = Math.floor(Date.now() / 1000) + 300;
+  if (expiresAt < fiveMinutesFromNow) {
+    // Token is missing or expiring — refresh it (this is the network call)
+    await supabase.auth.getUser();
+  }
+
+  // ── Redirect logic ────────────────────────────────────────────────────────
 
   // Logged-out user hitting a protected route → send to login
   if (!user && !isAuthOnlyRoute(pathname)) {
