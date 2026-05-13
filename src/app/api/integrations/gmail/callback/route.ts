@@ -14,15 +14,18 @@ export async function GET(req: NextRequest) {
   }
 
   let organizationId: string;
+  let redirectUri: string;
   try {
     const decoded = JSON.parse(Buffer.from(state, "base64").toString("utf8"));
     organizationId = decoded.organizationId;
+    // Use the redirectUri stored in state (same one used to start the OAuth flow)
+    redirectUri = decoded.redirectUri ?? `${origin}/api/integrations/gmail/callback`;
   } catch {
     return NextResponse.redirect(`${origin}/integrations?error=invalid_state`);
   }
 
   try {
-    const tokens = await exchangeCodeForTokens(code);
+    const tokens = await exchangeCodeForTokens(code, redirectUri);
     if (!tokens.refresh_token) {
       return NextResponse.redirect(`${origin}/integrations?error=no_refresh_token`);
     }
@@ -31,7 +34,7 @@ export async function GET(req: NextRequest) {
     const auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      redirectUri
     );
     auth.setCredentials(tokens);
     const gmail = google.gmail({ version: "v1", auth });
@@ -60,7 +63,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.redirect(`${origin}/integrations?success=gmail_connected`);
-  } catch {
+  } catch (err) {
+    console.error("[Gmail OAuth] callback error:", err);
     return NextResponse.redirect(`${origin}/integrations?error=gmail_connection_failed`);
   }
 }

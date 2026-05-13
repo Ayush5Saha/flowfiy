@@ -5,16 +5,16 @@ const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
 ];
 
-export function getGoogleOAuthClient() {
+export function getGoogleOAuthClient(redirectUri?: string) {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    redirectUri ?? process.env.GOOGLE_REDIRECT_URI
   );
 }
 
-export function getGoogleAuthUrl(): string {
-  const client = getGoogleOAuthClient();
+export function getGoogleAuthUrl(redirectUri: string): string {
+  const client = getGoogleOAuthClient(redirectUri);
   return client.generateAuthUrl({
     access_type: "offline",
     scope: SCOPES,
@@ -22,8 +22,8 @@ export function getGoogleAuthUrl(): string {
   });
 }
 
-export async function exchangeCodeForTokens(code: string) {
-  const client = getGoogleOAuthClient();
+export async function exchangeCodeForTokens(code: string, redirectUri: string) {
+  const client = getGoogleOAuthClient(redirectUri);
   const { tokens } = await client.getToken(code);
   return tokens;
 }

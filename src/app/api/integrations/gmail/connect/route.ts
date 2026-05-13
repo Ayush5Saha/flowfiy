@@ -7,13 +7,16 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { searchParams } = new URL(req.url);
+  const { searchParams, origin } = new URL(req.url);
   const organizationId = searchParams.get("organizationId");
   if (!organizationId) return NextResponse.json({ error: "organizationId required" }, { status: 400 });
 
-  // Store org ID in state param to retrieve after OAuth
-  const state = Buffer.from(JSON.stringify({ organizationId, userId: user.id })).toString("base64");
-  const url = new URL(getGoogleAuthUrl());
+  // Derive redirect URI from request origin — works in any environment automatically
+  const redirectUri = `${origin}/api/integrations/gmail/callback`;
+
+  // Store org ID + redirectUri in state so callback can use the same URI for token exchange
+  const state = Buffer.from(JSON.stringify({ organizationId, userId: user.id, redirectUri })).toString("base64");
+  const url = new URL(getGoogleAuthUrl(redirectUri));
   url.searchParams.set("state", state);
 
   return NextResponse.redirect(url.toString());
