@@ -18,7 +18,7 @@ export default function DemoBillingPage() {
   const usagePct = Math.round((847 / 2000) * 100);
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar organization={mockOrg} userRole="OWNER" />
+      <Sidebar organization={mockOrg} userRole="OWNER" userEmail="demo@flowfiy.com" userFullName="Demo User" />
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">

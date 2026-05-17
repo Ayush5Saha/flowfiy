@@ -19,7 +19,7 @@ const leads = [
 export default function DemoLeadsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar organization={mockOrg} userRole="OWNER" />
+      <Sidebar organization={mockOrg} userRole="OWNER" userEmail="demo@flowfiy.com" userFullName="Demo User" />
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
