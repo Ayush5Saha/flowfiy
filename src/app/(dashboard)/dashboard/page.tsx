@@ -16,12 +16,15 @@ export default async function DashboardPage() {
 
   const { organization } = membership;
 
-  const [totalLeads, qualifiedLeads, totalSent, totalReplied, activeCampaigns, recentLists, integrations, businessProfile] =
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [totalLeads, qualifiedLeads, totalSent, totalReplied, activeCampaigns, recentLists, integrations, businessProfile, sentToday, repliedToday] =
     await Promise.all([
       prisma.lead.count({ where: { organizationId: organization.id } }),
       prisma.lead.count({ where: { organizationId: organization.id, status: "QUALIFIED" } }),
       prisma.campaignLead.count({
-        where: { campaign: { organizationId: organization.id }, status: "SENT" },
+        where: { campaign: { organizationId: organization.id }, status: { in: ["SENT", "REPLIED"] } },
       }),
       prisma.campaignLead.count({
         where: { campaign: { organizationId: organization.id }, status: "REPLIED" },
@@ -40,6 +43,12 @@ export default async function DashboardPage() {
         select: { type: true },
       }),
       prisma.businessProfile.findUnique({ where: { organizationId: organization.id } }),
+      prisma.campaignLead.count({
+        where: { campaign: { organizationId: organization.id }, sentAt: { gte: todayStart } },
+      }),
+      prisma.campaignLead.count({
+        where: { campaign: { organizationId: organization.id }, status: "REPLIED", updatedAt: { gte: todayStart } },
+      }),
     ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
@@ -142,6 +151,22 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Today's activity strip */}
+      {(sentToday > 0 || repliedToday > 0) && (
+        <div className="flex items-center gap-3 mb-6 p-4 bg-card border border-border rounded-xl">
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground font-mono">{sentToday}</strong> emails sent today
+            {repliedToday > 0 && (
+              <> · <strong className="text-green-400 font-mono">{repliedToday}</strong> new repl{repliedToday === 1 ? "y" : "ies"} today</>
+            )}
+          </p>
+          <Link href="/campaigns" className="ml-auto text-xs text-primary hover:underline">
+            View campaigns →
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent lead lists */}
