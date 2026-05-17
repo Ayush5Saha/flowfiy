@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   description:
     "Claude-powered outbound intelligence platform. Research leads, analyze companies, and generate personalized outreach at scale.",
   keywords: ["outbound sales", "lead generation", "AI sales", "cold email", "Claude AI"],
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
