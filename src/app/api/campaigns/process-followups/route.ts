@@ -3,20 +3,15 @@ import { processFollowUpSchedule } from "@/workers/processors/followup-scheduler
 
 // POST /api/campaigns/process-followups
 //
-// Trigger the follow-up scheduler — finds all campaign leads where a follow-up
-// is now due (based on each campaign's current delay settings) and queues them.
+// Triggered by Vercel Cron daily at 09:00 UTC (configured in vercel.json).
+// Also callable manually from the dashboard by an authenticated user.
 //
-// Call this on a schedule (every hour). Vercel Cron is configured in vercel.json.
-// Protected by CRON_SECRET env var (or authenticated user for manual calls).
+// Auth: Vercel Cron calls include the "x-vercel-cron: 1" header automatically.
+// Manual calls require a valid Supabase session.
 export async function POST(req: NextRequest) {
-  // Allow cron runners (Vercel/Railway) via secret header
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = req.headers.get("authorization");
+  const isVercelCron = req.headers.get("x-vercel-cron") === "1";
 
-  const isCronCall = cronSecret && authHeader === `Bearer ${cronSecret}`;
-
-  if (!isCronCall) {
-    // Fall back to Supabase auth for manual dashboard calls
+  if (!isVercelCron) {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
