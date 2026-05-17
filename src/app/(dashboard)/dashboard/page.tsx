@@ -70,8 +70,8 @@ export default async function DashboardPage() {
     },
     {
       id: "claude-key",
-      label: "Connect your Flowfiy API key",
-      description: "Add your Anthropic API key — Flowfiy powers the entire research pipeline",
+      label: "Connect your Claude API key",
+      description: "Add your Anthropic API key — Claude powers the entire research pipeline",
       href: "/integrations",
       done: connectedTypes.has("CLAUDE"),
     },

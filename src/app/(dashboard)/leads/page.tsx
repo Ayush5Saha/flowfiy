@@ -43,7 +43,7 @@ export default async function LeadsPage() {
       icon: FileText,
     },
     !hasClaudeKey && {
-      label: "Connect your Flowfiy API key",
+      label: "Connect your Claude API key",
       href: "/integrations",
       icon: Zap,
     },

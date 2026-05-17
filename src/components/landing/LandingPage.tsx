@@ -807,7 +807,7 @@ function FeatureCard({ f, index }: { f: { icon: string; title: string; desc: str
 
 function Features() {
   const features = [
-    { icon: "🔐", title: "BYOK — Zero Platform Cost", desc: "Bring your own Flowfiy API key. Every token billed directly to your Anthropic account. Flowfiy charges only for platform access — not per generation." },
+    { icon: "🔐", title: "BYOK — Zero Platform Cost", desc: "Bring your own Claude API key. Every token billed directly to your Anthropic account. Flowfiy charges only for platform access — not per generation." },
     { icon: "🏢", title: "Multi-Tenant Workspaces", desc: "Invite your whole team. Owner, admin, and member roles with full isolation. Each workspace has its own ICP, leads, and campaigns." },
     { icon: "📊", title: "Lead Qualification Scoring", desc: "Every lead receives a 0–100 qualification score with reasoning. Filter, sort, and focus only on the prospects that will actually convert." },
     { icon: "✏️", title: "Editable AI Copy", desc: "Flowfiy writes the first draft. You own the final version. Edit, regenerate, or approve outreach copy before a single email is sent." },
@@ -1066,7 +1066,7 @@ function Footer() {
               <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-              AI-powered outbound sales platform. Bring your own Flowfiy key, generate qualified leads, and send hyper-personalized outreach — at scale.
+              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.
             </p>
           </div>
 
