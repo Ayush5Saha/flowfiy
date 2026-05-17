@@ -8,6 +8,15 @@
     },
     "src/app/api/leads/generate/route.ts": {
       "maxDuration": 10
+    },
+    "src/app/api/campaigns/process-followups/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/campaigns/process-followups",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

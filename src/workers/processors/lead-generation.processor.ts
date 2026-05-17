@@ -2,10 +2,8 @@ import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClient } from "@/ai/client";
-import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
-import { runCompanyAnalyzer } from "@/ai/agents/company-analyzer";
-import { runQualification } from "@/ai/agents/qualification";
-import { runPersonalization } from "@/ai/agents/personalization";
+import { runLeadGenOrchestrator } from "@/ai/orchestrator";
+import type { ToolContext } from "@/ai/tools/handlers";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
 import { incrementGenerationCount } from "@/lib/usage";
@@ -45,228 +43,137 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
     });
     if (!businessProfile) throw new Error("Business profile not configured");
 
-    // ── Step 2: Run ICP Analyzer ──────────────────────────────────────────────
+    // ── Step 2: Set up clients ────────────────────────────────────────────────
     const claude = await getClaudeClient(organizationId);
-    const icpAnalysis = await runICPAnalyzer(claude, {
-      companyName: businessProfile.companyName,
-      serviceOffered: businessProfile.serviceOffered,
-      icpDescription: businessProfile.icpDescription,
-      targetIndustries: businessProfile.targetIndustries,
-      targetGeographies: businessProfile.targetGeographies,
-      companySizeRange: businessProfile.companySizeRange ?? undefined,
-      painPointsSolved: businessProfile.painPointsSolved,
-      offerPositioning: businessProfile.offerPositioning,
-      outreachTone: businessProfile.outreachTone,
-    });
 
-    await prisma.businessProfile.update({
-      where: { organizationId },
-      data: { icpAnalysisCache: icpAnalysis as never },
-    });
+    const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
+    const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey) : null;
 
-    let createdLeads: Awaited<ReturnType<typeof prisma.lead.create>>[];
-
-    if (mode === "import") {
-      // ── Import mode: leads already in DB, skip Apollo ─────────────────────
-      await updateListStatus("RESEARCHING", { jobStatus: "analyzing_companies" });
-
-      createdLeads = await prisma.lead.findMany({
-        where: { leadListId, organizationId },
-      });
-
-      if (createdLeads.length === 0) {
-        await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
-        return;
-      }
-
-      // Mark all as RESEARCHING
-      await prisma.lead.updateMany({
-        where: { leadListId, organizationId },
-        data: { status: "RESEARCHING" },
-      });
-    } else {
-      // ── Apollo mode: discover leads ───────────────────────────────────────
-      await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
-
-      const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
-      if (!apolloCreds?.apiKey) throw new Error("Apollo API key not connected");
-
-      const apolloClient = new ApolloClient(apolloCreds.apiKey);
-      const rawLeads = await apolloClient.searchPeople({
-        jobTitles: icpAnalysis.apolloSearchFilters.jobTitles,
-        industries: icpAnalysis.apolloSearchFilters.industries,
-        companySizes: icpAnalysis.apolloSearchFilters.companySizes,
-        geographies: businessProfile.targetGeographies,
-        perPage: leadsPerRun,
-      });
-
-      if (rawLeads.length === 0) {
-        await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
-        return;
-      }
-
-      createdLeads = await Promise.all(
-        rawLeads.map((raw) =>
-          prisma.lead.create({
-            data: {
-              leadListId,
-              organizationId,
-              firstName: raw.firstName,
-              lastName: raw.lastName,
-              email: raw.email,
-              title: raw.title,
-              companyName: raw.organization?.name,
-              companyWebsite: raw.organization?.websiteUrl,
-              companySize: raw.organization?.employeeCount?.toString(),
-              industry: raw.organization?.industry,
-              linkedinUrl: raw.linkedinUrl,
-              source: "apollo",
-              rawData: raw as never,
-              status: "RESEARCHING",
-            },
-          })
-        )
-      );
-
-      await updateListStatus("RESEARCHING", {
-        jobStatus: "analyzing_companies",
-        totalLeads: createdLeads.length,
-      });
-    }
-
-    // ── Step 5: Company Analysis + Qualification (parallel, batched) ──────────
     const apifyCreds = await getIntegrationCredentials(organizationId, "APIFY");
     const apifyClient = apifyCreds?.apiKey ? new ApifyClient(apifyCreds.apiKey) : null;
 
     const calendlyCreds = await getIntegrationCredentials(organizationId, "CALENDLY");
-    const icpSummaryText = JSON.stringify(icpAnalysis);
 
-    const BATCH_SIZE = 5;
-    let qualifiedCount = 0;
+    // ── Step 3: Handle import mode (leads already in DB) ─────────────────────
+    if (mode === "import") {
+      await updateListStatus("RESEARCHING", { jobStatus: "analyzing_companies" });
 
-    for (let i = 0; i < createdLeads.length; i += BATCH_SIZE) {
-      const batch = createdLeads.slice(i, i + BATCH_SIZE);
+      const existingLeads = await prisma.lead.findMany({
+        where: { leadListId, organizationId },
+      });
 
-      await Promise.all(
-        batch.map(async (lead) => {
-          try {
-            // Scrape company website
-            let websiteContent = "";
-            if (apifyClient && lead.companyWebsite) {
-              try {
-                websiteContent = await apifyClient.scrapeWebsite(lead.companyWebsite);
-              } catch {
-                websiteContent = "";
-              }
-            }
+      if (existingLeads.length === 0) {
+        await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
+        return;
+      }
 
-            // Company analysis
-            const companyAnalysis = await runCompanyAnalyzer(claude, {
-              companyName: lead.companyName ?? "",
-              companyWebsite: lead.companyWebsite ?? "",
-              industry: lead.industry ?? "",
-              companySize: lead.companySize ?? undefined,
-              websiteContent,
-              icpSummary: icpSummaryText,
-            });
+      await prisma.lead.updateMany({
+        where: { leadListId, organizationId },
+        data: { status: "RESEARCHING" },
+      });
 
-            // Qualification
-            const qualification = await runQualification(claude, {
-              lead: {
-                firstName: lead.firstName ?? undefined,
-                lastName: lead.lastName ?? undefined,
-                title: lead.title ?? undefined,
-                companyName: lead.companyName ?? undefined,
-                companySize: lead.companySize ?? undefined,
-                industry: lead.industry ?? undefined,
-              },
-              companyAnalysis: companyAnalysis as never,
-              icpSummary: icpSummaryText,
-              qualificationCriteria: icpAnalysis.qualificationCriteria,
-            });
+      // Build a tool context with no apollo client so orchestrator skips discovery
+      // and processes the pre-loaded leads. We inject the existing leads as a
+      // synthetic search result via a pre-seeded stats object.
+      const ctx: ToolContext = {
+        organizationId,
+        leadListId,
+        apolloClient: null,        // no discovery needed in import mode
+        apifyClient,
+        geographies: businessProfile.targetGeographies,
+        stats: { totalLeads: existingLeads.length, qualifiedLeads: 0 },
+      };
 
-            // Save research
-            await prisma.leadResearch.create({
-              data: {
-                leadId: lead.id,
-                organizationId,
-                companyAnalysis: companyAnalysis as never,
-                opportunityAngle: qualification.bestAngle,
-                painPointMatch: qualification.painPointMatch,
-                personalizationNotes: qualification.personalizationHooks.join("; "),
-                researchMetadata: { confidence: companyAnalysis.confidence } as never,
-              },
-            });
+      // For import mode we still run the orchestrator but without search_leads.
+      // We craft the initial user message so Claude knows leads are pre-loaded.
+      const result = await runLeadGenOrchestrator(claude, ctx, {
+        businessProfile: {
+          companyName: businessProfile.companyName,
+          serviceOffered: businessProfile.serviceOffered,
+          icpDescription: businessProfile.icpDescription,
+          targetIndustries: businessProfile.targetIndustries,
+          targetGeographies: businessProfile.targetGeographies,
+          companySizeRange: businessProfile.companySizeRange,
+          painPointsSolved: businessProfile.painPointsSolved,
+          offerPositioning: businessProfile.offerPositioning,
+          outreachTone: businessProfile.outreachTone,
+        },
+        leadsPerRun: existingLeads.length,
+        calendlyLink: calendlyCreds?.schedulingLink,
+      });
 
-            const newStatus = qualification.qualified ? "QUALIFIED" : "DISQUALIFIED";
+      await incrementGenerationCount(organizationId, existingLeads.length);
+      await prisma.leadList.update({
+        where: { id: leadListId },
+        data: {
+          status: "READY",
+          jobStatus: "complete",
+          totalLeads: result.totalLeads,
+          qualifiedLeads: result.qualifiedLeads,
+        },
+      });
 
-            if (qualification.qualified) {
-              qualifiedCount++;
-
-              // Generate personalized outreach
-              const outreach = await runPersonalization(claude, {
-                lead: {
-                  firstName: lead.firstName ?? undefined,
-                  lastName: lead.lastName ?? undefined,
-                  title: lead.title ?? undefined,
-                  companyName: lead.companyName ?? undefined,
-                  industry: lead.industry ?? undefined,
-                },
-                businessProfile: {
-                  companyName: businessProfile.companyName,
-                  serviceOffered: businessProfile.serviceOffered,
-                  offerPositioning: businessProfile.offerPositioning,
-                  outreachTone: businessProfile.outreachTone,
-                },
-                bestAngle: qualification.bestAngle,
-                painPointMatch: qualification.painPointMatch,
-                personalizationHooks: qualification.personalizationHooks,
-                calendlyLink: calendlyCreds?.schedulingLink,
-              });
-
-              await prisma.outreachCopy.create({
-                data: {
-                  leadId: lead.id,
-                  organizationId,
-                  channel: "email",
-                  subjectLine: outreach.subjectLine,
-                  body: outreach.emailBody,
-                  followUp1: outreach.followUp1,
-                  followUp2: outreach.followUp2,
-                },
-              });
-            }
-
-            await prisma.lead.update({
-              where: { id: lead.id },
-              data: {
-                status: newStatus,
-                qualificationScore: qualification.score,
-              },
-            });
-          } catch (err) {
-            console.error(`[worker] Failed to process lead ${lead.id}:`, err);
-            await prisma.lead.update({
-              where: { id: lead.id },
-              data: { status: "DISQUALIFIED" },
-            });
-          }
-        })
+      console.log(
+        `[worker] Import run complete — ${result.totalLeads} leads, ` +
+          `${result.qualifiedLeads} qualified, ${result.toolCallCount} tool calls`
       );
+      return;
     }
 
-    // ── Step 6: Finalize ──────────────────────────────────────────────────────
-    await incrementGenerationCount(organizationId, createdLeads.length);
+    // ── Step 4: Apollo mode — Claude orchestrates everything ─────────────────
+    if (!apolloClient) {
+      throw new Error("Apollo API key not connected. Cannot generate leads.");
+    }
+
+    await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
+
+    const ctx: ToolContext = {
+      organizationId,
+      leadListId,
+      apolloClient,
+      apifyClient,
+      geographies: businessProfile.targetGeographies,
+      stats: { totalLeads: 0, qualifiedLeads: 0 },
+    };
+
+    const result = await runLeadGenOrchestrator(claude, ctx, {
+      businessProfile: {
+        companyName: businessProfile.companyName,
+        serviceOffered: businessProfile.serviceOffered,
+        icpDescription: businessProfile.icpDescription,
+        targetIndustries: businessProfile.targetIndustries,
+        targetGeographies: businessProfile.targetGeographies,
+        companySizeRange: businessProfile.companySizeRange,
+        painPointsSolved: businessProfile.painPointsSolved,
+        offerPositioning: businessProfile.offerPositioning,
+        outreachTone: businessProfile.outreachTone,
+      },
+      leadsPerRun,
+      calendlyLink: calendlyCreds?.schedulingLink,
+    });
+
+    if (result.totalLeads === 0) {
+      await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
+      return;
+    }
+
+    // ── Step 5: Finalise ──────────────────────────────────────────────────────
+    await incrementGenerationCount(organizationId, result.totalLeads);
 
     await prisma.leadList.update({
       where: { id: leadListId },
       data: {
         status: "READY",
         jobStatus: "complete",
-        totalLeads: createdLeads.length,
-        qualifiedLeads: qualifiedCount,
+        totalLeads: result.totalLeads,
+        qualifiedLeads: result.qualifiedLeads,
       },
     });
+
+    console.log(
+      `[worker] Lead gen complete — ${result.totalLeads} leads, ` +
+        `${result.qualifiedLeads} qualified, ${result.toolCallCount} tool calls`
+    );
   } catch (err) {
     await prisma.leadList.update({
       where: { id: leadListId },

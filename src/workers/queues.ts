@@ -42,3 +42,27 @@ export function getEmailSendQueue() {
 export function getRedisConnection(): Redis {
   return getConnection();
 }
+
+// ─── Follow-up scheduling helper ─────────────────────────────────────────────
+
+export interface EmailJobData {
+  campaignLeadId: string;
+  organizationId: string;
+  step: 0 | 1 | 2; // 0 = initial, 1 = follow-up 1, 2 = follow-up 2
+}
+
+/**
+ * Enqueue an email send job, optionally delayed (for follow-ups).
+ * delayMs = 0 means "send now" (initial email).
+ */
+export async function enqueueEmailJob(data: EmailJobData, delayMs = 0) {
+  const queue = getEmailSendQueue();
+  const stepLabel = data.step === 0 ? "initial" : `follow-up-${data.step}`;
+  await queue.add(`email-${stepLabel}`, data, {
+    delay: delayMs,
+    attempts: 2,
+    backoff: { type: "fixed", delay: 5000 },
+    removeOnComplete: { count: 1000 },
+    removeOnFail: { count: 200 },
+  });
+}

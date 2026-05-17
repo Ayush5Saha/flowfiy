@@ -35,7 +35,8 @@ export class ApolloClient {
       api_key: this.apiKey,
       per_page: params.perPage ?? 25,
       person_titles: params.jobTitles,
-      organization_industry_tag_ids: [], // resolved separately if needed
+      // Pass industry keywords as free-text labels (Apollo v1 mixed_people accepts string labels)
+      organization_industry_tag_ids: params.industries?.length ? params.industries : undefined,
       organization_num_employees_ranges: params.companySizes,
       contact_email_status: ["verified", "likely_to_engage"],
     };

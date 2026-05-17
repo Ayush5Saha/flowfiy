@@ -2,6 +2,7 @@
 import { getRedisConnection } from "./queues";
 import { processLeadGeneration } from "./processors/lead-generation.processor";
 import { processEmailSend } from "./processors/email-send.processor";
+import type { EmailJobData } from "./processors/email-send.processor";
 
 console.log("[worker] Starting Flowfiy workers...");
 
@@ -32,11 +33,15 @@ leadGenerationWorker.on("failed", (job, err) => {
 });
 
 emailSendWorker.on("completed", (job) => {
-  console.log(`[worker] Email send job ${job.id} completed`);
+  const data = job.data as EmailJobData;
+  const label = data.step === 0 ? "initial" : `follow-up-${data.step}`;
+  console.log(`[worker] Email job ${job.id} (${label}) completed`);
 });
 
 emailSendWorker.on("failed", (job, err) => {
-  console.error(`[worker] Email send job ${job?.id} failed:`, err.message);
+  const data = job?.data as EmailJobData | undefined;
+  const label = data ? (data.step === 0 ? "initial" : `follow-up-${data.step}`) : "unknown";
+  console.error(`[worker] Email job ${job?.id} (${label}) failed:`, err.message);
 });
 
 process.on("SIGTERM", async () => {
