@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Copy, Check, ExternalLink, Loader2, RefreshCw, Send, Bot, User, Megaphone, Plus } from "lucide-react";
+import { X, Copy, Check, ExternalLink, Loader2, RefreshCw, Send, Bot, User, Megaphone } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -126,27 +126,6 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
   const outreachCopy = currentCopy;
   const analysis = (lead.research?.companyAnalysis ?? {}) as Record<string, unknown>;
   const isQualified = lead.status === "QUALIFIED" || lead.status === "CONTACTED";
-
-  // Add to campaign state
-  const [addingToCampaign, setAddingToCampaign] = useState(false);
-  const [campaignAdded, setCampaignAdded] = useState(false);
-
-  async function handleAddToCampaign(campaignId: string) {
-    setAddingToCampaign(true);
-    try {
-      const res = await fetch(`/api/campaigns/${campaignId}/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadIds: [lead.id] }),
-      });
-      if (res.ok) {
-        setCampaignAdded(true);
-        setTimeout(() => setCampaignAdded(false), 3000);
-      }
-    } finally {
-      setAddingToCampaign(false);
-    }
-  }
 
   async function copyText(text: string, key: string) {
     await navigator.clipboard.writeText(text);
@@ -355,22 +334,15 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
               {/* Add to campaign quick-action */}
               {isQualified && (
                 <div className="pt-2 border-t border-border">
-                  {campaignAdded ? (
-                    <div className="flex items-center gap-2 text-xs text-green-400">
-                      <Check className="w-3.5 h-3.5" />
-                      Added to campaign successfully
+                  <a
+                    href="/campaigns/new"
+                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                  >
+                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                      <Megaphone className="w-3 h-3 text-primary" />
                     </div>
-                  ) : (
-                    <a
-                      href="/campaigns/new"
-                      className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
-                    >
-                      <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                        <Megaphone className="w-3 h-3 text-primary" />
-                      </div>
-                      Create a campaign with this lead list →
-                    </a>
-                  )}
+                    Create a campaign with this lead list →
+                  </a>
                 </div>
               )}
             </>
