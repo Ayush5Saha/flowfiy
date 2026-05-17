@@ -48,12 +48,21 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
   const [regenerating, setRegenerating] = useState(false);
   const [currentCopy, setCurrentCopy] = useState(lead.outreachCopies?.[0]);
 
-  // Chat state
+  // Chat state (declared before the reset effect so setters are in scope)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatStreaming, setChatStreaming] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset all state when a different lead is selected
+  useEffect(() => {
+    setCurrentCopy(lead.outreachCopies?.[0]);
+    setTab("outreach");
+    setCopied(null);
+    setChatMessages([]);
+    setChatInput("");
+  }, [lead.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -304,7 +313,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
               />
               {outreachCopy.followUp1 && (
                 <OutreachBlock
-                  label="Follow-up 1 (Day 3)"
+                  label="Follow-up 1"
                   content={outreachCopy.followUp1}
                   copyKey="fu1"
                   copied={copied}
@@ -313,7 +322,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
               )}
               {outreachCopy.followUp2 && (
                 <OutreachBlock
-                  label="Follow-up 2 (Day 7)"
+                  label="Follow-up 2"
                   content={outreachCopy.followUp2}
                   copyKey="fu2"
                   copied={copied}

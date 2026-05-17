@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, ExternalLink, ChevronRight, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Mail, ChevronRight, CheckCircle, XCircle, Clock, Copy, Check, Megaphone } from "lucide-react";
 import { OutreachPanel } from "@/components/leads/OutreachPanel";
 
 interface Lead {
@@ -42,6 +42,7 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
   const router = useRouter();
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [filter, setFilter] = useState<"ALL" | "QUALIFIED" | "DISQUALIFIED">("ALL");
+  const [copied, setCopied] = useState<string | null>(null);
 
   // Poll for updates while processing
   useEffect(() => {
@@ -49,6 +50,16 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
     const interval = setInterval(() => router.refresh(), 8000);
     return () => clearInterval(interval);
   }, [isProcessing, router]);
+
+  async function quickCopyEmail(lead: Lead, e: React.MouseEvent) {
+    e.stopPropagation();
+    const copy = lead.outreachCopies?.[0];
+    if (!copy) return;
+    const text = `Subject: ${copy.subjectLine ?? ""}\n\n${copy.body}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(lead.id);
+    setTimeout(() => setCopied(null), 2000);
+  }
 
   const filtered = leads.filter((l) => {
     if (filter === "ALL") return true;
@@ -82,7 +93,7 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
               }`}
             >
               {f === "ALL" ? `All (${leads.length})` : f === "QUALIFIED"
-                ? `Qualified (${leads.filter((l) => l.status === "QUALIFIED").length})`
+                ? `Qualified (${leads.filter((l) => l.status === "QUALIFIED" || l.status === "CONTACTED").length})`
                 : `Disqualified (${leads.filter((l) => l.status === "DISQUALIFIED").length})`}
             </button>
           ))}
@@ -121,6 +132,19 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
                   }`}>
                     {lead.qualificationScore}
                   </span>
+                )}
+                {(lead.status === "QUALIFIED" || lead.status === "CONTACTED") && lead.outreachCopies?.[0] && (
+                  <button
+                    onClick={(e) => void quickCopyEmail(lead, e)}
+                    title="Copy email to clipboard"
+                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    {copied === lead.id ? (
+                      <Check className="w-3.5 h-3.5 text-green-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
                 )}
                 <ChevronRight className="w-3 h-3 text-muted-foreground" />
               </div>

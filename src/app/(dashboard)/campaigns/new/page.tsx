@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Megaphone, Users, Mail, Clock, ChevronRight, Loader2 } from "lucide-react";
 
@@ -19,8 +19,10 @@ interface OrgData {
   leadLists: LeadList[];
 }
 
-export default function NewCampaignPage() {
+function NewCampaignInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedListId = searchParams.get("listId") ?? "";
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export default function NewCampaignPage() {
 
   const [form, setForm] = useState({
     name: "",
-    leadListId: "",
+    leadListId: preselectedListId,
     followUp1DelayDays: 3,
     followUp2DelayDays: 7,
     dailySendLimit: 50,
@@ -370,5 +372,17 @@ export default function NewCampaignPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewCampaignPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <NewCampaignInner />
+    </Suspense>
   );
 }

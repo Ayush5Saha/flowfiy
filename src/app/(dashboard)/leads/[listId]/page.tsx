@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail } from "lucide-react";
 import { LeadTableClient } from "@/components/leads/LeadTableClient";
+import { LeadListActions } from "@/components/leads/LeadListActions";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
@@ -38,16 +39,34 @@ export default async function LeadListPage({ params }: PageProps) {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/leads" className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <div>
-          <h1 className="text-xl font-semibold">{leadList.name}</h1>
-          {leadList.description && (
-            <p className="text-muted-foreground text-sm">{leadList.description}</p>
-          )}
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Link href="/leads" className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="text-xl font-semibold">{leadList.name}</h1>
+            {leadList.description && (
+              <p className="text-muted-foreground text-sm">{leadList.description}</p>
+            )}
+          </div>
         </div>
+        <LeadListActions
+          listId={listId}
+          listName={leadList.name}
+          isReady={leadList.status === "READY"}
+          hasQualifiedLeads={leadList.qualifiedLeads > 0}
+          leads={leadList.leads.map((l) => ({
+            firstName: l.firstName,
+            lastName: l.lastName,
+            email: l.email,
+            title: l.title,
+            companyName: l.companyName,
+            companyWebsite: l.companyWebsite,
+            status: l.status,
+            qualificationScore: l.qualificationScore,
+          }))}
+        />
       </div>
 
       {/* Stats bar */}
