@@ -30,7 +30,7 @@ export default function DemoLeadsPage() {
                 <span>B2B SaaS Founders — NYC</span>
               </div>
               <h1 className="text-xl font-semibold">B2B SaaS Founders — NYC</h1>
-              <p className="text-muted-foreground text-sm">ICP-matched, Claude-researched leads ready for outreach</p>
+              <p className="text-muted-foreground text-sm">ICP-matched, Flowfiy-researched leads ready for outreach</p>
             </div>
           </div>
 

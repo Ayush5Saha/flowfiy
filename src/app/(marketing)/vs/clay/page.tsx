@@ -5,7 +5,7 @@ import { Check, X, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Flowfiy vs Clay — AI Sales Outreach Comparison 2026",
   description:
-    "Comparing Flowfiy vs Clay for AI-powered B2B lead generation and outreach. Clay is a data enrichment tool; Flowfiy is a full outbound pipeline with 5 Claude AI agents, Gmail sending, and BYOK pricing.",
+    "Comparing Flowfiy vs Clay for AI-powered B2B lead generation and outreach. Clay is a data enrichment tool; Flowfiy is a full outbound pipeline with 5 Flowfiy AI agents, Gmail sending, and BYOK pricing.",
   keywords: ["Flowfiy vs Clay", "Clay alternative", "Clay competitor", "Clay vs Flowfiy", "AI sales tool comparison 2026", "Clay alternative BYOK"],
   openGraph: {
     title: "Flowfiy vs Clay — Which AI Sales Tool Is Right for You?",
@@ -24,11 +24,11 @@ const jsonLd = {
 
 const rows = [
   { feature: "AI lead research", outbound: true, clay: "Partial" },
-  { feature: "5-agent Claude pipeline", outbound: true, clay: false },
+  { feature: "5-agent Flowfiy pipeline", outbound: true, clay: false },
   { feature: "AI qualification scoring (0–100)", outbound: true, clay: false },
   { feature: "AI-written personalized emails", outbound: true, clay: "Via integrations" },
   { feature: "Gmail OAuth sending", outbound: true, clay: false },
-  { feature: "BYOK (Bring Your Own Claude Key)", outbound: true, clay: false },
+  { feature: "BYOK (Bring Your Own Flowfiy Key)", outbound: true, clay: false },
   { feature: "Per-lead AI cost to you", outbound: "$0", clay: "Credit-based" },
   { feature: "Apollo API integration", outbound: true, clay: true },
   { feature: "Apify web scraping", outbound: true, clay: "Via HTTP API" },
@@ -57,7 +57,7 @@ export default function VsClayPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-              Clay is a powerful data enrichment and workflow tool. Flowfiy is a complete outbound pipeline with 5 Claude AI agents, built-in Gmail sending, and a BYOK model that charges $0 per lead generation.
+              Clay is a powerful data enrichment and workflow tool. Flowfiy is a complete outbound pipeline with 5 Flowfiy AI agents, built-in Gmail sending, and a BYOK model that charges $0 per lead generation.
               They solve different problems — here&apos;s how to choose.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function VsClayPage() {
                 <ul className="space-y-2">
                   {[
                     "You want a full AI pipeline — research to sent email — in one tool",
-                    "You want $0 per-lead AI cost (BYOK Claude)",
+                    "You want $0 per-lead AI cost (BYOK)",
                     "You want AI qualification scoring before any email is sent",
                     "You want Gmail-native sending without a separate sequencer",
                   ].map(item => (
@@ -153,7 +153,7 @@ export default function VsClayPage() {
             {[
               {
                 title: "Pricing model",
-                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee ($49–$249) with $0 per-generation AI cost because you use your own Claude API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
+                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee ($49–$249) with $0 per-generation AI cost because you use your own Flowfiy API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
               },
               {
                 title: "AI email writing",
@@ -180,7 +180,7 @@ export default function VsClayPage() {
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Try Flowfiy free — no Clay credits needed</h2>
-            <p className="text-zinc-400 mb-8">50 free lead generations. Bring your Claude API key. Start building pipeline in under 30 minutes.</p>
+            <p className="text-zinc-400 mb-8">50 free lead generations. Bring your Flowfiy API key. Start building pipeline in under 30 minutes.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
                 Get started free <ArrowRight className="w-4 h-4" />

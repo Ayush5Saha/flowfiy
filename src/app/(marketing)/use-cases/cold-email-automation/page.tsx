@@ -40,7 +40,7 @@ export default function ColdEmailAutomationPage() {
               Start automating cold email free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-xs text-zinc-600 mt-5">50 free generations · Gmail OAuth · BYOK Claude · No credit card</p>
+          <p className="text-xs text-zinc-600 mt-5">50 free generations · Gmail OAuth · BYOK · No credit card</p>
         </div>
       </section>
 
@@ -89,10 +89,10 @@ export default function ColdEmailAutomationPage() {
               <div className="space-y-4">
                 {[
                   "AI scrapes every company website in 10–15 seconds",
-                  "Claude writes emails with 4+ specific, researched facts",
+                  "Flowfiy writes emails with 4+ specific, researched facts",
                   "Only qualified leads (score ≥ threshold) get an email",
                   "Reply rates of 12–20% from deeply personalized outreach",
-                  "Full pipeline runs at ~$0.015/lead in Claude API costs",
+                  "Full pipeline runs at ~$0.015/lead in AI API costs",
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3 text-sm text-zinc-300">
                     <Check className="mt-0.5 w-4 h-4 text-violet-400 shrink-0" />
@@ -168,7 +168,7 @@ export default function ColdEmailAutomationPage() {
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Send your first AI-personalized campaign</h2>
-          <p className="text-zinc-400 mb-8">Start free. 50 full pipeline runs. Your Claude key, your Gmail, your pipeline.</p>
+          <p className="text-zinc-400 mb-8">Start free. 50 full pipeline runs. Your Flowfiy key, your Gmail, your pipeline.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-primary rounded-xl text-white font-semibold hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30">
               Get started free <ArrowRight className="w-5 h-5" />

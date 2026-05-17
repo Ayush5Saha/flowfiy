@@ -59,7 +59,7 @@ export function MarketingFooter() {
               <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.
+              AI-powered outbound sales platform. Bring your own Flowfiy key, generate qualified leads, and send hyper-personalized outreach — at scale.
             </p>
             <div className="flex items-center gap-3">
               {socials.map(({ icon: Icon, href, label }) => (
@@ -117,7 +117,7 @@ export function MarketingFooter() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <span>Built with Claude AI · Powered by Anthropic</span>
+            <span>Built with Flowfiy · Powered by Anthropic</span>
             <span className="hidden sm:inline">·</span>
             <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">support@flowfiy.com</Link>
           </div>

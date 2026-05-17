@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026 | Flowfiy Blog",
   description:
     "Manual SDR work costs $80k–$120k per rep per year. AI agents do the same work in seconds. Learn how the 5-agent pipeline replaces ICP research, lead discovery, company analysis, qualification, and email writing.",
-  keywords: ["AI SDR", "replace sales development rep with AI", "AI lead generation agent", "Claude AI sales", "automated SDR", "AI outbound sales 2026"],
+  keywords: ["AI SDR", "replace sales development rep with AI", "AI lead generation agent", "Flowfiy AI sales", "automated SDR", "AI outbound sales 2026"],
   openGraph: {
     title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026",
     description: "The full breakdown of how AI agents replace manual SDR work — from ICP research to personalized email copy.",
@@ -74,7 +74,7 @@ export default function BlogPostAIAgentSDR() {
               A human SDR typically spends 2–4 hours per quarter (re-)defining the ICP, talking to AEs, reviewing lost deals. An ICP Analyzer agent takes your business profile — service, target market, pain points, positioning — and generates a structured targeting signal in under 10 seconds.
             </p>
             <p>
-              Using <strong className="text-white">claude-haiku-4-5</strong>, the agent outputs: target industries, company size ranges, decision-maker titles, growth signals to look for, and disqualifying signals to avoid. This ICP summary is then passed to every downstream agent as shared context.
+              Using <strong className="text-white">Flowfiy AI</strong>, the agent outputs: target industries, company size ranges, decision-maker titles, growth signals to look for, and disqualifying signals to avoid. This ICP summary is then passed to every downstream agent as shared context.
             </p>
 
             <h3 className="text-lg font-semibold text-white">2. Prospecting → Lead Discovery Agent</h3>
@@ -106,7 +106,7 @@ export default function BlogPostAIAgentSDR() {
               The most time-consuming SDR task. A well-researched, truly personalized cold email — not a &quot;Hi [First Name]&quot; merge — takes 20–40 minutes per lead. Most reps don&apos;t do it. They blast templates and wonder why reply rates are 1%.
             </p>
             <p>
-              Using <strong className="text-white">claude-sonnet-4-6</strong>, the Personalization Agent writes a subject line, email body, and two follow-ups per qualified lead — referencing the company&apos;s actual context from the research stage. The result reads like a human spent an hour on it. Because effectively, an agent equivalent to a senior copywriter did.
+              Using <strong className="text-white">Flowfiy AI</strong>, the Personalization Agent writes a subject line, email body, and two follow-ups per qualified lead — referencing the company&apos;s actual context from the research stage. The result reads like a human spent an hour on it. Because effectively, an agent equivalent to a senior copywriter did.
             </p>
 
             <h2 className="text-2xl font-bold text-white mt-10">The economics</h2>

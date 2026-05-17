@@ -66,7 +66,7 @@ export function GenerateLeadsButton({ organizationId, variant = "default" }: Gen
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl">
             <h2 className="text-lg font-semibold mb-1">Generate Lead List</h2>
             <p className="text-muted-foreground text-sm mb-5">
-              Claude will research your ICP, find matching leads, analyze each company, and write personalized outreach.
+              Flowfiy will research your ICP, find matching leads, analyze each company, and write personalized outreach.
             </p>
 
             <form onSubmit={handleGenerate} className="space-y-4">

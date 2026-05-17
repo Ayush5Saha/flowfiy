@@ -7,7 +7,7 @@ import { Check, Loader2, ChevronRight } from "lucide-react";
 const STEPS = [
   { id: 1, label: "Workspace" },
   { id: 2, label: "Business Profile" },
-  { id: 3, label: "Connect Claude" },
+  { id: 3, label: "Connect Flowfiy AI" },
 ];
 
 const INDUSTRIES = [
@@ -133,7 +133,7 @@ export function OnboardingWizard({ userId }: { userId: string }) {
     setValidating(false);
 
     if (!validateData.valid) {
-      setError(validateData.message ?? "Invalid Claude API key");
+      setError(validateData.message ?? "Invalid Flowfiy API key");
       return;
     }
 
@@ -220,7 +220,7 @@ export function OnboardingWizard({ userId }: { userId: string }) {
             <div>
               <h2 className="text-lg font-semibold mb-1">Define your business & ICP</h2>
               <p className="text-muted-foreground text-sm mb-4">
-                Claude uses this to research and qualify leads. Be specific.
+                Flowfiy uses this to research and qualify leads. Be specific.
               </p>
             </div>
 
@@ -350,11 +350,11 @@ export function OnboardingWizard({ userId }: { userId: string }) {
           </form>
         )}
 
-        {/* Step 3: Claude API Key */}
+        {/* Step 3: Flowfiy API Key */}
         {step === 3 && (
           <form onSubmit={handleStep3} className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-1">Connect Claude AI</h2>
+              <h2 className="text-lg font-semibold mb-1">Connect Flowfiy AI</h2>
               <p className="text-muted-foreground text-sm mb-4">
                 Your API key is encrypted and stored securely. It&apos;s used only for your outbound research.
               </p>
@@ -372,7 +372,7 @@ export function OnboardingWizard({ userId }: { userId: string }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Claude API Key</label>
+              <label className="block text-sm font-medium mb-1.5">Flowfiy API Key</label>
               <input
                 type="password"
                 value={claudeApiKey}

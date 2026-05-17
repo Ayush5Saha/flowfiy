@@ -38,7 +38,7 @@ export default function PrivacyPage() {
 
             <h3 className="text-base font-medium text-white mb-2 mt-5">Integration credentials</h3>
             <p>
-              API keys and OAuth tokens you connect (Claude, Apollo, Apify, Gmail, Calendly) are encrypted at rest using AES-256-GCM before storage. The encryption key is stored in our infrastructure environment variables and is never stored in the database. We cannot read your credentials in plaintext.
+              API keys and OAuth tokens you connect (Flowfiy AI, Apollo, Apify, Gmail, Calendly) are encrypted at rest using AES-256-GCM before storage. The encryption key is stored in our infrastructure environment variables and is never stored in the database. We cannot read your credentials in plaintext.
             </p>
 
             <h3 className="text-base font-medium text-white mb-2 mt-5">Lead and outreach data</h3>

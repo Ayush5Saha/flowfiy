@@ -43,7 +43,7 @@ export default async function LeadsPage() {
       icon: FileText,
     },
     !hasClaudeKey && {
-      label: "Connect your Claude API key",
+      label: "Connect your Flowfiy API key",
       href: "/integrations",
       icon: Zap,
     },
@@ -99,7 +99,7 @@ export default async function LeadsPage() {
 
           <h2 className="font-semibold text-lg mb-2">Generate your first lead list</h2>
           <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-            Claude researches your ICP, finds matching companies via Apollo, analyzes each
+            Flowfiy researches your ICP, finds matching companies via Apollo, analyzes each
             one, scores them 0–100, and writes personalized outreach — all automatically.
           </p>
 

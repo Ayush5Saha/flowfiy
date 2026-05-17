@@ -17,7 +17,7 @@ const SUBJECTS = [
 const FAQS = [
   {
     q: "How does the BYOK model work?",
-    a: "You bring your own Anthropic Claude API key. Flowfiy uses it to run the AI pipeline on your behalf — we never pay for your AI usage and you're never charged per-token by us. Your key is stored encrypted (AES-256-GCM) and only used when you trigger a pipeline run.",
+    a: "You bring your own Anthropic API key. Flowfiy uses it to run the AI pipeline on your behalf — we never pay for your AI usage and you're never charged per-token by us. Your key is stored encrypted (AES-256-GCM) and only used when you trigger a pipeline run.",
   },
   {
     q: "Which plan should I start with?",
@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "What APIs do I need to connect?",
-    a: "At minimum: a Claude API key (Anthropic) to run the AI pipeline. For lead discovery you'll also need Apollo.io. Apify is optional for website scraping, Gmail for sending outreach, and Calendly if you want booking links in your emails.",
+    a: "At minimum: a Flowfiy API key (Anthropic) to run the AI pipeline. For lead discovery you'll also need Apollo.io. Apify is optional for website scraping, Gmail for sending outreach, and Calendly if you want booking links in your emails.",
   },
 ];
 

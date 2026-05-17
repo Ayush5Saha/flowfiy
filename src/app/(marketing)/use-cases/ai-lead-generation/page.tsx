@@ -5,11 +5,11 @@ import { Check, ArrowRight, Zap } from "lucide-react";
 export const metadata: Metadata = {
   title: "AI Lead Generation Software — Automated B2B Prospecting | Flowfiy",
   description:
-    "Flowfiy uses 5 Claude AI agents to automate the entire B2B lead generation pipeline: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach. Start free.",
-  keywords: ["AI lead generation software", "automated B2B lead generation", "AI prospecting tool", "automated lead generation 2026", "Claude AI lead generation", "AI SDR software"],
+    "Flowfiy uses 5 Flowfiy AI agents to automate the entire B2B lead generation pipeline: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach. Start free.",
+  keywords: ["AI lead generation software", "automated B2B lead generation", "AI prospecting tool", "automated lead generation 2026", "Flowfiy AI lead generation", "AI SDR software"],
   openGraph: {
     title: "AI Lead Generation Software — Automated B2B Prospecting | Flowfiy",
-    description: "5 Claude AI agents handle your entire lead generation pipeline automatically. ICP → prospect → research → qualify → outreach.",
+    description: "5 Flowfiy AI agents handle your entire lead generation pipeline automatically. ICP → prospect → research → qualify → outreach.",
     url: "/use-cases/ai-lead-generation",
   },
   alternates: { canonical: "/use-cases/ai-lead-generation" },
@@ -20,7 +20,7 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "Flowfiy — AI Lead Generation",
   applicationCategory: "BusinessApplication",
-  description: "Automated B2B lead generation using 5 Claude AI agents: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach copy.",
+  description: "Automated B2B lead generation using 5 Flowfiy AI agents: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach copy.",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier with 50 lifetime generations" },
 };
 
@@ -53,7 +53,7 @@ export default function AILeadGenerationPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-              Flowfiy&apos;s 5 Claude AI agents handle the entire B2B lead generation pipeline — from ICP definition to research, qualification, and personalized email copy — automatically.
+              Flowfiy&apos;s 5 Flowfiy AI agents handle the entire B2B lead generation pipeline — from ICP definition to research, qualification, and personalized email copy — automatically.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
@@ -63,7 +63,7 @@ export default function AILeadGenerationPage() {
                 How it works →
               </Link>
             </div>
-            <p className="text-xs text-zinc-600 mt-5">50 free generations · No credit card · BYOK Claude</p>
+            <p className="text-xs text-zinc-600 mt-5">50 free generations · No credit card · BYOK</p>
           </div>
         </section>
 
@@ -74,7 +74,7 @@ export default function AILeadGenerationPage() {
               ["275M+", "Searchable contacts via Apollo"],
               ["~15s", "Per-company research time"],
               ["0–100", "Qualification score per lead"],
-              ["$0", "Claude API cost per lead"],
+              ["$0", "AI cost per lead"],
             ].map(([val, label]) => (
               <div key={label}>
                 <p className="text-3xl font-bold font-mono text-white mb-1">{val}</p>
@@ -149,13 +149,13 @@ export default function AILeadGenerationPage() {
             <h2 className="text-2xl font-bold text-white mb-8">Everything included</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                "ICP Analyzer agent (claude-haiku-4-5)",
+                "ICP Analyzer agent",
                 "Lead Discovery via Apollo API",
                 "Company research via Apify web scraping",
                 "AI qualification scoring 0–100 with reasoning",
                 "Personalized subject line + body + 2 follow-ups",
                 "Gmail OAuth sending from your inbox",
-                "BYOK Claude API — $0 per-lead AI cost",
+                "BYOK API — $0 per-lead AI cost",
                 "AES-256-GCM encrypted credentials",
                 "BullMQ job queue with retry + backoff",
                 "Multi-tenant team workspaces",

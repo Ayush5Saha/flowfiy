@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation | Flowfiy Blog",
   description:
     "Most AI sales tools charge $0.50–$2.00 per lead. Flowfiy charges $0 per generation because you bring your own Claude API key. Here's the full math on BYOK pricing and why it's the only honest model for AI SaaS.",
-  keywords: ["BYOK AI", "bring your own API key", "AI SaaS pricing", "Claude API BYOK", "AI sales tool cost", "Flowfiy pricing model"],
+  keywords: ["BYOK AI", "bring your own API key", "AI SaaS pricing", "Flowfiy API BYOK", "AI sales tool cost", "Flowfiy pricing model"],
   openGraph: {
     title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation",
     description: "The math behind Bring Your Own Key AI pricing — and why it's better for customers than per-lead fees.",
@@ -64,14 +64,14 @@ export default function BlogPostBYOK() {
 
             <h2 className="text-2xl font-bold text-white mt-10">What most AI tools actually charge you</h2>
             <p>
-              The typical model: you pay the platform a per-lead or per-generation fee. The platform takes your request, runs it through their LLM account (usually the same Claude or GPT-4 you could access directly), and charges you a markup.
+              The typical model: you pay the platform a per-lead or per-generation fee. The platform takes your request, runs it through their LLM account (usually the same AI models you could access directly), and charges you a markup.
             </p>
 
             <div className="bg-zinc-900/60 border border-white/8 rounded-xl p-6 not-prose">
               <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">Typical AI sales tool cost per full lead pipeline</p>
               <div className="space-y-3">
                 {[
-                  ["Actual Claude API cost (ICP + research + qualification + copy)", "~$0.008–$0.015"],
+                  ["Actual AI API cost (ICP + research + qualification + copy)", "~$0.008–$0.015"],
                   ["What competitor platforms charge", "$0.50–$2.00"],
                   ["Platform markup", "33x–250x"],
                   ["Flowfiy per-generation cost to you", "$0.00"],
@@ -90,10 +90,10 @@ export default function BlogPostBYOK() {
 
             <h2 className="text-2xl font-bold text-white mt-10">What BYOK means in practice</h2>
             <p>
-              BYOK (Bring Your Own Key) means you connect your Anthropic API key directly to Flowfiy. When our pipeline runs Claude agents on your behalf, the API calls are billed directly to your Anthropic account — not through us.
+              BYOK (Bring Your Own Key) means you connect your Anthropic API key directly to Flowfiy. When our pipeline runs Flowfiy agents on your behalf, the API calls are billed directly to your Anthropic account — not through us.
             </p>
             <p>
-              We never see your tokens. We never mark them up. Your Claude usage appears in your Anthropic billing dashboard exactly as it would if you built the pipeline yourself.
+              We never see your tokens. We never mark them up. Your AI usage appears in your Anthropic billing dashboard exactly as it would if you built the pipeline yourself.
             </p>
             <p>
               What Flowfiy charges for is the <strong className="text-white">platform intelligence</strong>: the orchestration, the 5-agent pipeline design, the BullMQ job queue, the multi-tenant isolation, the Gmail integration, the Apify scraping infrastructure, the qualification scoring logic. The hard engineering work that you&apos;d otherwise spend months building.
@@ -109,7 +109,7 @@ export default function BlogPostBYOK() {
                   <p className="text-xs text-zinc-600 mt-1">AI inference costs only</p>
                 </div>
                 <div className="border border-violet-500/30 rounded-lg p-4 bg-violet-950/20">
-                  <p className="text-xs text-zinc-500 mb-2">Flowfiy (Growth plan + your Claude API key)</p>
+                  <p className="text-xs text-zinc-500 mb-2">Flowfiy (Growth plan + your Flowfiy API key)</p>
                   <p className="text-2xl font-bold font-mono text-white">$99 + ~$25</p>
                   <p className="text-xs text-zinc-600 mt-1">Platform ($99) + actual Anthropic API cost (~$0.012/lead × 2,000)</p>
                 </div>
@@ -125,12 +125,12 @@ export default function BlogPostBYOK() {
               <strong className="text-white">1. Alignment of incentives.</strong> Per-lead pricing creates a perverse incentive: we profit more when we run more (and worse) pipelines. BYOK means we win only when the platform is genuinely valuable — when you stay subscribed because the orchestration, not the inference, is worth paying for.
             </p>
             <p>
-              <strong className="text-white">2. Transparency about what you&apos;re buying.</strong> LLM inference is a commodity. Anyone can run Claude. What&apos;s hard to build is the multi-agent pipeline, the quality guardrails, the job queue with proper retry logic, the encrypted credential storage, and the Gmail integration. That&apos;s what Flowfiy sells. The AI itself, you already have access to.
+              <strong className="text-white">2. Transparency about what you&apos;re buying.</strong> LLM inference is a commodity. Anyone can run AI models. What&apos;s hard to build is the multi-agent pipeline, the quality guardrails, the job queue with proper retry logic, the encrypted credential storage, and the Gmail integration. That&apos;s what Flowfiy sells. The AI itself, you already have access to.
             </p>
 
             <h2 className="text-2xl font-bold text-white mt-10">The one tradeoff</h2>
             <p>
-              BYOK does require you to have an Anthropic account and a valid API key. If you&apos;ve never used the Claude API before, this is a 5-minute setup — create an account at console.anthropic.com, add a payment method, generate a key.
+              BYOK does require you to have an Anthropic account and a valid API key. If you&apos;ve never used the Flowfiy API before, this is a 5-minute setup — create an account at console.anthropic.com, add a payment method, generate a key.
             </p>
             <p>
               For teams that want zero infrastructure ownership and are happy paying per-lead premiums, a different platform might feel simpler. But for revenue teams who want to understand and control their costs, BYOK is almost always the better deal within the first month.
@@ -141,7 +141,7 @@ export default function BlogPostBYOK() {
 
           <div className="bg-gradient-to-br from-violet-950/50 to-zinc-900/50 border border-violet-500/20 rounded-2xl p-8 text-center">
             <h3 className="text-xl font-bold text-white mb-3">See the full pricing breakdown</h3>
-            <p className="text-zinc-400 text-sm mb-6">Start with 50 free generations. Connect your Claude API key in under 5 minutes.</p>
+            <p className="text-zinc-400 text-sm mb-6">Start with 50 free generations. Connect your Flowfiy API key in under 5 minutes.</p>
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
               Start for free <ArrowRight className="w-4 h-4" />
             </Link>

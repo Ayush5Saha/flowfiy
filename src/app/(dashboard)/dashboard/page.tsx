@@ -64,14 +64,14 @@ export default async function DashboardPage() {
     {
       id: "business-profile",
       label: "Set up your business profile & ICP",
-      description: "Tell Claude who your ideal customer is so it can find and qualify leads",
+      description: "Tell Flowfiy who your ideal customer is so it can find and qualify leads",
       href: "/settings",
       done: !!businessProfile,
     },
     {
       id: "claude-key",
-      label: "Connect your Claude API key",
-      description: "Add your Anthropic API key — Claude powers the entire research pipeline",
+      label: "Connect your Flowfiy API key",
+      description: "Add your Anthropic API key — Flowfiy powers the entire research pipeline",
       href: "/integrations",
       done: connectedTypes.has("CLAUDE"),
     },

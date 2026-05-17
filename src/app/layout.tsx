@@ -6,8 +6,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Flowfiy — AI-Powered Sales Outreach",
   description:
-    "Claude-powered outbound intelligence platform. Research leads, analyze companies, and generate personalized outreach at scale.",
-  keywords: ["outbound sales", "lead generation", "AI sales", "cold email", "Claude AI"],
+    "Flowfiy-powered outbound intelligence platform. Research leads, analyze companies, and generate personalized outreach at scale.",
+  keywords: ["outbound sales", "lead generation", "AI sales", "cold email", "Flowfiy AI"],
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",

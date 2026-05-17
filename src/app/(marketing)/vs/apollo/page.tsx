@@ -5,7 +5,7 @@ import { Check, X, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Flowfiy vs Apollo.io — AI Sales Outreach Comparison 2026",
   description:
-    "Flowfiy vs Apollo.io for AI-powered B2B outreach. Apollo is a contact database and sequencer; Flowfiy adds 5 Claude AI agents for research, qualification scoring, and hyper-personalized email copy.",
+    "Flowfiy vs Apollo.io for AI-powered B2B outreach. Apollo is a contact database and sequencer; Flowfiy adds 5 Flowfiy agents for research, qualification scoring, and hyper-personalized email copy.",
   keywords: ["Flowfiy vs Apollo", "Apollo.io alternative", "Apollo competitor", "Apollo vs Flowfiy", "AI sales tool comparison", "Apollo alternative BYOK"],
   openGraph: {
     title: "Flowfiy vs Apollo.io — AI Sales Platform Comparison 2026",
@@ -23,7 +23,7 @@ const rows = [
   { feature: "AI-written personalized email copy", outbound: true, apollo: "Basic AI assist" },
   { feature: "Multi-step email sequences", outbound: "Campaign follow-ups", apollo: true },
   { feature: "Gmail OAuth sending", outbound: true, apollo: true },
-  { feature: "BYOK Claude API", outbound: true, apollo: false },
+  { feature: "BYOK AI API", outbound: true, apollo: false },
   { feature: "Per-lead AI cost to you", outbound: "$0", apollo: "Included in plan" },
   { feature: "CRM integrations", outbound: "Roadmap", apollo: true },
   { feature: "Multi-tenant team workspaces", outbound: true, apollo: true },
@@ -47,7 +47,7 @@ export default function VsApolloPage() {
             </span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-            Apollo.io is the world&apos;s best contact database — 275M+ verified contacts with a built-in sequencer. Flowfiy is the AI intelligence layer on top: it uses Apollo&apos;s data, then adds 5 Claude agents for research, qualification, and hyper-personalized copy.
+            Apollo.io is the world&apos;s best contact database — 275M+ verified contacts with a built-in sequencer. Flowfiy is the AI intelligence layer on top: it uses Apollo&apos;s data, then adds 5 Flowfiy agents for research, qualification, and hyper-personalized copy.
             Many teams use both.
           </p>
         </div>
@@ -80,8 +80,8 @@ export default function VsApolloPage() {
                 {[
                   "AI company research on every prospect (not just enrichment)",
                   "0–100 qualification scoring before any email is sent",
-                  "Claude-written emails with 4+ specific facts per lead",
-                  "$0 per-generation AI cost with your own Claude key",
+                  "Flowfiy-written emails with 4+ specific facts per lead",
+                  "$0 per-generation AI cost with your own Flowfiy key",
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
                     <Check className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />

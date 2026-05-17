@@ -201,7 +201,7 @@ export default function ImportPage() {
         <div>
           <h1 className="text-2xl font-semibold">Import CSV</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Upload your own leads — Claude will research, qualify, and write outreach for each one
+            Upload your own leads — Flowfiy will research, qualify, and write outreach for each one
           </p>
         </div>
       </div>
@@ -426,7 +426,7 @@ export default function ImportPage() {
             <p className="text-sm font-medium mb-3">What happens after import</p>
             <div className="space-y-2">
               {[
-                "Claude analyzes your ICP to build qualification criteria",
+                "Flowfiy analyzes your ICP to build qualification criteria",
                 "Each company website is scraped for research signals",
                 "Every lead is scored 0–100 against your ICP",
                 "Qualified leads get a personalized 3-touch email sequence",
@@ -440,7 +440,7 @@ export default function ImportPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Apollo is not required for CSV imports — only your Claude API key is needed.
+              Apollo is not required for CSV imports — only your Flowfiy API key is needed.
             </p>
           </div>
 

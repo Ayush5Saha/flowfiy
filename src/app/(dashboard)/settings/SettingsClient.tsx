@@ -244,7 +244,7 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
           <div className="bg-card border border-border rounded-xl p-5 space-y-5">
             <div>
               <h2 className="font-medium">Business & ICP</h2>
-              <p className="text-muted-foreground text-xs mt-1">Claude uses this to research and qualify leads. Be specific.</p>
+              <p className="text-muted-foreground text-xs mt-1">Flowfiy uses this to research and qualify leads. Be specific.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
