@@ -28,7 +28,7 @@ const rows = [
   { feature: "AI qualification scoring (0–100)", outbound: true, clay: false },
   { feature: "AI-written personalized emails", outbound: true, clay: "Via integrations" },
   { feature: "Gmail OAuth sending", outbound: true, clay: false },
-  { feature: "BYOK (Bring Your Own Flowfiy Key)", outbound: true, clay: false },
+  { feature: "BYOK (Bring Your Own Claude Key)", outbound: true, clay: false },
   { feature: "Per-lead AI cost to you", outbound: "$0", clay: "Credit-based" },
   { feature: "Apollo API integration", outbound: true, clay: true },
   { feature: "Apify web scraping", outbound: true, clay: "Via HTTP API" },
@@ -153,7 +153,7 @@ export default function VsClayPage() {
             {[
               {
                 title: "Pricing model",
-                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee ($49–$249) with $0 per-generation AI cost because you use your own Flowfiy API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
+                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee ($49–$249) with $0 per-generation AI cost because you use your own Claude API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
               },
               {
                 title: "AI email writing",
@@ -180,7 +180,7 @@ export default function VsClayPage() {
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Try Flowfiy free — no Clay credits needed</h2>
-            <p className="text-zinc-400 mb-8">50 free lead generations. Bring your Flowfiy API key. Start building pipeline in under 30 minutes.</p>
+            <p className="text-zinc-400 mb-8">50 free lead generations. Bring your Claude API key. Start building pipeline in under 30 minutes.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
                 Get started free <ArrowRight className="w-4 h-4" />

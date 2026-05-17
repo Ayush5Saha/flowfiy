@@ -81,7 +81,7 @@ export default function VsApolloPage() {
                   "AI company research on every prospect (not just enrichment)",
                   "0–100 qualification scoring before any email is sent",
                   "Claude-written emails with 4+ specific facts per lead",
-                  "$0 per-generation AI cost with your own Flowfiy key",
+                  "$0 per-generation AI cost with your own Claude key",
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
                     <Check className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
