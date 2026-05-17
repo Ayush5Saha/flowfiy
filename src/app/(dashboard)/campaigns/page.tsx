@@ -135,7 +135,10 @@ export default async function CampaignsPage() {
                 <div>
                   <p className="font-medium text-sm group-hover:text-primary transition-colors">{campaign.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {campaign._count.campaignLeads} leads · {campaign.sentCount} sent · {campaign.replyCount} replies
+                    {campaign._count.campaignLeads} leads · {campaign.sentCount} sent
+                    {campaign.sentCount > 0 && (
+                      <> · <span className="text-green-400">{Math.round((campaign.replyCount / campaign.sentCount) * 100)}% reply rate</span></>
+                    )}
                   </p>
                 </div>
               </div>

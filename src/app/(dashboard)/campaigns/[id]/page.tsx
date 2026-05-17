@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Users, Send, MessageSquare, Pause, Play, Clock } from "lucide-react";
+import { ArrowLeft, Mail, Users, Send, MessageSquare, Clock } from "lucide-react";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { CampaignActions } from "@/components/campaigns/CampaignActions";
+import { CampaignTimingEditor } from "@/components/campaigns/CampaignTimingEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -135,27 +136,14 @@ export default async function CampaignDetailPage({
           <Clock className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-sm font-medium">Follow-up Sequence</h2>
         </div>
-        <div className="flex items-center gap-4">
-          {[
-            { label: "Initial Email", day: "Day 0", color: "bg-primary" },
-            { label: "Follow-up 1", day: `Day ${campaign.followUp1DelayDays}`, color: "bg-purple-500" },
-            { label: "Follow-up 2", day: `Day ${campaign.followUp2DelayDays}`, color: "bg-indigo-500" },
-          ].map((step, i, arr) => (
-            <div key={step.label} className="flex items-center flex-1">
-              <div className="flex flex-col items-center gap-1 flex-1">
-                <div className={`w-2.5 h-2.5 rounded-full ${step.color}`} />
-                <p className="text-xs font-medium text-center">{step.label}</p>
-                <p className="text-[11px] text-muted-foreground">{step.day}</p>
-              </div>
-              {i < arr.length - 1 && <div className="h-px bg-border flex-1 mx-2 -mt-5" />}
-            </div>
-          ))}
-        </div>
+        <CampaignTimingEditor
+          campaignId={campaign.id}
+          followUp1DelayDays={campaign.followUp1DelayDays}
+          followUp2DelayDays={campaign.followUp2DelayDays}
+          canEdit={campaign.status !== "COMPLETED"}
+        />
         <p className="text-xs text-muted-foreground mt-3">
-          Follow-ups stop automatically when a lead replies.
-          {campaign.status !== "COMPLETED" && (
-            <> Timing can be adjusted via <code className="text-xs bg-secondary px-1 rounded">PATCH /api/campaigns/{campaign.id}/timing</code></>
-          )}
+          Follow-ups stop automatically when a lead replies. Timing changes apply to upcoming follow-ups only.
         </p>
       </div>
 
