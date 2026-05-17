@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Users, Send, MessageSquare, Clock } from "lucide-react";
+import { ArrowLeft, Mail, Users, Send, MessageSquare, Clock, ExternalLink } from "lucide-react";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { CampaignActions } from "@/components/campaigns/CampaignActions";
 import { CampaignTimingEditor } from "@/components/campaigns/CampaignTimingEditor";
@@ -25,6 +25,26 @@ export default async function CampaignDetailPage({
     include: {
       campaignLeads: {
         include: {
+          lead: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              title: true,
+              companyName: true,
+            },
+          },
+          outreachCopy: {
+            select: { subjectLine: true, body: true, followUp1: true, followUp2: true },
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          followUpStep: true,
+          sentAt: true,
+          gmailThreadId: true,
           lead: {
             select: {
               id: true,
@@ -195,7 +215,23 @@ export default async function CampaignDetailPage({
                         Step {cl.followUpStep}
                       </span>
                     )}
+                    {cl.sentAt && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(cl.sentAt).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
+                  {cl.gmailThreadId && (cl.status === "REPLIED" || cl.status === "SENT") && (
+                    <a
+                      href={`https://mail.google.com/mail/u/0/#inbox/${cl.gmailThreadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      title="Open in Gmail"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${leadStatusColor[cl.status] ?? "bg-secondary text-muted-foreground"}`}>
                     {cl.status.charAt(0) + cl.status.slice(1).toLowerCase()}
                   </span>
