@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap, BookOpen } from "lucide-react";
 
 interface IntegrationStatus {
   status: string;
@@ -21,6 +21,11 @@ interface IntegrationConfig {
   fields: Array<{ key: string; label: string; placeholder: string; type?: string }>;
   isOAuth?: boolean;
   docsUrl?: string;
+  howToGet?: {
+    title: string;
+    steps: string[];
+    note?: string;
+  };
 }
 
 const INTEGRATIONS: IntegrationConfig[] = [
@@ -31,6 +36,16 @@ const INTEGRATIONS: IntegrationConfig[] = [
     icon: "🤖",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "sk-ant-...", type: "password" }],
     docsUrl: "https://console.anthropic.com/settings/keys",
+    howToGet: {
+      title: "How to get your Anthropic API Key",
+      steps: [
+        "Go to console.anthropic.com and sign in (or create a free account)",
+        "Click your profile icon → Settings → API Keys",
+        'Click "Create Key", give it a name like "Flowfiy", and copy the key',
+        "Paste it above — it starts with sk-ant-",
+      ],
+      note: "Free tier includes $5 credit. Usage-based billing applies beyond that.",
+    },
   },
   {
     type: "APOLLO",
@@ -39,6 +54,16 @@ const INTEGRATIONS: IntegrationConfig[] = [
     icon: "🚀",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "Apollo API key", type: "password" }],
     docsUrl: "https://app.apollo.io/#/settings/integrations/api",
+    howToGet: {
+      title: "How to get your Apollo.io API Key",
+      steps: [
+        "Log in to app.apollo.io (create a free account if needed)",
+        "Go to Settings → Integrations → API",
+        'Click "Create New Key" and copy the generated key',
+        "Paste it above",
+      ],
+      note: "The free plan includes 50 credits/month. Paid plans unlock higher limits.",
+    },
   },
   {
     type: "APIFY",
@@ -47,6 +72,16 @@ const INTEGRATIONS: IntegrationConfig[] = [
     icon: "🕷️",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "apify_api_...", type: "password" }],
     docsUrl: "https://console.apify.com/account/integrations",
+    howToGet: {
+      title: "How to get your Apify API Token",
+      steps: [
+        "Sign up or log in at apify.com",
+        "Click your avatar (top-right) → Settings → Integrations",
+        'Under "Personal API tokens", click "Create token"',
+        "Copy the token — it starts with apify_api_",
+      ],
+      note: "The free tier gives $5/month of compute. Scraping is optional — Flowfiy works without it.",
+    },
   },
   {
     type: "GMAIL",
@@ -55,6 +90,16 @@ const INTEGRATIONS: IntegrationConfig[] = [
     icon: "📧",
     fields: [],
     isOAuth: true,
+    howToGet: {
+      title: "How to connect Gmail",
+      steps: [
+        'Click "Connect with Google" below',
+        "Choose the Gmail account you want to send outreach from",
+        'Grant the requested permissions (send email on your behalf)',
+        "You\'ll be redirected back here once connected",
+      ],
+      note: "Flowfiy only sends emails — it never reads your inbox or deletes messages.",
+    },
   },
   {
     type: "CALENDLY",
@@ -66,6 +111,16 @@ const INTEGRATIONS: IntegrationConfig[] = [
       { key: "schedulingLink", label: "Scheduling Link (optional)", placeholder: "https://calendly.com/you/30min" },
     ],
     docsUrl: "https://calendly.com/integrations/api_webhooks",
+    howToGet: {
+      title: "How to get your Calendly API Token",
+      steps: [
+        "Log in to calendly.com",
+        "Go to Integrations → API & Webhooks (or visit calendly.com/integrations/api_webhooks)",
+        'Click "Create new token", name it, and copy the token',
+        "Your scheduling link is your Calendly profile URL — e.g. calendly.com/yourname/30min",
+      ],
+      note: "The scheduling link is optional — if left blank, Flowfiy will try to fetch it automatically from your API token.",
+    },
   },
 ];
 
@@ -82,6 +137,45 @@ export function IntegrationCenter({ organizationId, statusMap }: IntegrationCent
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+function HowToGetBox({ howToGet, docsUrl }: { howToGet: NonNullable<IntegrationConfig["howToGet"]>; docsUrl?: string }) {
+  return (
+    <div className="mb-4 rounded-lg bg-blue-500/5 border border-blue-500/15 p-3.5">
+      <div className="flex items-center gap-1.5 mb-2">
+        <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+        <p className="text-xs font-medium text-blue-400">{howToGet.title}</p>
+      </div>
+      <ol className="space-y-1">
+        {howToGet.steps.map((step, i) => (
+          <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+            <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500/15 text-blue-400 flex items-center justify-center text-[10px] font-bold mt-px">
+              {i + 1}
+            </span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+      {(howToGet.note || docsUrl) && (
+        <div className="mt-2.5 pt-2.5 border-t border-blue-500/10 flex items-start justify-between gap-3">
+          {howToGet.note && (
+            <p className="text-[11px] text-muted-foreground/70 italic">{howToGet.note}</p>
+          )}
+          {docsUrl && (
+            <a
+              href={docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Open docs
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -183,22 +277,16 @@ function IntegrationCard({
           }`}>
             {isConnected ? "Connected" : "Not connected"}
           </span>
-          {config.docsUrl && (
-            <a
-              href={config.docsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
         </div>
       </div>
 
       {expanded && (
         <div className="px-4 pb-4 border-t border-border pt-4">
+          {/* How-to-get instructions */}
+          {config.howToGet && (
+            <HowToGetBox howToGet={config.howToGet} docsUrl={config.docsUrl} />
+          )}
+
           {error && (
             <div className="mb-3 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
               {error}
