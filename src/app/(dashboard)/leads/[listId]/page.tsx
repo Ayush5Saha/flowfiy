@@ -73,6 +73,7 @@ export default async function LeadListPage({ params }: PageProps) {
           listName={leadList.name}
           isReady={leadList.status === "READY"}
           hasQualifiedLeads={leadList.qualifiedLeads > 0}
+          organizationId={membership.organization.id}
           leads={leadList.leads.map((l) => ({
             firstName: l.firstName,
             lastName: l.lastName,

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
         where: { organizationId: organization.id, status: "ACTIVE" },
       }),
       prisma.leadList.findMany({
-        where: { organizationId: organization.id },
+        where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
         orderBy: { createdAt: "desc" },
         take: 5,
         select: { id: true, name: true, status: true, totalLeads: true, qualifiedLeads: true, createdAt: true },

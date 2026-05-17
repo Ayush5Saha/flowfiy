@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, ArrowRight, Plug, FileText, Zap, Upload } from "lucide-react";
 import { GenerateLeadsButton } from "@/components/leads/GenerateLeadsButton";
+import { LeadListRowActions } from "@/components/leads/LeadListRowActions";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ export default async function LeadsPage() {
 
   const [leadLists, integrations, businessProfile] = await Promise.all([
     prisma.leadList.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.integration.findMany({
@@ -154,6 +155,7 @@ export default async function LeadsPage() {
 
               <div className="flex items-center gap-3">
                 <StatusBadge status={list.status} />
+                <LeadListRowActions listId={list.id} organizationId={organization.id} />
                 <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </div>
             </Link>
