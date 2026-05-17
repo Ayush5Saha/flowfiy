@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Copy, Check, ExternalLink, Loader2, RefreshCw, Send, Bot, User, Megaphone } from "lucide-react";
+import { X, Copy, Check, ExternalLink, Loader2, RefreshCw, Send, Bot, User, Megaphone, FlaskConical } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Lead {
   id: string;
@@ -43,9 +44,11 @@ interface ChatMessage {
 }
 
 export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelProps) {
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("outreach");
   const [copied, setCopied] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [currentCopy, setCurrentCopy] = useState(lead.outreachCopies?.[0]);
 
   // Chat state (declared before the reset effect so setters are in scope)
@@ -143,8 +146,32 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
     if (res.ok) {
       const data = await res.json() as { outreachCopy: typeof currentCopy };
       setCurrentCopy(data.outreachCopy);
+      toast("Email copy regenerated", "success");
+    } else {
+      toast("Failed to regenerate copy", "error");
     }
     setRegenerating(false);
+  }
+
+  async function handleTestSend() {
+    setSendingTest(true);
+    try {
+      const res = await fetch("/api/outreach/test-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: lead.id, organizationId }),
+      });
+      const data = await res.json() as { ok?: boolean; sentTo?: string; error?: string };
+      if (res.ok) {
+        toast(`Test email sent to ${data.sentTo ?? "your email"}`, "success");
+      } else {
+        toast(data.error ?? "Failed to send test email", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setSendingTest(false);
+    }
   }
 
   return (
@@ -288,14 +315,25 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
             <>
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Outreach</p>
-                <button
-                  onClick={handleRegenerate}
-                  disabled={regenerating}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                >
-                  {regenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                  Regenerate
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => void handleTestSend()}
+                    disabled={sendingTest || regenerating}
+                    title="Send test email to yourself"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  >
+                    {sendingTest ? <Loader2 className="w-3 h-3 animate-spin" /> : <FlaskConical className="w-3 h-3" />}
+                    Test
+                  </button>
+                  <button
+                    onClick={() => void handleRegenerate()}
+                    disabled={regenerating || sendingTest}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  >
+                    {regenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    Regenerate
+                  </button>
+                </div>
               </div>
 
               <OutreachBlock

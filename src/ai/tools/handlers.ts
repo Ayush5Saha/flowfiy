@@ -15,6 +15,8 @@ export interface ToolContext {
     totalLeads: number;
     qualifiedLeads: number;
   };
+  /** Optional log emitter — pushes a log entry to Redis for the live UI */
+  log?: (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>;
 }
 
 // ─── Tool input shapes (mirror definitions.ts schemas) ───────────────────────
@@ -55,6 +57,8 @@ async function handleSearchLeads(
     throw new Error("Apollo integration not connected. Cannot search for leads.");
   }
 
+  await ctx.log?.(`Searching Apollo for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
+
   const rawLeads = await ctx.apolloClient.searchPeople({
     jobTitles: input.jobTitles,
     industries: input.industries,
@@ -64,8 +68,11 @@ async function handleSearchLeads(
   });
 
   if (rawLeads.length === 0) {
+    await ctx.log?.("No leads found with these filters. Consider broadening the search.", "error");
     return { leads: [], message: "No leads found with these filters. Consider broadening job titles or industries." };
   }
+
+  await ctx.log?.(`Found ${rawLeads.length} leads from Apollo. Saving to database...`, "success");
 
   // Persist leads to DB immediately so save_lead_result can reference them
   const savedLeads = await Promise.all(
@@ -130,14 +137,18 @@ async function handleScrapeWebsite(
     };
   }
 
+  await ctx.log?.(`Scraping website: ${input.url}`, "tool");
+
   try {
     const content = await ctx.apifyClient.scrapeWebsite(input.url);
+    await ctx.log?.(`Scraped ${content.length.toLocaleString()} chars from ${input.url}`, "info");
     return {
       url: input.url,
       content: content || "No content extracted from website.",
       characters: content.length,
     };
   } catch (err) {
+    await ctx.log?.(`Scrape failed for ${input.url} — proceeding with available data`, "error");
     return {
       url: input.url,
       content: "",
@@ -163,6 +174,11 @@ async function handleSaveLeadResult(
   }
 
   const newStatus = input.qualified ? "QUALIFIED" : "DISQUALIFIED";
+  const scoreLabel = input.score >= 80 ? "🟢" : input.score >= 60 ? "🟡" : "🔴";
+  await ctx.log?.(
+    `${scoreLabel} ${newStatus} — score ${input.score}/100`,
+    input.qualified ? "success" : "info"
+  );
 
   // Save research data
   await prisma.leadResearch.create({

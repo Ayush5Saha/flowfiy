@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface RetryListButtonProps {
   listId: string;
@@ -11,6 +12,7 @@ interface RetryListButtonProps {
 
 export function RetryListButton({ listId, organizationId }: RetryListButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -26,7 +28,9 @@ export function RetryListButton({ listId, organizationId }: RetryListButtonProps
       const json = await res.json();
       if (!res.ok) {
         setError(json.error ?? "Failed to retry");
+        toast(json.error ?? "Failed to retry", "error");
       } else {
+        toast("Research restarted — this may take a few minutes", "info");
         router.refresh();
       }
     } catch {

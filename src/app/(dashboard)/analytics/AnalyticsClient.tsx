@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   TrendingUp, Users, Mail, MessageSquare, Calendar,
-  Star, BarChart3, Target, Activity,
+  Star, BarChart3, Target, Activity, ExternalLink,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -353,8 +354,13 @@ export function AnalyticsClient({
               </thead>
               <tbody className="divide-y divide-border">
                 {campaignStats.map((c) => (
-                  <tr key={c.id} className="hover:bg-secondary/40 transition-colors">
-                    <td className="px-6 py-3.5 font-medium truncate max-w-48">{c.name}</td>
+                  <tr key={c.id} className="hover:bg-secondary/40 transition-colors group">
+                    <td className="px-6 py-3.5 font-medium truncate max-w-48">
+                      <Link href={`/campaigns/${c.id}`} className="hover:text-primary transition-colors flex items-center gap-1.5 group/link">
+                        {c.name}
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                      </Link>
+                    </td>
                     <td className="px-4 py-3.5">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CAMPAIGN_STATUS_BADGE[c.status] ?? ""}`}>
                         {c.status.toLowerCase()}
@@ -398,7 +404,10 @@ export function AnalyticsClient({
               return (
                 <div key={list.id} className="px-6 py-4 flex items-center gap-6 hover:bg-secondary/30 transition-colors">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{list.name}</p>
+                    <Link href={`/leads/${list.id}`} className="font-medium text-sm truncate hover:text-primary transition-colors flex items-center gap-1.5 group/link w-fit">
+                      {list.name}
+                      <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity shrink-0" />
+                    </Link>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {new Date(list.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </p>

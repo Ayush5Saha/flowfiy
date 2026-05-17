@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Props {
   listId: string;
@@ -11,6 +12,7 @@ interface Props {
 
 export function LeadListRowActions({ listId, organizationId }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +29,12 @@ export function LeadListRowActions({ listId, organizationId }: Props) {
     setLoading(true);
     try {
       const res = await fetch(`/api/leads/${listId}?organizationId=${organizationId}`, { method: "DELETE" });
-      if (res.ok) router.refresh();
+      if (res.ok) {
+        toast("Lead list archived", "success");
+        router.refresh();
+      } else {
+        toast("Failed to archive list", "error");
+      }
     } finally {
       setLoading(false);
       setConfirm(false);

@@ -34,6 +34,7 @@ export default async function CampaignDetailPage({
               email: true,
               title: true,
               companyName: true,
+              status: true,
             },
           },
           outreachCopy: {
@@ -54,6 +55,7 @@ export default async function CampaignDetailPage({
               email: true,
               title: true,
               companyName: true,
+              status: true,
             },
           },
           outreachCopy: {
@@ -74,6 +76,7 @@ export default async function CampaignDetailPage({
     sent: campaign.campaignLeads.filter((cl) => ["SENT", "REPLIED", "BOUNCED"].includes(cl.status)).length,
     replied: campaign.campaignLeads.filter((cl) => cl.status === "REPLIED").length,
     bounced: campaign.campaignLeads.filter((cl) => cl.status === "BOUNCED").length,
+    meetings: campaign.meetingCount,
   };
 
   const replyRate = stats.sent > 0 ? Math.round((stats.replied / stats.sent) * 100) : 0;
@@ -126,12 +129,13 @@ export default async function CampaignDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
         {[
           { label: "Total Leads", value: stats.total, icon: Users, color: "text-muted-foreground" },
           { label: "Emails Sent", value: stats.sent, icon: Send, color: "text-blue-400" },
           { label: "Replies", value: stats.replied, icon: MessageSquare, color: "text-green-400" },
           { label: "Reply Rate", value: `${replyRate}%`, icon: null, color: replyRate >= 10 ? "text-green-400" : "text-purple-400" },
+          { label: "Meetings", value: stats.meetings, icon: null, color: stats.meetings > 0 ? "text-yellow-400" : "text-muted-foreground" },
           { label: "Bounced", value: stats.bounced, icon: null, color: stats.bounced > 0 ? "text-destructive" : "text-muted-foreground" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-4">
@@ -169,6 +173,7 @@ export default async function CampaignDetailPage({
       {/* Leads table — client component with preview modal */}
       <CampaignLeadsTable
         campaignLeads={campaign.campaignLeads}
+        campaignId={campaign.id}
         followUp1DelayDays={campaign.followUp1DelayDays}
         followUp2DelayDays={campaign.followUp2DelayDays}
         stats={stats}

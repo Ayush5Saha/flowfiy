@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Megaphone, Download, Check, Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface LeadRow {
   firstName?: string | null;
@@ -27,6 +28,7 @@ interface LeadListActionsProps {
 
 export function LeadListActions({ listId, listName, isReady, hasQualifiedLeads, leads, organizationId }: LeadListActionsProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [exported, setExported] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,6 +60,7 @@ export function LeadListActions({ listId, listName, isReady, hasQualifiedLeads, 
 
     setExported(true);
     setTimeout(() => setExported(false), 2000);
+    toast(`Exported ${leads.length} leads to CSV`, "success");
   }
 
   async function handleDelete() {
@@ -70,8 +73,11 @@ export function LeadListActions({ listId, listName, isReady, hasQualifiedLeads, 
     try {
       const res = await fetch(`/api/leads/${listId}?organizationId=${organizationId}`, { method: "DELETE" });
       if (res.ok) {
+        toast("Lead list archived", "success");
         router.push("/leads");
         router.refresh();
+      } else {
+        toast("Failed to delete lead list", "error");
       }
     } finally {
       setDeleting(false);

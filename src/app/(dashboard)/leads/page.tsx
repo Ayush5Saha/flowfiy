@@ -17,7 +17,7 @@ export default async function LeadsPage() {
 
   const { organization } = membership;
 
-  const [leadLists, integrations, businessProfile] = await Promise.all([
+  const [leadLists, integrations, businessProfile, totalLeadsCount, qualifiedCount] = await Promise.all([
     prisma.leadList.findMany({
       where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
       orderBy: { createdAt: "desc" },
@@ -27,6 +27,8 @@ export default async function LeadsPage() {
       select: { type: true },
     }),
     prisma.businessProfile.findUnique({ where: { organizationId: organization.id } }),
+    prisma.lead.count({ where: { organizationId: organization.id } }),
+    prisma.lead.count({ where: { organizationId: organization.id, status: { in: ["QUALIFIED", "CONTACTED", "REPLIED", "MEETING_BOOKED"] } } }),
   ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
@@ -72,6 +74,22 @@ export default async function LeadsPage() {
           <GenerateLeadsButton organizationId={organization.id} />
         </div>
       </div>
+
+      {/* Quick stats — only show if we have data */}
+      {leadLists.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            { label: "Lead Lists", value: leadLists.length, color: "text-foreground" },
+            { label: "Total Leads", value: totalLeadsCount, color: "text-blue-400" },
+            { label: "Qualified", value: qualifiedCount, color: "text-green-400" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{label}</span>
+              <span className={`text-lg font-mono font-semibold ${color}`}>{value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {leadLists.length === 0 ? (
         <div className="border border-dashed border-border rounded-xl p-12 text-center">

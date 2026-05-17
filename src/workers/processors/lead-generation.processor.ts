@@ -7,6 +7,7 @@ import type { ToolContext } from "@/ai/tools/handlers";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
 import { incrementGenerationCount } from "@/lib/usage";
+import { appendLog, clearLogs } from "@/lib/job-logs";
 
 export interface LeadGenerationJobData {
   organizationId: string;
@@ -27,6 +28,9 @@ async function getIntegrationCredentials(organizationId: string, type: string) {
 export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
   const { organizationId, leadListId, leadsPerRun, mode = "apollo" } = job.data;
 
+  const log = (msg: string, level: "info" | "success" | "error" | "tool" = "info") =>
+    appendLog(leadListId, msg, level);
+
   async function updateListStatus(status: string, extra?: Record<string, unknown>) {
     await prisma.leadList.update({
       where: { id: leadListId },
@@ -36,14 +40,20 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
   try {
     // ── Step 1: Load business profile ────────────────────────────────────────
+    await clearLogs(leadListId);
+    await log("Starting lead generation pipeline...", "info");
     await updateListStatus("RESEARCHING", { jobStatus: "analyzing_icp" });
+    await log("Analyzing your Ideal Customer Profile (ICP)...", "info");
 
     const businessProfile = await prisma.businessProfile.findUnique({
       where: { organizationId },
     });
     if (!businessProfile) throw new Error("Business profile not configured");
 
+    await log(`ICP loaded: targeting ${businessProfile.targetIndustries.slice(0, 3).join(", ")} in ${businessProfile.targetGeographies.slice(0, 2).join(", ")}`, "success");
+
     // ── Step 2: Set up clients ────────────────────────────────────────────────
+    await log("Initializing AI and integration clients...", "info");
     const claude = await getClaudeClient(organizationId);
 
     const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
@@ -54,8 +64,13 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     const calendlyCreds = await getIntegrationCredentials(organizationId, "CALENDLY");
 
+    const apolloConnected = !!apolloCreds?.apiKey;
+    const apifyConnected = !!apifyCreds?.apiKey;
+    await log(`Apollo: ${apolloConnected ? "connected" : "not connected"} · Apify: ${apifyConnected ? "connected" : "not connected"}`, "info");
+
     // ── Step 3: Handle import mode (leads already in DB) ─────────────────────
     if (mode === "import") {
+      await log("Import mode: using pre-loaded leads from CSV...", "info");
       await updateListStatus("RESEARCHING", { jobStatus: "analyzing_companies" });
 
       const existingLeads = await prisma.lead.findMany({
@@ -63,9 +78,12 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       });
 
       if (existingLeads.length === 0) {
+        await log("No leads found in import. List is empty.", "error");
         await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
         return;
       }
+
+      await log(`Found ${existingLeads.length} imported leads. Starting AI analysis...`, "success");
 
       await prisma.lead.updateMany({
         where: { leadListId, organizationId },
@@ -82,6 +100,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
         apifyClient,
         geographies: businessProfile.targetGeographies,
         stats: { totalLeads: existingLeads.length, qualifiedLeads: 0 },
+        log,
       };
 
       // For import mode we still run the orchestrator but without search_leads.
@@ -113,6 +132,8 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
         },
       });
 
+      await log(`Done! ${result.totalLeads} leads processed, ${result.qualifiedLeads} qualified (${result.toolCallCount} AI tool calls)`, "success");
+
       console.log(
         `[worker] Import run complete — ${result.totalLeads} leads, ` +
           `${result.qualifiedLeads} qualified, ${result.toolCallCount} tool calls`
@@ -125,6 +146,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       throw new Error("Apollo API key not connected. Cannot generate leads.");
     }
 
+    await log(`Asking Claude to find ${leadsPerRun} leads matching your ICP...`, "info");
     await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
 
     const ctx: ToolContext = {
@@ -134,6 +156,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       apifyClient,
       geographies: businessProfile.targetGeographies,
       stats: { totalLeads: 0, qualifiedLeads: 0 },
+      log,
     };
 
     const result = await runLeadGenOrchestrator(claude, ctx, {
@@ -153,6 +176,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
     });
 
     if (result.totalLeads === 0) {
+      await log("No leads were found. Check Apollo filters or broaden the ICP.", "error");
       await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
       return;
     }
@@ -170,17 +194,21 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       },
     });
 
+    await log(`Pipeline complete! ${result.totalLeads} leads found, ${result.qualifiedLeads} qualified with personalised outreach ready.`, "success");
+
     console.log(
       `[worker] Lead gen complete — ${result.totalLeads} leads, ` +
         `${result.qualifiedLeads} qualified, ${result.toolCallCount} tool calls`
     );
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    await appendLog(leadListId, `Pipeline failed: ${errMsg}`, "error").catch(() => null);
     await prisma.leadList.update({
       where: { id: leadListId },
       data: {
         status: "FAILED",
         jobStatus: "failed",
-        jobError: err instanceof Error ? err.message : "Unknown error",
+        jobError: errMsg,
       },
     });
     throw err;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, ChevronRight, CheckCircle, XCircle, Clock, Copy, Check, Megaphone } from "lucide-react";
+import { Mail, ChevronRight, CheckCircle, XCircle, Clock, Copy, Check, Search, ArrowUpDown } from "lucide-react";
 import { OutreachPanel } from "@/components/leads/OutreachPanel";
 
 interface Lead {
@@ -38,11 +38,35 @@ interface LeadTableClientProps {
   listId: string;
 }
 
+type SortKey = "score" | "name" | "company";
+
 export function LeadTableClient({ leads, isProcessing, organizationId, listId }: LeadTableClientProps) {
   const router = useRouter();
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [filter, setFilter] = useState<"ALL" | "QUALIFIED" | "DISQUALIFIED">("ALL");
   const [copied, setCopied] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("score");
+  const [sortAsc, setSortAsc] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortAsc((v) => !v);
+    } else {
+      setSortKey(key);
+      setSortAsc(key !== "score"); // score descending by default, others ascending
+    }
+    setShowSort(false);
+  }
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    if (!showSort) return;
+    function handleClick() { setShowSort(false); }
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [showSort]);
 
   // Poll for updates while processing
   useEffect(() => {
@@ -50,6 +74,26 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
     const interval = setInterval(() => router.refresh(), 8000);
     return () => clearInterval(interval);
   }, [isProcessing, router]);
+
+  // Keyboard shortcuts: Escape to deselect, C to copy email
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "Escape") setSelectedLead(null);
+      if (e.key === "c" && selectedLead) {
+        const copy = selectedLead.outreachCopies?.[0];
+        if (!copy) return;
+        const text = `Subject: ${copy.subjectLine ?? ""}\n\n${copy.body}`;
+        void navigator.clipboard.writeText(text).then(() => {
+          setCopied(selectedLead.id);
+          setTimeout(() => setCopied(null), 2000);
+        });
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [selectedLead]);
 
   async function quickCopyEmail(lead: Lead, e: React.MouseEvent) {
     e.stopPropagation();
@@ -61,12 +105,37 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const filtered = leads.filter((l) => {
-    if (filter === "ALL") return true;
-    if (filter === "QUALIFIED") return l.status === "QUALIFIED" || l.status === "CONTACTED";
-    if (filter === "DISQUALIFIED") return l.status === "DISQUALIFIED";
-    return true;
-  });
+  const q = search.toLowerCase().trim();
+  const filtered = leads
+    .filter((l) => {
+      // Status filter
+      if (filter === "QUALIFIED" && l.status !== "QUALIFIED" && l.status !== "CONTACTED") return false;
+      if (filter === "DISQUALIFIED" && l.status !== "DISQUALIFIED") return false;
+      // Search filter
+      if (q) {
+        const name = `${l.firstName ?? ""} ${l.lastName ?? ""}`.toLowerCase();
+        const company = (l.companyName ?? "").toLowerCase();
+        const email = (l.email ?? "").toLowerCase();
+        const title = (l.title ?? "").toLowerCase();
+        return name.includes(q) || company.includes(q) || email.includes(q) || title.includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "score") {
+        cmp = (a.qualificationScore ?? -1) - (b.qualificationScore ?? -1);
+      } else if (sortKey === "name") {
+        const na = `${a.firstName ?? ""} ${a.lastName ?? ""}`.toLowerCase();
+        const nb = `${b.firstName ?? ""} ${b.lastName ?? ""}`.toLowerCase();
+        cmp = na.localeCompare(nb);
+      } else if (sortKey === "company") {
+        const ca = (a.companyName ?? "").toLowerCase();
+        const cb = (b.companyName ?? "").toLowerCase();
+        cmp = ca.localeCompare(cb);
+      }
+      return sortAsc ? cmp : -cmp;
+    });
 
   if (leads.length === 0 && !isProcessing) {
     return (
@@ -97,6 +166,45 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
                 : `Disqualified (${leads.filter((l) => l.status === "DISQUALIFIED").length})`}
             </button>
           ))}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Sort dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSort((v) => !v)}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <ArrowUpDown className="w-3 h-3" />
+                {sortKey === "score" ? "Score" : sortKey === "name" ? "Name" : "Company"}
+                {sortAsc ? " ↑" : " ↓"}
+              </button>
+              {showSort && (
+                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-20 py-1 min-w-[120px]">
+                  {(["score", "name", "company"] as SortKey[]).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => toggleSort(key)}
+                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                        sortKey === key ? "text-foreground bg-secondary/60" : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                      }`}
+                    >
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                      {sortKey === key && (sortAsc ? " ↑" : " ↓")}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Search */}
+            <div className="relative">
+              <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search..."
+                className="pl-7 pr-3 py-1 text-xs bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring w-36 placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Lead rows */}
@@ -160,6 +268,17 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
               </div>
             </div>
           ))}
+
+          {/* Keyboard hint footer */}
+          {filtered.length > 0 && (
+            <div className="px-4 py-2 bg-secondary/20 border-t border-border flex items-center gap-3 text-[10px] text-muted-foreground">
+              <span>Click to open</span>
+              <span className="px-1.5 py-0.5 bg-secondary rounded border border-border font-mono">C</span>
+              <span>Copy email</span>
+              <span className="px-1.5 py-0.5 bg-secondary rounded border border-border font-mono">Esc</span>
+              <span>Close</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface CampaignTimingEditorProps {
   campaignId: string;
@@ -18,6 +19,7 @@ export function CampaignTimingEditor({
   canEdit,
 }: CampaignTimingEditorProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [fu1, setFu1] = useState(initialFu1);
   const [fu2, setFu2] = useState(initialFu2);
   const [saving, setSaving] = useState(false);
@@ -36,7 +38,10 @@ export function CampaignTimingEditor({
       if (res.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+        toast("Follow-up timing saved", "success");
         router.refresh();
+      } else {
+        toast("Failed to save timing", "error");
       }
     } finally {
       setSaving(false);

@@ -35,6 +35,7 @@ interface SidebarProps {
   userRole: MemberRole;
   userEmail: string;
   userFullName: string;
+  activeCampaignReplies?: number;
 }
 
 function getInitials(name: string, email: string) {
@@ -47,7 +48,7 @@ function getInitials(name: string, email: string) {
   return email.slice(0, 2).toUpperCase();
 }
 
-export function Sidebar({ organization, userEmail, userFullName }: SidebarProps) {
+export function Sidebar({ organization, userEmail, userFullName, activeCampaignReplies = 0 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -88,6 +89,7 @@ export function Sidebar({ organization, userEmail, userFullName }: SidebarProps)
       <nav className="flex-1 px-2 py-3 space-y-0.5">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+          const showBadge = href === "/campaigns" && activeCampaignReplies > 0;
           return (
             <Link
               key={href}
@@ -99,7 +101,12 @@ export function Sidebar({ organization, userEmail, userFullName }: SidebarProps)
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {showBadge && (
+                <span className="ml-auto min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-green-500 text-white text-[10px] font-bold leading-none">
+                  {activeCampaignReplies > 99 ? "99+" : activeCampaignReplies}
+                </span>
+              )}
             </Link>
           );
         })}
