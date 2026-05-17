@@ -146,7 +146,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       throw new Error("Apollo API key not connected. Cannot generate leads.");
     }
 
-    await log(`Asking Flowfiy AI to find ${leadsPerRun} leads matching your ICP...`, "info");
+    await log(`Asking Claude to find ${leadsPerRun} leads matching your ICP...`, "info");
     await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
 
     const ctx: ToolContext = {

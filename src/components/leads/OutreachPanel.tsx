@@ -231,7 +231,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
                 </div>
                 <div>
                   <p className="text-sm font-medium">Ask anything about this lead</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-52 mx-auto">Flowfiy has full context on the company research, scores, and your generated outreach.</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-52 mx-auto">Claude has full context on the company research, scores, and your generated outreach.</p>
                 </div>
                 <div className="flex flex-col gap-1.5 text-left">
                   {[
@@ -304,7 +304,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
                 {chatStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">Uses your Flowfiy API key · Shift+Enter for new line</p>
+            <p className="text-xs text-muted-foreground mt-1.5">Uses your Claude API key · Shift+Enter for new line</p>
           </div>
         </div>
       )}

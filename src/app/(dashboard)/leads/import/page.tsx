@@ -440,7 +440,7 @@ export default function ImportPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Apollo is not required for CSV imports — only your Flowfiy API key is needed.
+              Apollo is not required for CSV imports — only your Claude API key is needed.
             </p>
           </div>
 

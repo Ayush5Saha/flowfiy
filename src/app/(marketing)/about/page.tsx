@@ -5,11 +5,11 @@ import { Zap, Shield, Globe, Code2, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform",
   description:
-    "Flowfiy is a multi-tenant SaaS platform that uses 5 Flowfiy AI agents to automate the entire outbound sales pipeline. BYOK. Zero per-lead cost. Built for global revenue teams.",
-  keywords: ["about Flowfiy", "AI sales platform", "Flowfiy AI sales tool", "B2B outreach automation", "BYOK AI SaaS"],
+    "Flowfiy is a multi-tenant SaaS platform that uses 5 Claude AI agents to automate the entire outbound sales pipeline. BYOK. Zero per-lead cost. Built for global revenue teams.",
+  keywords: ["about Flowfiy", "AI sales platform", "Claude AI sales tool", "B2B outreach automation", "BYOK AI SaaS"],
   openGraph: {
     title: "About Flowfiy — AI-Powered B2B Sales Platform",
-    description: "Learn how Flowfiy uses 5 specialized Flowfiy AI agents to replace the manual SDR stack. BYOK model, multi-tenant, AES-256 encrypted.",
+    description: "Learn how Flowfiy uses 5 specialized Claude AI agents to replace the manual SDR stack. BYOK model, multi-tenant, AES-256 encrypted.",
     url: "/about",
   },
   alternates: { canonical: "/about" },
@@ -19,11 +19,11 @@ const values = [
   { icon: Shield, title: "Security first", desc: "Every API key stored with AES-256-GCM. Your credentials never appear in logs. Full tenant isolation via Supabase RLS." },
   { icon: Globe, title: "Global from day one", desc: "Stripe billing in 135+ currencies. Multi-language ICP support. Built for revenue teams everywhere, not just Silicon Valley." },
   { icon: Code2, title: "Transparent stack", desc: "Next.js 15, Supabase, Prisma, BullMQ, Upstash Redis, Anthropic SDK. No black boxes. Engineers know exactly what runs their pipeline." },
-  { icon: Zap, title: "BYOK always", desc: "Your Flowfiy API key stays yours. We never see your tokens, never mark up your AI costs. Charge only for platform intelligence." },
+  { icon: Zap, title: "BYOK always", desc: "Your Claude API key stays yours. We never see your tokens, never mark up your AI costs. Charge only for platform intelligence." },
 ];
 
 const stack = [
-  { name: "Flowfiy AI (Anthropic)", role: "AI backbone — 5 specialized agents", color: "from-orange-500/20 to-amber-500/20 border-orange-500/20" },
+  { name: "Claude (Anthropic)", role: "AI backbone — 5 specialized agents", color: "from-orange-500/20 to-amber-500/20 border-orange-500/20" },
   { name: "Next.js 15", role: "App Router, server components, API routes", color: "from-zinc-700/40 to-zinc-800/40 border-white/8" },
   { name: "Supabase", role: "PostgreSQL + Auth + RLS multi-tenant isolation", color: "from-emerald-500/15 to-green-500/15 border-emerald-500/20" },
   { name: "BullMQ + Upstash Redis", role: "AI pipeline job queue with retry & backoff", color: "from-red-500/15 to-rose-500/15 border-red-500/20" },
@@ -51,7 +51,7 @@ export default function AboutPage() {
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed mb-8">
             Manual SDR work — scraping LinkedIn, researching companies, writing cold emails — is repetitive, slow, and expensive.
-            Flowfiy replaces that entire workflow with 5 specialized Flowfiy AI agents that run 24/7, never get tired, and personalize every single touchpoint.
+            Flowfiy replaces that entire workflow with 5 specialized Claude AI agents that run 24/7, never get tired, and personalize every single touchpoint.
           </p>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
             We built this for revenue teams who want pipeline quality, not just volume. Every lead is researched, scored, and written for — before a single email leaves your inbox.
@@ -65,7 +65,7 @@ export default function AboutPage() {
           {[
             ["50", "Free generations to start"],
             ["5", "Specialized AI agents"],
-            ["$0", "Per-lead AI cost to you"],
+            ["$0", "Per-lead Claude cost to you"],
             ["AES-256", "Credential encryption"],
           ].map(([val, label]) => (
             <div key={label}>
@@ -126,11 +126,11 @@ export default function AboutPage() {
           </div>
           <ol className="space-y-4">
             {[
-              { n: "01", title: "ICP Analyzer", desc: "Takes your business profile and generates a precise Ideal Customer Profile — target industries, company sizes, titles, and pain-point signals." },
-              { n: "02", title: "Lead Discovery (Apollo API)", desc: "Constructs Apollo People Search queries from your ICP. Pulls matching contacts from 275M+ contacts. No manual filter-clicking." },
-              { n: "03", title: "Company Analyzer (Apify)", desc: "Scrapes each prospect's company website. Extracts brand signals, tech stack clues, growth indicators, and service gaps." },
-              { n: "04", title: "Qualification Agent", desc: "Scores each lead 0–100 against your ICP. Only leads above threshold proceed. Every score includes reasoning you can read." },
-              { n: "05", title: "Personalization Agent", desc: "Writes a subject line, email body, and two follow-ups per qualified lead — referencing their actual company context, not a merge field." },
+              { n: "01", title: "ICP Analyzer (claude-haiku-4-5)", desc: "Takes your business profile and generates a precise Ideal Customer Profile — target industries, company sizes, titles, and pain-point signals." },
+              { n: "02", title: "Lead Discovery (claude-haiku-4-5 + Apollo API)", desc: "Constructs Apollo People Search queries from your ICP. Pulls matching contacts from 275M+ contacts. No manual filter-clicking." },
+              { n: "03", title: "Company Analyzer (claude-sonnet-4-6 + Apify)", desc: "Scrapes each prospect's company website. Extracts brand signals, tech stack clues, growth indicators, and service gaps." },
+              { n: "04", title: "Qualification Agent (claude-haiku-4-5)", desc: "Scores each lead 0–100 against your ICP. Only leads above threshold proceed. Every score includes reasoning you can read." },
+              { n: "05", title: "Personalization Agent (claude-sonnet-4-6)", desc: "Writes a subject line, email body, and two follow-ups per qualified lead — referencing their actual company context, not a merge field." },
             ].map(({ n, title, desc }) => (
               <li key={n} className="flex gap-5 bg-zinc-900/40 border border-white/6 rounded-2xl p-6">
                 <span className="text-xs font-mono text-violet-400 mt-0.5 shrink-0">{n}</span>

@@ -117,7 +117,7 @@ export function MarketingFooter() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <span>Built with Flowfiy · Powered by Anthropic</span>
+            <span>Built with Claude AI · Powered by Anthropic</span>
             <span className="hidden sm:inline">·</span>
             <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">support@flowfiy.com</Link>
           </div>

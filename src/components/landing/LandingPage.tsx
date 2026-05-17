@@ -471,7 +471,7 @@ function Hero() {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium mb-8"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Powered by Flowfiy AI · BYOK · Zero per-lead cost
+          Powered by Claude AI · BYOK · Zero per-lead cost
         </motion.div>
 
         <motion.h1
@@ -652,7 +652,7 @@ function StatsBar() {
     { value: 275, suffix: "M+", label: "Contacts in Apollo DB" },
     { value: 5, suffix: "x", label: "Faster lead research" },
     { value: 87, suffix: "%", label: "Avg qualification accuracy" },
-    { value: 0, suffix: "$", label: "AI cost to you" },
+    { value: 0, suffix: "$", label: "Claude API cost to you" },
   ];
 
   return (
@@ -732,11 +732,11 @@ function HowItWorks() {
   const springLine = useSpring(lineScaleY, { stiffness: 40, damping: 15 });
 
   const steps = [
-    { num: "01", icon: "🧠", title: "ICP Analyzer", desc: "Flowfiy maps your ideal customer profile — industries, titles, company size, pain points — into a precise targeting signal." },
+    { num: "01", icon: "🧠", title: "ICP Analyzer", desc: "Claude maps your ideal customer profile — industries, titles, company size, pain points — into a precise targeting signal." },
     { num: "02", icon: "🔍", title: "Lead Discovery", desc: "Apollo's 275M+ contact database is searched with AI-constructed filters. Matching prospects are pulled in seconds." },
     { num: "03", icon: "🕷️", title: "Company Research", desc: "Apify scrapes each company's website, extracts signals, and builds a live context snapshot for each lead." },
     { num: "04", icon: "⚡", title: "AI Qualification", desc: "Every lead is scored 0–100. Only high-fit prospects move forward — no wasted outreach on dead-end contacts." },
-    { num: "05", icon: "✉️", title: "Personalized Outreach", desc: "Flowfiy writes a subject line, email body, and two follow-ups for each qualified lead — using their actual company context." },
+    { num: "05", icon: "✉️", title: "Personalized Outreach", desc: "Claude writes a subject line, email body, and two follow-ups for each qualified lead — using their actual company context." },
   ];
 
   return (
@@ -810,7 +810,7 @@ function Features() {
     { icon: "🔐", title: "BYOK — Zero Platform Cost", desc: "Bring your own Claude API key. Every token billed directly to your Anthropic account. Flowfiy charges only for platform access — not per generation." },
     { icon: "🏢", title: "Multi-Tenant Workspaces", desc: "Invite your whole team. Owner, admin, and member roles with full isolation. Each workspace has its own ICP, leads, and campaigns." },
     { icon: "📊", title: "Lead Qualification Scoring", desc: "Every lead receives a 0–100 qualification score with reasoning. Filter, sort, and focus only on the prospects that will actually convert." },
-    { icon: "✏️", title: "Editable AI Copy", desc: "Flowfiy writes the first draft. You own the final version. Edit, regenerate, or approve outreach copy before a single email is sent." },
+    { icon: "✏️", title: "Editable AI Copy", desc: "Claude writes the first draft. You own the final version. Edit, regenerate, or approve outreach copy before a single email is sent." },
     { icon: "📧", title: "Gmail-Native Delivery", desc: "Emails send from your own inbox via OAuth. No shared IP pools, no domain warm-up, no deliverability headaches. Full reply tracking." },
     { icon: "🔒", title: "AES-256 Encrypted Credentials", desc: "Every API key and OAuth token is encrypted at rest with AES-256-GCM. Your keys never appear in logs. Your data never leaves your control." },
   ];
@@ -1093,7 +1093,7 @@ function Footer() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <span>Built with Flowfiy · Powered by Anthropic</span>
+            <span>Built with Claude AI · Powered by Anthropic</span>
             <span className="hidden sm:inline">·</span>
             <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">
               support@flowfiy.com

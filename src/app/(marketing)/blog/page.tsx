@@ -5,11 +5,11 @@ import { ArrowRight, Clock } from "lucide-react";
 export const metadata: Metadata = {
   title: "Blog — AI Sales Outreach Tips, Guides & Insights | Flowfiy",
   description:
-    "Practical guides on AI-powered B2B sales outreach, cold email personalization, lead generation automation, and using Flowfiy AI for your sales pipeline.",
-  keywords: ["AI sales blog", "cold email tips", "B2B lead generation guide", "AI SDR", "outbound sales automation", "Flowfiy AI sales"],
+    "Practical guides on AI-powered B2B sales outreach, cold email personalization, lead generation automation, and using Claude AI for your sales pipeline.",
+  keywords: ["AI sales blog", "cold email tips", "B2B lead generation guide", "AI SDR", "outbound sales automation", "Claude AI sales"],
   openGraph: {
     title: "Flowfiy Blog — AI Sales Outreach Tips & Guides",
-    description: "Practical guides on AI-powered B2B outreach, cold email, lead generation automation, and Flowfiy AI for sales.",
+    description: "Practical guides on AI-powered B2B outreach, cold email, lead generation automation, and Claude AI for sales.",
     url: "/blog",
   },
   alternates: { canonical: "/blog" },
@@ -61,7 +61,7 @@ export default function BlogPage() {
             AI sales, explained clearly.
           </h1>
           <p className="text-lg text-zinc-400 max-w-xl">
-            Practical guides on outbound automation, cold email, lead generation, and using Flowfiy AI for B2B sales.
+            Practical guides on outbound automation, cold email, lead generation, and using Claude AI for B2B sales.
           </p>
         </div>
       </section>

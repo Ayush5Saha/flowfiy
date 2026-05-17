@@ -5,7 +5,7 @@ import { Check, X, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Flowfiy vs Clay — AI Sales Outreach Comparison 2026",
   description:
-    "Comparing Flowfiy vs Clay for AI-powered B2B lead generation and outreach. Clay is a data enrichment tool; Flowfiy is a full outbound pipeline with 5 Flowfiy AI agents, Gmail sending, and BYOK pricing.",
+    "Comparing Flowfiy vs Clay for AI-powered B2B lead generation and outreach. Clay is a data enrichment tool; Flowfiy is a full outbound pipeline with 5 Claude AI agents, Gmail sending, and BYOK pricing.",
   keywords: ["Flowfiy vs Clay", "Clay alternative", "Clay competitor", "Clay vs Flowfiy", "AI sales tool comparison 2026", "Clay alternative BYOK"],
   openGraph: {
     title: "Flowfiy vs Clay — Which AI Sales Tool Is Right for You?",
@@ -24,7 +24,7 @@ const jsonLd = {
 
 const rows = [
   { feature: "AI lead research", outbound: true, clay: "Partial" },
-  { feature: "5-agent Flowfiy pipeline", outbound: true, clay: false },
+  { feature: "5-agent Claude pipeline", outbound: true, clay: false },
   { feature: "AI qualification scoring (0–100)", outbound: true, clay: false },
   { feature: "AI-written personalized emails", outbound: true, clay: "Via integrations" },
   { feature: "Gmail OAuth sending", outbound: true, clay: false },
@@ -57,7 +57,7 @@ export default function VsClayPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-              Clay is a powerful data enrichment and workflow tool. Flowfiy is a complete outbound pipeline with 5 Flowfiy AI agents, built-in Gmail sending, and a BYOK model that charges $0 per lead generation.
+              Clay is a powerful data enrichment and workflow tool. Flowfiy is a complete outbound pipeline with 5 Claude AI agents, built-in Gmail sending, and a BYOK model that charges $0 per lead generation.
               They solve different problems — here&apos;s how to choose.
             </p>
           </div>

@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "What APIs do I need to connect?",
-    a: "At minimum: a Flowfiy API key (Anthropic) to run the AI pipeline. For lead discovery you'll also need Apollo.io. Apify is optional for website scraping, Gmail for sending outreach, and Calendly if you want booking links in your emails.",
+    a: "At minimum: a Claude API key (Anthropic) to run the AI pipeline. For lead discovery you'll also need Apollo.io. Apify is optional for website scraping, Gmail for sending outreach, and Calendly if you want booking links in your emails.",
   },
 ];
 
