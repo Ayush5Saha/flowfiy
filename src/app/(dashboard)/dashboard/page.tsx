@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Mail, Calendar, TrendingUp, Plus, ArrowRight } from "lucide-react";
+import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
@@ -16,12 +16,18 @@ export default async function DashboardPage() {
 
   const { organization } = membership;
 
-  const [totalLeads, qualifiedLeads, totalSent, recentLists, integrations, businessProfile] =
+  const [totalLeads, qualifiedLeads, totalSent, totalReplied, activeCampaigns, recentLists, integrations, businessProfile] =
     await Promise.all([
       prisma.lead.count({ where: { organizationId: organization.id } }),
       prisma.lead.count({ where: { organizationId: organization.id, status: "QUALIFIED" } }),
       prisma.campaignLead.count({
         where: { campaign: { organizationId: organization.id }, status: "SENT" },
+      }),
+      prisma.campaignLead.count({
+        where: { campaign: { organizationId: organization.id }, status: "REPLIED" },
+      }),
+      prisma.campaign.count({
+        where: { organizationId: organization.id, status: "ACTIVE" },
       }),
       prisma.leadList.findMany({
         where: { organizationId: organization.id },
@@ -94,11 +100,13 @@ export default async function DashboardPage() {
     ? 0
     : Math.round((organization.generationCount / organization.generationLimit) * 100);
 
+  const replyRate = totalSent > 0 ? Math.round((totalReplied / totalSent) * 100) : 0;
+
   const stats = [
-    { label: "Total Leads Generated", value: totalLeads, icon: Users, color: "text-blue-400" },
-    { label: "Qualified Leads", value: qualifiedLeads, icon: TrendingUp, color: "text-green-400" },
+    { label: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-400" },
+    { label: "Qualified", value: qualifiedLeads, icon: TrendingUp, color: "text-green-400" },
     { label: "Emails Sent", value: totalSent, icon: Mail, color: "text-purple-400" },
-    { label: "Meetings Booked", value: 0, icon: Calendar, color: "text-yellow-400" },
+    { label: "Reply Rate", value: `${replyRate}%`, icon: MessageSquare, color: "text-yellow-400" },
   ];
 
   return (
@@ -174,44 +182,80 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Usage panel */}
-        <div className="bg-card border border-border rounded-xl p-5">
-          <h2 className="font-medium mb-4">Usage</h2>
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-muted-foreground">Lead generations</span>
-              <span className="font-mono text-xs">
-                {organization.generationCount}
-                {organization.generationLimit !== -1 && ` / ${organization.generationLimit}`}
-              </span>
+        {/* Right column: Quick actions + Usage */}
+        <div className="space-y-4">
+          {/* Quick Actions */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h2 className="font-medium mb-3">Quick Actions</h2>
+            <div className="space-y-2">
+              <Link href="/leads" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Users className="w-3.5 h-3.5 text-blue-400" />
+                </div>
+                <span className="text-sm flex-1">Generate Leads</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              <Link href="/campaigns/new" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
+                  <Megaphone className="w-3.5 h-3.5 text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm">New Campaign</span>
+                  {activeCampaigns > 0 && (
+                    <span className="ml-2 text-xs bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded-full">
+                      {activeCampaigns} active
+                    </span>
+                  )}
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              <Link href="/settings" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
+                <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-3.5 h-3.5 text-green-400" />
+                </div>
+                <span className="text-sm flex-1">Edit ICP / Profile</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
             </div>
-            {organization.generationLimit !== -1 && (
-              <div className="w-full bg-secondary rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full transition-all ${usagePercent > 80 ? "bg-destructive" : "bg-primary"}`}
-                  style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                />
+          </div>
+
+          {/* Usage */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h2 className="font-medium mb-3">Usage</h2>
+            <div className="mb-3">
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">Generations used</span>
+                <span className="font-mono text-xs">
+                  {organization.generationCount}
+                  {organization.generationLimit !== -1 && ` / ${organization.generationLimit}`}
+                </span>
               </div>
+              {organization.generationLimit !== -1 && (
+                <div className="w-full bg-secondary rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${usagePercent > 80 ? "bg-destructive" : "bg-primary"}`}
+                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="border border-border rounded-lg p-3 mb-3">
+              <p className="text-xs font-medium capitalize">{organization.plan.toLowerCase()} Plan</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {organization.generationLimit === -1
+                  ? "Unlimited generations"
+                  : `${Math.max(0, organization.generationLimit - organization.generationCount)} remaining`}
+              </p>
+            </div>
+            {organization.plan === "FREE" && (
+              <Link
+                href="/billing"
+                className="block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                Upgrade Plan
+              </Link>
             )}
           </div>
-
-          <div className="border border-border rounded-lg p-3 mb-3">
-            <p className="text-xs font-medium capitalize">{organization.plan.toLowerCase()} Plan</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {organization.generationLimit === -1
-                ? "Unlimited generations"
-                : `${Math.max(0, organization.generationLimit - organization.generationCount)} remaining`}
-            </p>
-          </div>
-
-          {organization.plan === "FREE" && (
-            <Link
-              href="/billing"
-              className="block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Upgrade Plan
-            </Link>
-          )}
         </div>
       </div>
     </div>
