@@ -33,9 +33,21 @@ const bottomItems = [
 interface SidebarProps {
   organization: Organization;
   userRole: MemberRole;
+  userEmail: string;
+  userFullName: string;
 }
 
-export function Sidebar({ organization }: SidebarProps) {
+function getInitials(name: string, email: string) {
+  if (name?.trim()) {
+    const parts = name.trim().split(" ");
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : name.slice(0, 2).toUpperCase();
+  }
+  return email.slice(0, 2).toUpperCase();
+}
+
+export function Sidebar({ organization, userEmail, userFullName }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -120,6 +132,22 @@ export function Sidebar({ organization }: SidebarProps) {
           <LogOut className="w-4 h-4 shrink-0" />
           Sign out
         </button>
+
+        {/* User avatar strip */}
+        <Link
+          href="/profile"
+          className="flex items-center gap-2.5 px-2.5 py-2 mt-1 rounded-md hover:bg-sidebar-accent transition-colors group"
+        >
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 select-none">
+            {getInitials(userFullName, userEmail)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium truncate leading-tight">
+              {userFullName || userEmail.split("@")[0]}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate leading-tight">{userEmail}</p>
+          </div>
+        </Link>
       </div>
     </aside>
   );

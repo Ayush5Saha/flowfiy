@@ -13,9 +13,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { organization } = membership;
 
+  const fullName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    "";
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar organization={organization} userRole={membership.role} />
+      <Sidebar
+        organization={organization}
+        userRole={membership.role}
+        userEmail={user.email ?? ""}
+        userFullName={fullName}
+      />
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
