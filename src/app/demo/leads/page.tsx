@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 const mockOrg = {
   id: "demo-org", name: "Acme Corp", slug: "acme-corp", plan: "GROWTH" as const,
   razorpayCustomerId: null, razorpaySubscriptionId: null, subscriptionStatus: "active",
-  generationCount: 847, generationLimit: 2000, createdAt: new Date(), updatedAt: new Date(), members: [],
+  generationCount: 847, generationLimit: 7500, createdAt: new Date(), updatedAt: new Date(), members: [],
 };
 
 const leads = [

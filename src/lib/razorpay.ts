@@ -33,9 +33,9 @@ export const PLANS = {
     priceUsd: 0,
     priceInr: 0,           // ₹0 — no Razorpay plan needed
     currency: "INR",
-    generationLimit: 50,
+    generationLimit: 100,
     seats: 1,
-    features: ["50 lifetime generations", "1 seat", "1 campaign"],
+    features: ["100 generations/mo", "1 seat", "1 campaign", "Gmail integration", "Community support"],
     razorpayPlanId: null as string | null,
   },
   STARTER: {
@@ -43,9 +43,9 @@ export const PLANS = {
     priceUsd: 59,
     priceInr: 4900,        // ₹4,900/mo
     currency: "INR",
-    generationLimit: 500,
+    generationLimit: 2500,
     seats: 1,
-    features: ["500 generations/mo", "1 seat", "5 campaigns", "CSV import", "Email outreach"],
+    features: ["2,500 generations/mo", "1 seat", "5 campaigns", "CSV import", "Email outreach", "Email support"],
     razorpayPlanId: process.env.RAZORPAY_STARTER_PLAN_ID ?? null,
   },
   GROWTH: {
@@ -53,9 +53,9 @@ export const PLANS = {
     priceUsd: 119,
     priceInr: 9900,        // ₹9,900/mo
     currency: "INR",
-    generationLimit: 2000,
+    generationLimit: 7500,
     seats: 5,
-    features: ["2,000 generations/mo", "5 seats", "Unlimited campaigns", "Priority queue", "Analytics"],
+    features: ["7,500 generations/mo", "5 seats", "Unlimited campaigns", "Priority queue", "Analytics", "A/B testing", "Webhooks & export"],
     razorpayPlanId: process.env.RAZORPAY_GROWTH_PLAN_ID ?? null,
   },
   AGENCY: {
@@ -65,7 +65,7 @@ export const PLANS = {
     currency: "INR",
     generationLimit: -1,   // unlimited
     seats: 20,
-    features: ["Unlimited generations", "20 seats", "Unlimited campaigns", "White-label ready", "Dedicated support"],
+    features: ["Unlimited generations", "20 seats", "Unlimited campaigns", "White-label ready", "API access", "Dedicated support"],
     razorpayPlanId: process.env.RAZORPAY_AGENCY_PLAN_ID ?? null,
   },
 } as const;

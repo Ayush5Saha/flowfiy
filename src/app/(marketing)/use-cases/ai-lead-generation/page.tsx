@@ -21,7 +21,7 @@ const jsonLd = {
   name: "Flowfiy — AI Lead Generation",
   applicationCategory: "BusinessApplication",
   description: "Automated B2B lead generation using 5 Claude AI agents: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach copy.",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier with 50 lifetime generations" },
+  offers: { "@type": "Offer", price: "0", priceCurrency: "INR", description: "Free tier with 100 generations/month" },
 };
 
 const steps = [

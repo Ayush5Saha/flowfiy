@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: "Which plan should I start with?",
-    a: "Start with the Free tier — you get 50 lifetime lead generations at no cost. If you're generating leads regularly, the Starter plan (₹4,900/mo, 500 generations) fits most solo operators and consultants.",
+    a: "Start with the Free tier — you get 100 generations/month at no cost. If you're generating leads regularly, the Starter plan (₹4,900/mo, 2,500 generations) fits most solo operators and consultants.",
   },
   {
     q: "Can I cancel anytime?",

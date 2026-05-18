@@ -4,18 +4,18 @@ import { Sidebar } from "@/components/layout/Sidebar";
 const mockOrg = {
   id: "demo-org", name: "Acme Corp", slug: "acme-corp", plan: "GROWTH" as const,
   razorpayCustomerId: null, razorpaySubscriptionId: null, subscriptionStatus: "active",
-  generationCount: 847, generationLimit: 2000, createdAt: new Date(), updatedAt: new Date(), members: [],
+  generationCount: 847, generationLimit: 7500, createdAt: new Date(), updatedAt: new Date(), members: [],
 };
 
 const plans = [
   { key: "FREE", name: "Free", price: 0, gens: 50, seats: 1, current: false },
   { key: "STARTER", name: "Starter", price: 4900, gens: 500, seats: 1, current: false },
-  { key: "GROWTH", name: "Growth", price: 9900, gens: 2000, seats: 5, current: true },
+  { key: "GROWTH", name: "Growth", price: 9900, gens: 7500, seats: 5, current: true },
   { key: "AGENCY", name: "Agency", price: 24900, gens: -1, seats: 20, current: false },
 ];
 
 export default function DemoBillingPage() {
-  const usagePct = Math.round((847 / 2000) * 100);
+  const usagePct = Math.round((847 / 7500) * 100);
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar organization={mockOrg} userRole="OWNER" userEmail="demo@flowfiy.com" userFullName="Demo User" />

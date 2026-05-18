@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { Plan } from "@prisma/client";
 
 export const PLAN_LIMITS: Record<Plan, number> = {
-  FREE: 50,
-  STARTER: 500,
-  GROWTH: 2000,
+  FREE: 100,
+  STARTER: 2500,
+  GROWTH: 7500,
   AGENCY: -1, // unlimited
 };
 

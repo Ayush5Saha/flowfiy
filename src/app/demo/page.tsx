@@ -11,7 +11,7 @@ const mockOrg = {
   razorpaySubscriptionId: null,
   subscriptionStatus: "active",
   generationCount: 847,
-  generationLimit: 2000,
+  generationLimit: 7500,
   createdAt: new Date(),
   updatedAt: new Date(),
   members: [],

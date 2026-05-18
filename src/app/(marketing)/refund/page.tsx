@@ -34,7 +34,7 @@ export default function RefundPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">2. Free tier</h2>
             <p>
-              The Free tier includes 50 lifetime lead generations at no cost. No payment information is required and no charges are ever made on a Free account. There is nothing to cancel or refund on the Free tier.
+              The Free tier includes 100 lead generations per month at no cost. No payment information is required and no charges are ever made on a Free account. There is nothing to cancel or refund on the Free tier.
             </p>
           </section>
 

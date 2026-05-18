@@ -845,10 +845,10 @@ function Features() {
 
 function Pricing() {
   const plans = [
-    { name: "Free", price: 0, desc: "Try it out", gens: "50 lifetime", seats: 1, features: ["1 lead list", "All 5 AI agents", "Email copy generation", "Community support"], cta: "Get started", highlight: false },
-    { name: "Starter", price: 49, desc: "Solo founders", gens: "500/mo", seats: 1, features: ["5 campaigns", "Gmail integration", "Apollo + Apify", "Email support"], cta: "Start free trial", highlight: false },
-    { name: "Growth", price: 99, desc: "Growing teams", gens: "2,000/mo", seats: 5, features: ["Unlimited campaigns", "Team workspace", "Priority support", "Advanced analytics"], cta: "Start free trial", highlight: true },
-    { name: "Agency", price: 249, desc: "Agencies & scale", gens: "Unlimited", seats: 20, features: ["Unlimited everything", "20 team seats", "White-label ready", "Dedicated support"], cta: "Contact sales", highlight: false },
+    { name: "Free", price: 0, desc: "Try it out", gens: "100/mo", seats: 1, features: ["1 campaign", "Gmail integration", "All AI agents", "Community support"], cta: "Get started", highlight: false },
+    { name: "Starter", price: 4900, desc: "Solo founders", gens: "2,500/mo", seats: 1, features: ["5 campaigns", "CSV import", "Email outreach", "Email support"], cta: "Start free trial", highlight: false },
+    { name: "Growth", price: 9900, desc: "Growing teams", gens: "7,500/mo", seats: 5, features: ["Unlimited campaigns", "Team workspace", "A/B testing", "Priority queue & analytics"], cta: "Start free trial", highlight: true },
+    { name: "Agency", price: 24900, desc: "Agencies & scale", gens: "Unlimited", seats: 20, features: ["Unlimited everything", "20 team seats", "White-label ready", "Dedicated support"], cta: "Contact sales", highlight: false },
   ];
 
   return (
@@ -882,7 +882,7 @@ function Pricing() {
                   </div>
                   <div className="mb-5">
                     <span className="text-4xl font-bold font-mono text-white">
-                      {plan.price === 0 ? "Free" : `$${plan.price}`}
+                      {plan.price === 0 ? "Free" : `₹${plan.price.toLocaleString("en-IN")}`}
                     </span>
                     {plan.price > 0 && <span className="text-sm text-zinc-500">/mo</span>}
                   </div>

@@ -19,7 +19,7 @@ model Organization {
   razorpaySubscriptionId String?   @unique @map("razorpay_subscription_id")
   subscriptionStatus   String?   @map("subscription_status")
   generationCount      Int       @default(0) @map("generation_count")
-  generationLimit      Int       @default(50) @map("generation_limit")
+  generationLimit      Int       @default(100) @map("generation_limit")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
