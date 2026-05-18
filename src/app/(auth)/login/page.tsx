@@ -31,17 +31,9 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  async function handleGoogleLogin() {
+  function handleGoogleLogin() {
     setGoogleLoading(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-    } catch {
-      setGoogleLoading(false);
-    }
+    window.location.href = "/api/auth/google";
   }
 
   return (

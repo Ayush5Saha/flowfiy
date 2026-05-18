@@ -40,17 +40,9 @@ export default function SignupPage() {
     setLoading(false);
   }
 
-  async function handleGoogleSignup() {
+  function handleGoogleSignup() {
     setGoogleLoading(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-    } catch {
-      setGoogleLoading(false);
-    }
+    window.location.href = "/api/auth/google";
   }
 
   if (emailSent) {
