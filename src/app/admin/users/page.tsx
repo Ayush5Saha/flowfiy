@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export default async function AdminUsersPage() {
   await requireAdmin();
 
-  const supabase = createServiceClient();
+  const supabase = await createServiceClient();
   const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   const users = data?.users ?? [];
 

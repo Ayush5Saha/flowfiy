@@ -32,7 +32,7 @@ function StatCard({
 export default async function AdminOverviewPage() {
   await requireAdmin();
 
-  const supabase = createServiceClient();
+  const supabase = await createServiceClient();
 
   const [
     orgCount,
