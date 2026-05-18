@@ -110,8 +110,8 @@ export default function BlogPostBYOK() {
                 </div>
                 <div className="border border-violet-500/30 rounded-lg p-4 bg-violet-950/20">
                   <p className="text-xs text-zinc-500 mb-2">Flowfiy (Growth plan + your Claude API key)</p>
-                  <p className="text-2xl font-bold font-mono text-white">$99 + ~$25</p>
-                  <p className="text-xs text-zinc-600 mt-1">Platform ($99) + actual Anthropic API cost (~$0.012/lead × 2,000)</p>
+                  <p className="text-2xl font-bold font-mono text-white">₹9,900 + ~$25</p>
+                  <p className="text-xs text-zinc-600 mt-1">Platform (₹9,900) + actual Anthropic API cost (~$0.012/lead × 2,000)</p>
                 </div>
               </div>
               <p className="text-xs text-zinc-500 mt-4">Savings at 2,000 leads/month: <span className="text-green-400 font-semibold">$1,876/mo</span></p>

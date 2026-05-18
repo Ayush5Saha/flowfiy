@@ -153,7 +153,7 @@ export default function VsClayPage() {
             {[
               {
                 title: "Pricing model",
-                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee ($49–$249) with $0 per-generation AI cost because you use your own Claude API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
+                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee (₹4,900–₹24,900/mo) with $0 per-generation AI cost because you use your own Claude API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
               },
               {
                 title: "AI email writing",

@@ -40,8 +40,8 @@ export const PLANS = {
   },
   STARTER: {
     name: "Starter",
-    priceUsd: 49,
-    priceInr: 4099,        // ₹4,099/mo
+    priceUsd: 59,
+    priceInr: 4900,        // ₹4,900/mo
     currency: "INR",
     generationLimit: 500,
     seats: 1,
@@ -50,8 +50,8 @@ export const PLANS = {
   },
   GROWTH: {
     name: "Growth",
-    priceUsd: 99,
-    priceInr: 8299,        // ₹8,299/mo
+    priceUsd: 119,
+    priceInr: 9900,        // ₹9,900/mo
     currency: "INR",
     generationLimit: 2000,
     seats: 5,
@@ -60,8 +60,8 @@ export const PLANS = {
   },
   AGENCY: {
     name: "Agency",
-    priceUsd: 249,
-    priceInr: 20799,       // ₹20,799/mo
+    priceUsd: 299,
+    priceInr: 24900,       // ₹24,900/mo
     currency: "INR",
     generationLimit: -1,   // unlimited
     seats: 20,

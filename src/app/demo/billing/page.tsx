@@ -9,9 +9,9 @@ const mockOrg = {
 
 const plans = [
   { key: "FREE", name: "Free", price: 0, gens: 50, seats: 1, current: false },
-  { key: "STARTER", name: "Starter", price: 49, gens: 500, seats: 1, current: false },
-  { key: "GROWTH", name: "Growth", price: 99, gens: 2000, seats: 5, current: true },
-  { key: "AGENCY", name: "Agency", price: 249, gens: -1, seats: 20, current: false },
+  { key: "STARTER", name: "Starter", price: 4900, gens: 500, seats: 1, current: false },
+  { key: "GROWTH", name: "Growth", price: 9900, gens: 2000, seats: 5, current: true },
+  { key: "AGENCY", name: "Agency", price: 24900, gens: -1, seats: 20, current: false },
 ];
 
 export default function DemoBillingPage() {
@@ -31,7 +31,7 @@ export default function DemoBillingPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="font-medium">Growth Plan</p>
-                <p className="text-sm text-muted-foreground">$99/month · Renews June 12, 2026</p>
+                <p className="text-sm text-muted-foreground">₹9,900/month · Renews June 12, 2026</p>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 font-medium">Active</span>
             </div>
@@ -60,7 +60,7 @@ export default function DemoBillingPage() {
                 )}
                 <p className="font-semibold text-sm mb-0.5">{plan.name}</p>
                 <p className="text-2xl font-mono font-bold mb-1">
-                  {plan.price === 0 ? "Free" : `$${plan.price}`}
+                  {plan.price === 0 ? "Free" : `₹${plan.price.toLocaleString("en-IN")}`}
                   {plan.price > 0 && <span className="text-xs font-normal text-muted-foreground">/mo</span>}
                 </p>
                 <div className="space-y-1 text-xs text-muted-foreground mb-4">
