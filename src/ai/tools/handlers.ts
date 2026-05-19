@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
+import { fireWebhookEvent } from "@/lib/webhooks";
 
 // ─── Context passed to every tool handler ────────────────────────────────────
 
@@ -203,6 +204,7 @@ async function handleSaveLeadResult(
         body: input.emailBody,
         followUp1: input.followUp1 ?? null,
         followUp2: input.followUp2 ?? null,
+        followUp3: (input as { followUp3?: string | null }).followUp3 ?? null,
       },
     });
     ctx.stats.qualifiedLeads++;
@@ -213,6 +215,16 @@ async function handleSaveLeadResult(
     where: { id: lead.id },
     data: { status: newStatus, qualificationScore: input.score },
   });
+
+  // Feature 7: fire webhook for qualified leads
+  if (input.qualified) {
+    void fireWebhookEvent(ctx.organizationId, "lead.qualified", {
+      leadId: lead.id,
+      score: input.score,
+      bestAngle: input.bestAngle,
+      painPointMatch: input.painPointMatch,
+    });
+  }
 
   return {
     success: true,

@@ -48,7 +48,7 @@ export function getRedisConnection(): Redis {
 export interface EmailJobData {
   campaignLeadId: string;
   organizationId: string;
-  step: 0 | 1 | 2; // 0 = initial, 1 = follow-up 1, 2 = follow-up 2
+  step: 0 | 1 | 2 | 3; // 0 = initial, 1 = FU1, 2 = FU2, 3 = FU3
 }
 
 /**

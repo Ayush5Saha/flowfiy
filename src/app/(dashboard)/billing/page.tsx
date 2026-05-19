@@ -52,6 +52,8 @@ export default async function BillingPage() {
             generationLimit: organization.generationLimit,
             subscriptionStatus: organization.subscriptionStatus,
             razorpaySubscriptionId: organization.razorpaySubscriptionId,
+            stripeSubscriptionId: organization.stripeSubscriptionId,
+            billingGateway: organization.billingGateway,
           }}
           usageThisMonth={usageThisMonth}
           plans={plans}

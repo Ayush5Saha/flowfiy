@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { getRazorpay, PLANS } from "@/lib/razorpay";
+import { getRazorpay } from "@/lib/razorpay";
+import { getStripe } from "@/lib/stripe";
 
 const schema = z.object({ organizationId: z.string().uuid() });
 
+/**
+ * POST /api/billing/portal
+ *
+ * Cancel or manage subscription. Behaviour depends on billing gateway:
+ *
+ * Razorpay: cancel at end of current period (Razorpay API).
+ * Stripe:   create a Stripe Customer Portal session and return the URL.
+ *           The client redirects the user there to self-manage.
+ */
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,7 +37,25 @@ export async function POST(req: NextRequest) {
   }
 
   const { organization } = member;
+  const gateway = organization.billingGateway ?? "razorpay";
 
+  // ── Stripe portal ─────────────────────────────────────────────────────────
+  if (gateway === "stripe") {
+    if (!organization.stripeCustomerId) {
+      return NextResponse.json({ error: "No active Stripe subscription" }, { status: 404 });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://flowfiy.com";
+
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: organization.stripeCustomerId,
+      return_url: `${appUrl}/billing`,
+    });
+
+    return NextResponse.json({ gateway: "stripe", portalUrl: session.url });
+  }
+
+  // ── Razorpay cancel ───────────────────────────────────────────────────────
   if (!organization.razorpaySubscriptionId) {
     return NextResponse.json({ error: "No active subscription" }, { status: 404 });
   }
@@ -36,7 +64,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Billing is not configured." }, { status: 503 });
   }
 
-  // false = cancel at end of current billing cycle (not immediately)
+  // false = cancel at end of current billing cycle
   await getRazorpay().subscriptions.cancel(organization.razorpaySubscriptionId, false);
 
   await prisma.organization.update({
@@ -44,7 +72,7 @@ export async function POST(req: NextRequest) {
     data: { subscriptionStatus: "pending_cancellation" },
   });
 
-  return NextResponse.json({ cancelled: true });
+  return NextResponse.json({ gateway: "razorpay", cancelled: true });
 }
 
 export async function DELETE(req: NextRequest) {

@@ -16,7 +16,10 @@ export async function checkGenerationLimit(
     select: { plan: true, generationCount: true, generationLimit: true },
   });
 
-  const limit = org.generationLimit;
+  // Derive the effective limit from PLAN_LIMITS so it always reflects current
+  // plan pricing — fall back to the DB value for orgs with custom overrides.
+  const planLimit = PLAN_LIMITS[org.plan];
+  const limit = planLimit !== undefined ? planLimit : org.generationLimit;
   const count = org.generationCount;
 
   if (limit === -1) {

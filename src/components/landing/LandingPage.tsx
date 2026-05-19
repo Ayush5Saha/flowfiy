@@ -843,12 +843,23 @@ function Features() {
 
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
+import { getLocalisedPrice } from "@/lib/currency";
+
 function Pricing() {
+  const [country, setCountry] = useState<string>("IN");
+
+  useEffect(() => {
+    fetch("/api/geo")
+      .then((r) => r.json())
+      .then((d: { country?: string }) => { if (d.country) setCountry(d.country); })
+      .catch(() => null);
+  }, []);
+
   const plans = [
-    { name: "Free", price: 0, desc: "Try it out", gens: "100/mo", seats: 1, features: ["1 campaign", "Gmail integration", "All AI agents", "Community support"], cta: "Get started", highlight: false },
-    { name: "Starter", price: 4900, desc: "Solo founders", gens: "2,500/mo", seats: 1, features: ["5 campaigns", "CSV import", "Email outreach", "Email support"], cta: "Start free trial", highlight: false },
-    { name: "Growth", price: 9900, desc: "Growing teams", gens: "7,500/mo", seats: 5, features: ["Unlimited campaigns", "Team workspace", "A/B testing", "Priority queue & analytics"], cta: "Start free trial", highlight: true },
-    { name: "Agency", price: 24900, desc: "Agencies & scale", gens: "Unlimited", seats: 20, features: ["Unlimited everything", "20 team seats", "White-label ready", "Dedicated support"], cta: "Contact sales", highlight: false },
+    { name: "Free",    priceInr: 0,     desc: "Try it out",       gens: "100/mo",        seats: 1,  features: ["1 campaign", "Gmail integration", "All AI agents", "Community support"],                              cta: "Get started",    highlight: false },
+    { name: "Starter", priceInr: 4900,  desc: "Solo founders",    gens: "2,500/mo",       seats: 1,  features: ["5 campaigns", "CSV import", "Email outreach", "Email support"],                                      cta: "Start free trial", highlight: false },
+    { name: "Growth",  priceInr: 9900,  desc: "Growing teams",    gens: "7,500/mo",       seats: 5,  features: ["Unlimited campaigns", "Team workspace", "A/B testing", "Priority queue & analytics"],                cta: "Start free trial", highlight: true  },
+    { name: "Agency",  priceInr: 24900, desc: "Agencies & scale", gens: "Unlimited",      seats: 20, features: ["Unlimited everything", "20 team seats", "White-label ready", "Dedicated support"],                   cta: "Contact sales",  highlight: false },
   ];
 
   return (
@@ -863,55 +874,59 @@ function Pricing() {
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-          {plans.map((plan, i) => (
-            <FadeIn key={plan.name} delay={i * 0.1}>
-              <TiltCard>
-                <div className={`relative rounded-2xl p-6 border transition-all duration-300 ${
-                  plan.highlight
-                    ? "bg-gradient-to-b from-violet-950/80 to-zinc-900/80 border-violet-500/40 shadow-xl shadow-violet-500/10"
-                    : "bg-zinc-900/40 border-white/6 hover:border-white/12"
-                }`}>
-                  {plan.highlight && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-violet-500 rounded-full text-xs font-semibold text-white whitespace-nowrap">
-                      Most Popular
+          {plans.map((plan, i) => {
+            const lp = getLocalisedPrice(plan.priceInr, country);
+            return (
+              <FadeIn key={plan.name} delay={i * 0.1}>
+                <TiltCard>
+                  <div className={`relative rounded-2xl p-6 border transition-all duration-300 ${
+                    plan.highlight
+                      ? "bg-gradient-to-b from-violet-950/80 to-zinc-900/80 border-violet-500/40 shadow-xl shadow-violet-500/10"
+                      : "bg-zinc-900/40 border-white/6 hover:border-white/12"
+                  }`}>
+                    {plan.highlight && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-violet-500 rounded-full text-xs font-semibold text-white whitespace-nowrap">
+                        Most Popular
+                      </div>
+                    )}
+                    <div className="mb-5">
+                      <p className="font-semibold text-white mb-0.5">{plan.name}</p>
+                      <p className="text-xs text-zinc-500">{plan.desc}</p>
                     </div>
-                  )}
-                  <div className="mb-5">
-                    <p className="font-semibold text-white mb-0.5">{plan.name}</p>
-                    <p className="text-xs text-zinc-500">{plan.desc}</p>
+                    <div className="mb-5">
+                      <span className="text-4xl font-bold font-mono text-white">{lp.formatted}</span>
+                      {plan.priceInr > 0 && <span className="text-sm text-zinc-500">/mo</span>}
+                      {plan.priceInr > 0 && lp.currency.code !== "INR" && (
+                        <p className="text-xs text-zinc-600 mt-0.5">{lp.note}</p>
+                      )}
+                    </div>
+                    <div className="mb-5 p-3 rounded-xl bg-black/20 border border-white/5">
+                      <p className="text-xs text-zinc-400"><span className="text-white font-medium">{plan.gens}</span> generations</p>
+                      <p className="text-xs text-zinc-400 mt-1"><span className="text-white font-medium">{plan.seats}</span> seat{plan.seats > 1 ? "s" : ""}</p>
+                    </div>
+                    <ul className="space-y-2 mb-6">
+                      {plan.features.map(f => (
+                        <li key={f} className="flex items-center gap-2 text-xs text-zinc-400">
+                          <Check className={`w-3.5 h-3.5 shrink-0 ${plan.highlight ? "text-violet-400" : "text-zinc-600"}`} />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href="/signup"
+                      className={`block text-center py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        plan.highlight
+                          ? "bg-violet-500 hover:bg-violet-400 text-white hover:shadow-lg hover:shadow-violet-500/25"
+                          : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/6"
+                      }`}
+                    >
+                      {plan.cta}
+                    </Link>
                   </div>
-                  <div className="mb-5">
-                    <span className="text-4xl font-bold font-mono text-white">
-                      {plan.price === 0 ? "Free" : `₹${plan.price.toLocaleString("en-IN")}`}
-                    </span>
-                    {plan.price > 0 && <span className="text-sm text-zinc-500">/mo</span>}
-                  </div>
-                  <div className="mb-5 p-3 rounded-xl bg-black/20 border border-white/5">
-                    <p className="text-xs text-zinc-400"><span className="text-white font-medium">{plan.gens}</span> generations</p>
-                    <p className="text-xs text-zinc-400 mt-1"><span className="text-white font-medium">{plan.seats}</span> seat{plan.seats > 1 ? "s" : ""}</p>
-                  </div>
-                  <ul className="space-y-2 mb-6">
-                    {plan.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-xs text-zinc-400">
-                        <Check className={`w-3.5 h-3.5 shrink-0 ${plan.highlight ? "text-violet-400" : "text-zinc-600"}`} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href="/signup"
-                    className={`block text-center py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      plan.highlight
-                        ? "bg-violet-500 hover:bg-violet-400 text-white hover:shadow-lg hover:shadow-violet-500/25"
-                        : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/6"
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
-              </TiltCard>
-            </FadeIn>
-          ))}
+                </TiltCard>
+              </FadeIn>
+            );
+          })}
         </div>
       </div>
     </section>

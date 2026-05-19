@@ -34,6 +34,8 @@ export interface GmailSendParams {
   from: string;
   subject: string;
   body: string;
+  /** If provided the email is sent as HTML; plain-text `body` is ignored. */
+  htmlBody?: string;
   replyToMessageId?: string;
   threadId?: string;
 }
@@ -44,11 +46,15 @@ export async function sendGmail(params: GmailSendParams): Promise<{ messageId: s
 
   const gmail = google.gmail({ version: "v1", auth: client });
 
+  const contentType = params.htmlBody
+    ? "text/html; charset=utf-8"
+    : "text/plain; charset=utf-8";
+
   const headers = [
     `To: ${params.to}`,
     `From: ${params.from}`,
     `Subject: ${params.subject}`,
-    "Content-Type: text/plain; charset=utf-8",
+    `Content-Type: ${contentType}`,
     "MIME-Version: 1.0",
   ];
 
@@ -60,7 +66,7 @@ export async function sendGmail(params: GmailSendParams): Promise<{ messageId: s
   const rawMessage = [
     ...headers,
     "",
-    params.body,
+    params.htmlBody ?? params.body,
   ].join("\n");
 
   const encoded = Buffer.from(rawMessage)

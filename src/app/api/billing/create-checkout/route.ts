@@ -3,10 +3,13 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getRazorpay, PLANS, type PlanKey } from "@/lib/razorpay";
+import { getStripe, STRIPE_PLANS, type StripePlanKey, resolveGateway } from "@/lib/stripe";
 
 const schema = z.object({
   organizationId: z.string().uuid(),
   plan: z.enum(["STARTER", "GROWTH", "AGENCY"]),
+  /** Country code from /api/geo — determines which gateway to use */
+  country: z.string().length(2).optional().default("IN"),
 });
 
 export async function POST(req: NextRequest) {
@@ -18,7 +21,7 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { organizationId, plan } = parsed.data;
+  const { organizationId, plan, country } = parsed.data;
 
   const member = await prisma.organizationMember.findUnique({
     where: { organizationId_userId: { organizationId, userId: user.id } },
@@ -30,74 +33,139 @@ export async function POST(req: NextRequest) {
   }
 
   const { organization } = member;
-  const planConfig = PLANS[plan as PlanKey];
+  const gateway = resolveGateway(country);
+
+  // ── Stripe checkout ───────────────────────────────────────────────────────
+  if (gateway === "stripe") {
+    return handleStripeCheckout({ organizationId, plan: plan as StripePlanKey, organization, userEmail: user.email ?? "" });
+  }
+
+  // ── Razorpay checkout (India) ─────────────────────────────────────────────
+  return handleRazorpayCheckout({ organizationId, plan: plan as PlanKey, organization, userId: user.id, userEmail: user.email ?? "" });
+}
+
+// ─── Razorpay ─────────────────────────────────────────────────────────────────
+
+async function handleRazorpayCheckout({
+  organizationId, plan, organization, userId, userEmail,
+}: {
+  organizationId: string;
+  plan: PlanKey;
+  organization: { id: string; name: string; razorpayCustomerId: string | null };
+  userId: string;
+  userEmail: string;
+}) {
+  const planConfig = PLANS[plan];
 
   if (!planConfig.razorpayPlanId) {
     return NextResponse.json(
-      { error: `Plan "${plan}" is not configured. Set RAZORPAY_${plan}_PLAN_ID in your environment variables.` },
+      { error: `Plan "${plan}" is not configured. Set RAZORPAY_${plan}_PLAN_ID in your environment.` },
       { status: 400 }
     );
   }
 
-  // Guard: Razorpay keys not yet set (billing coming soon)
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    return NextResponse.json(
-      { error: "Billing is not available yet. Please contact support@flowfiy.com." },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "Billing is not available yet." }, { status: 503 });
   }
 
   const rzp = getRazorpay();
 
-  // ── Create or reuse Razorpay Customer ────────────────────────────────────────
   let customerId = organization.razorpayCustomerId;
-
   if (!customerId) {
-    const customerName = organization.name || user.email?.split("@")[0] || "Customer";
     try {
       const customer = await rzp.customers.create({
-        name: customerName,
-        email: user.email ?? "",
+        name: organization.name || userEmail.split("@")[0],
+        email: userEmail,
         fail_existing: 0,
       });
       customerId = customer.id;
       await prisma.organization.update({
         where: { id: organizationId },
-        data: { razorpayCustomerId: customerId },
+        data: { razorpayCustomerId: customerId, billingGateway: "razorpay" },
       });
     } catch (err) {
-      console.error("[billing] Failed to create Razorpay customer:", err);
+      console.error("[billing] Razorpay customer create failed:", err);
     }
   }
 
-  // ── Create Razorpay Subscription ──────────────────────────────────────────────
   const subscription = await rzp.subscriptions.create({
     plan_id: planConfig.razorpayPlanId,
     customer_notify: 1,
     total_count: 120,
     ...(customerId ? { customer_id: customerId } : {}),
-    notes: {
-      organizationId,
-      planKey: plan,
-      userId: user.id,
-      userEmail: user.email ?? "",
-      orgName: organization.name,
-    },
+    notes: { organizationId, planKey: plan, userId, userEmail, orgName: organization.name },
   });
 
   await prisma.organization.update({
     where: { id: organizationId },
-    data: { razorpaySubscriptionId: subscription.id },
+    data: { razorpaySubscriptionId: subscription.id, billingGateway: "razorpay" },
   });
 
   return NextResponse.json({
+    gateway: "razorpay",
     subscriptionId: subscription.id,
     keyId: process.env.RAZORPAY_KEY_ID,
     planName: planConfig.name,
     priceInr: planConfig.priceInr,
-    prefill: {
+    prefill: { name: organization.name, email: userEmail },
+  });
+}
+
+// ─── Stripe ───────────────────────────────────────────────────────────────────
+
+async function handleStripeCheckout({
+  organizationId, plan, organization, userEmail,
+}: {
+  organizationId: string;
+  plan: StripePlanKey;
+  organization: { id: string; name: string; stripeCustomerId: string | null };
+  userEmail: string;
+}) {
+  const planConfig = STRIPE_PLANS[plan];
+
+  if (!planConfig.stripePriceId) {
+    return NextResponse.json(
+      { error: `Stripe plan "${plan}" is not configured. Set STRIPE_${plan}_PRICE_ID in your environment.` },
+      { status: 400 }
+    );
+  }
+
+  const stripe = getStripe();
+
+  // Create or reuse Stripe customer
+  let customerId = organization.stripeCustomerId;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: userEmail,
       name: organization.name,
-      email: user.email ?? "",
+      metadata: { organizationId },
+    });
+    customerId = customer.id;
+    await prisma.organization.update({
+      where: { id: organizationId },
+      data: { stripeCustomerId: customerId, billingGateway: "stripe" },
+    });
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://flowfiy.com";
+
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: "subscription",
+    line_items: [{ price: planConfig.stripePriceId, quantity: 1 }],
+    success_url: `${appUrl}/billing?success=true&plan=${plan}&gateway=stripe`,
+    cancel_url: `${appUrl}/billing`,
+    subscription_data: {
+      metadata: { organizationId, planKey: plan },
     },
+    metadata: { organizationId, planKey: plan },
+    allow_promotion_codes: true,
+  });
+
+  return NextResponse.json({
+    gateway: "stripe",
+    checkoutUrl: session.url,
+    planName: planConfig.name,
+    priceUsd: planConfig.priceUsd,
   });
 }

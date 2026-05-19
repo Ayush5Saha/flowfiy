@@ -17,19 +17,24 @@ model Organization {
   plan                 Plan      @default(FREE)
   razorpayCustomerId     String?   @unique @map("razorpay_customer_id")
   razorpaySubscriptionId String?   @unique @map("razorpay_subscription_id")
-  subscriptionStatus   String?   @map("subscription_status")
+  stripeCustomerId       String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map("stripe_subscription_id")
+  billingGateway         String?   @map("billing_gateway") // "razorpay" | "stripe"
+  subscriptionStatus     String?   @map("subscription_status")
   generationCount      Int       @default(0) @map("generation_count")
   generationLimit      Int       @default(100) @map("generation_limit")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  members         OrganizationMember[]
-  businessProfile BusinessProfile?
-  integrations    Integration[]
-  leadLists       LeadList[]
-  campaigns       Campaign[]
-  usageEvents     UsageEvent[]
-  auditLogs       AuditLog[]
+  members           OrganizationMember[]
+  businessProfile   BusinessProfile?
+  integrations      Integration[]
+  leadLists         LeadList[]
+  campaigns         Campaign[]
+  usageEvents       UsageEvent[]
+  auditLogs         AuditLog[]
+  suppressedEmails  SuppressedEmail[]
+  webhookEndpoints  WebhookEndpoint[]
 
   @@map("organizations")
 }
@@ -166,6 +171,7 @@ model Lead {
   rawData           Json?      @map("raw_data")
   status            LeadStatus @default(NEW)
   qualificationScore Int?      @map("qualification_score")
+  timezone          String?    // IANA timezone e.g. "Asia/Kolkata", "America/New_York"
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
@@ -217,6 +223,8 @@ model OutreachCopy {
   body         String
   followUp1    String?  @map("follow_up_1")
   followUp2    String?  @map("follow_up_2")
+  followUp3    String?  @map("follow_up_3")
+  variant      String   @default("A") // A/B test variant
   version      Int      @default(1)
   isApproved   Boolean  @default(false) @map("is_approved")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -242,6 +250,8 @@ model Campaign {
   dailySendLimit      Int            @default(50) @map("daily_send_limit")
   followUp1DelayDays  Int            @default(3)  @map("follow_up1_delay_days")
   followUp2DelayDays  Int            @default(7)  @map("follow_up2_delay_days")
+  followUp3DelayDays  Int            @default(14) @map("follow_up3_delay_days")
+  abTestEnabled       Boolean        @default(false) @map("ab_test_enabled")
   sentCount           Int            @default(0) @map("sent_count")
   replyCount          Int            @default(0) @map("reply_count")
   meetingCount        Int            @default(0) @map("meeting_count")
@@ -272,8 +282,14 @@ model CampaignLead {
   sentAt            DateTime?      @map("sent_at")
   followUp1SentAt   DateTime?      @map("follow_up1_sent_at")
   followUp2SentAt   DateTime?      @map("follow_up2_sent_at")
+  followUp3SentAt   DateTime?      @map("follow_up3_sent_at")
   gmailMessageId    String?        @map("gmail_message_id")
   gmailThreadId     String?        @map("gmail_thread_id")
+  openedAt          DateTime?      @map("opened_at")
+  openCount         Int            @default(0) @map("open_count")
+  replyIntent       String?        @map("reply_intent") // INTERESTED | NOT_INTERESTED | OOO | REFERRAL | UNSUBSCRIBE | OTHER
+  replySnippet      String?        @map("reply_snippet") // first 300 chars of reply for display
+  bounceReason      String?        @map("bounce_reason") // HARD | SOFT | SPAM — set on Gmail send failure
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
@@ -321,6 +337,49 @@ model PromptTemplate {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("prompt_templates")
+}
+
+// ─── Email Suppression ────────────────────────────────────────────────────────
+
+/**
+ * Org-scoped list of email addresses that must never receive outreach.
+ * Populated automatically on unsubscribe or bounce; can also be added manually.
+ */
+model SuppressedEmail {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  email          String
+  reason         String   @default("unsubscribed") // unsubscribed | bounced | manual
+  suppressedAt   DateTime @default(now()) @map("suppressed_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@map("suppressed_emails")
+}
+
+// ─── Webhook Endpoints ───────────────────────────────────────────────────────
+
+/**
+ * Outgoing webhooks — Flowfiy fires a signed POST to these URLs on key events:
+ *   lead.qualified, reply.received, campaign.completed, meeting.booked
+ * Payload is signed with HMAC-SHA256 using the endpoint's secret.
+ */
+model WebhookEndpoint {
+  id              String   @id @default(uuid())
+  organizationId  String   @map("organization_id")
+  url             String
+  secret          String   // random 32-byte hex, shown once at creation
+  events          String[] // e.g. ["lead.qualified", "reply.received"]
+  isActive        Boolean  @default(true) @map("is_active")
+  lastDeliveredAt DateTime? @map("last_delivered_at")
+  failureCount    Int      @default(0) @map("failure_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_endpoints")
 }
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────

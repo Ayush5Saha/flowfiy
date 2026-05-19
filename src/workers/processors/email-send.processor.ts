@@ -2,6 +2,9 @@ import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { sendGmail } from "@/integrations/gmail";
+import { buildUnsubscribeUrl, buildTrackingPixelUrl } from "@/lib/unsubscribe";
+import { fireWebhookEvent } from "@/lib/webhooks";
+import { resolveTimezone, isInSendWindow, getLocalTimeString } from "@/lib/timezones";
 import type { EmailJobData } from "@/workers/queues";
 
 export type { EmailJobData };
@@ -37,6 +40,54 @@ export async function processEmailSend(job: Job<EmailJobData>) {
     return;
   }
 
+  // ── Feature 9: Timezone-aware send window check ──────────────────────────
+  // Resolve lead timezone from stored value, or fall back to country code
+  const leadTimezone = resolveTimezone(lead.timezone, null);
+  if (!isInSendWindow(leadTimezone)) {
+    const localTime = getLocalTimeString(leadTimezone);
+    console.log(
+      `[email] Skipping ${campaignLeadId} — outside send window (${localTime} in ${leadTimezone}). Will retry.`
+    );
+    // Throw so BullMQ retries — the next retry will land in a valid window
+    throw new Error(`Outside send window for ${leadTimezone} (local: ${localTime})`);
+  }
+
+  // ── Check suppression list — never email a lead who opted out ────────────
+  if (lead.email) {
+    const suppressed = await prisma.suppressedEmail.findUnique({
+      where: { organizationId_email: { organizationId, email: lead.email } },
+    });
+    if (suppressed) {
+      console.log(`[email] Skipping ${campaignLeadId} — ${lead.email} is suppressed (${suppressed.reason})`);
+      await prisma.campaignLead.update({
+        where: { id: campaignLeadId },
+        data: { status: "UNSUBSCRIBED" },
+      });
+      return;
+    }
+  }
+
+  // ── Cross-campaign deduplication — skip initial sends to already-contacted leads ──
+  if (step === 0 && lead.email) {
+    const alreadyContacted = await prisma.campaignLead.findFirst({
+      where: {
+        id: { not: campaignLeadId },
+        lead: { email: lead.email, organizationId },
+        status: { in: ["SENT", "OPENED", "REPLIED"] },
+        campaign: { status: { in: ["ACTIVE", "COMPLETED"] } },
+      },
+      select: { id: true, campaignId: true },
+    });
+    if (alreadyContacted) {
+      console.log(`[email] Skipping ${campaignLeadId} — already contacted in campaign ${alreadyContacted.campaignId}`);
+      await prisma.campaignLead.update({
+        where: { id: campaignLeadId },
+        data: { status: "SENT", sentAt: new Date(), followUpStep: 1 },
+      });
+      return;
+    }
+  }
+
   // ── Resolve the email body for this step ─────────────────────────────────
   const emailContent = resolveEmailContent(step, outreachCopy);
   if (!emailContent) {
@@ -56,20 +107,55 @@ export async function processEmailSend(job: Job<EmailJobData>) {
   const { refreshToken, emailAddress } = decryptCredentials(gmailIntegration.encryptedCredentials);
   const fromAddress = campaign.gmailFromAddress ?? emailAddress;
 
-  // ── Send the email ────────────────────────────────────────────────────────
-  // Follow-ups go in the same Gmail thread as the initial email
-  const { messageId, threadId } = await sendGmail({
-    refreshToken,
-    to: lead.email!,
-    from: fromAddress,
-    subject: step === 0
-      ? (outreachCopy.subjectLine ?? "")
-      : `Re: ${outreachCopy.subjectLine ?? ""}`,
-    body: emailContent,
-    // Thread follow-ups into the original conversation
-    replyToMessageId: step > 0 ? (campaignLead.gmailMessageId ?? undefined) : undefined,
-    threadId: step > 0 ? (campaignLead.gmailThreadId ?? undefined) : undefined,
-  });
+  // ── Build HTML email with tracking pixel + unsubscribe footer ───────────
+  const htmlBody = buildHtmlEmail(emailContent, campaignLeadId, lead.email!);
+
+  // ── Send the email (with bounce detection) ───────────────────────────────
+  let messageId: string;
+  let threadId: string;
+  try {
+    ({ messageId, threadId } = await sendGmail({
+      refreshToken,
+      to: lead.email!,
+      from: fromAddress,
+      subject: step === 0
+        ? (outreachCopy.subjectLine ?? "")
+        : `Re: ${outreachCopy.subjectLine ?? ""}`,
+      body: emailContent,
+      htmlBody,
+      replyToMessageId: step > 0 ? (campaignLead.gmailMessageId ?? undefined) : undefined,
+      threadId: step > 0 ? (campaignLead.gmailThreadId ?? undefined) : undefined,
+    }));
+  } catch (sendErr) {
+    const errMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
+    const bounceReason = classifyBounce(errMsg);
+
+    console.error(`[email] Send failed for ${campaignLeadId} — ${bounceReason}: ${errMsg}`);
+
+    await prisma.campaignLead.update({
+      where: { id: campaignLeadId },
+      data: { status: "BOUNCED", bounceReason },
+    });
+
+    if (bounceReason === "HARD" && lead.email) {
+      await prisma.suppressedEmail.upsert({
+        where: { organizationId_email: { organizationId, email: lead.email } },
+        create: { organizationId, email: lead.email, reason: "bounced" },
+        update: { reason: "bounced", suppressedAt: new Date() },
+      });
+
+      // Feature 7: fire webhook on hard bounce
+      void fireWebhookEvent(organizationId, "bounce.detected", {
+        campaignLeadId,
+        campaignId: campaign.id,
+        leadId: lead.id,
+        email: lead.email,
+        bounceReason,
+      });
+    }
+
+    return;
+  }
 
   // ── Persist send status ───────────────────────────────────────────────────
   const now = new Date();
@@ -81,13 +167,12 @@ export async function processEmailSend(job: Job<EmailJobData>) {
       sentAt: step === 0 ? now : campaignLead.sentAt,
       followUp1SentAt: step === 1 ? now : campaignLead.followUp1SentAt,
       followUp2SentAt: step === 2 ? now : campaignLead.followUp2SentAt,
-      // Store thread info from initial send so follow-ups can thread correctly
+      followUp3SentAt: step === 3 ? now : campaignLead.followUp3SentAt,
       gmailMessageId: step === 0 ? messageId : campaignLead.gmailMessageId,
       gmailThreadId: step === 0 ? threadId : campaignLead.gmailThreadId,
     },
   });
 
-  // Increment campaign sent counter on initial send
   if (step === 0) {
     await prisma.campaign.update({
       where: { id: campaign.id },
@@ -95,26 +180,80 @@ export async function processEmailSend(job: Job<EmailJobData>) {
     });
   }
 
-  // Follow-ups are NOT pre-scheduled here.
-  // The follow-up cron (POST /api/campaigns/process-followups) checks the DB
-  // every hour and queues follow-ups when they are due based on the campaign's
-  // current delay settings — so users can change timing anytime.
+  console.log(`[email] Sent step ${step} for ${campaignLeadId} — thread: ${threadId}`);
+}
 
-  console.log(
-    `[email] Sent step ${step} for ${campaignLeadId} — thread: ${threadId}`
-  );
+// ─── Helper: classify send error as bounce type ───────────────────────────────
+
+function classifyBounce(errMsg: string): string {
+  const lower = errMsg.toLowerCase();
+  if (
+    lower.includes("550") ||
+    lower.includes("551") ||
+    lower.includes("553") ||
+    lower.includes("user unknown") ||
+    lower.includes("no such user") ||
+    lower.includes("invalid address") ||
+    lower.includes("does not exist") ||
+    lower.includes("address rejected")
+  ) return "HARD";
+
+  if (
+    lower.includes("spam") ||
+    lower.includes("blocked") ||
+    lower.includes("policy") ||
+    lower.includes("554")
+  ) return "SPAM";
+
+  return "SOFT";
 }
 
 // ─── Helper: pick the right email body for each step ─────────────────────────
 
 function resolveEmailContent(
   step: number,
-  outreachCopy: { body: string; followUp1?: string | null; followUp2?: string | null }
+  outreachCopy: { body: string; followUp1?: string | null; followUp2?: string | null; followUp3?: string | null }
 ): string | null {
   switch (step) {
     case 0: return outreachCopy.body || null;
     case 1: return outreachCopy.followUp1 || null;
     case 2: return outreachCopy.followUp2 || null;
+    case 3: return outreachCopy.followUp3 || null;  // Feature 8: third follow-up
     default: return null;
   }
+}
+
+// ─── Helper: wrap plain-text content in HTML with pixel + unsubscribe ─────────
+
+function buildHtmlEmail(
+  plainText: string,
+  campaignLeadId: string,
+  toEmail: string
+): string {
+  const bodyHtml = plainText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+
+  const pixelUrl = buildTrackingPixelUrl(campaignLeadId);
+  const unsubUrl = buildUnsubscribeUrl(campaignLeadId, toEmail);
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#222;">
+  <div style="max-width:600px;padding:20px;">
+    ${bodyHtml}
+  </div>
+  <div style="max-width:600px;padding:8px 20px 20px;border-top:1px solid #eee;margin-top:16px;">
+    <p style="font-size:11px;color:#999;margin:0;">
+      You received this email because your information is publicly listed.
+      If you'd prefer not to hear from us,
+      <a href="${unsubUrl}" style="color:#999;">unsubscribe here</a>.
+    </p>
+  </div>
+  <img src="${pixelUrl}" width="1" height="1" style="display:none;border:0;" alt="" />
+</body>
+</html>`;
 }

@@ -20,10 +20,24 @@ export interface BusinessProfileInput {
   outreachTone: string;
 }
 
+export interface PreloadedLead {
+  leadId: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  title?: string | null;
+  email?: string | null;
+  companyName?: string | null;
+  companyWebsite?: string | null;
+  companySize?: string | null;
+  industry?: string | null;
+}
+
 export interface OrchestratorInput {
   businessProfile: BusinessProfileInput;
   leadsPerRun: number;
   calendlyLink?: string;
+  /** Import mode: leads already in DB — skip search_leads entirely */
+  preloadedLeads?: PreloadedLead[];
 }
 
 export interface OrchestratorResult {
@@ -35,13 +49,26 @@ export interface OrchestratorResult {
 // ─── System prompt ────────────────────────────────────────────────────────────
 
 function buildSystemPrompt(input: OrchestratorInput): string {
-  const { businessProfile: bp, leadsPerRun, calendlyLink } = input;
+  const { businessProfile: bp, leadsPerRun, calendlyLink, preloadedLeads } = input;
+
+  const isImportMode = !!preloadedLeads?.length;
+
+  const discoverySection = isImportMode
+    ? `## LEADS ARE ALREADY PROVIDED
+The user has uploaded a CSV. All ${leadsPerRun} leads are listed in the initial user message with their exact leadIds.
+DO NOT call search_leads — it is not available. Start directly from Step 2.`
+    : `## STEP 1 — Search for leads
+Call search_leads once with optimised Apollo filters derived from the ICP above.
+- Pick 3–6 job titles that match the ICP decision-maker
+- Use industry keywords that map to the target industries
+- Set company size ranges that match the ICP
+- Request exactly ${leadsPerRun} leads`;
 
   return `You are an autonomous B2B sales intelligence agent for ${bp.companyName}.
 
 ## YOUR MISSION
-Find ${leadsPerRun} leads, qualify each one, and generate personalised outreach copy for qualified leads.
-You have three tools: search_leads, scrape_website, and save_lead_result.
+Process ${leadsPerRun} leads, qualify each one, and generate personalised outreach copy for qualified leads.
+You have ${isImportMode ? "two" : "three"} tools: ${isImportMode ? "" : "search_leads, "}scrape_website, and save_lead_result.
 
 ## BUSINESS CONTEXT
 - Company: ${bp.companyName}
@@ -55,20 +82,13 @@ You have three tools: search_leads, scrape_website, and save_lead_result.
 - Outreach Tone: ${bp.outreachTone}
 ${calendlyLink ? `- Booking Link: ${calendlyLink}` : ""}
 
-## STEP-BY-STEP WORKFLOW
+${discoverySection}
 
-### Step 1 — Search for leads
-Call search_leads once with optimised Apollo filters derived from the ICP above.
-- Pick 3–6 job titles that match the ICP decision-maker
-- Use industry keywords that map to the target industries
-- Set company size ranges that match the ICP
-- Request exactly ${leadsPerRun} leads
-
-### Step 2 — Gather intelligence (for each lead)
+## STEP 2 — Gather intelligence (for each lead)
 For each lead that has a company website, call scrape_website to gather context.
-Skip scraping if: no URL, or you already have strong context from Apollo data.
+Skip scraping if: no URL, or you already have strong context from the lead data.
 
-### Step 3 — Qualify & save each lead
+## STEP 3 — Qualify & save each lead
 Call save_lead_result for EVERY lead. Never skip a lead.
 - Score 0–100 based on ICP fit (title relevance, company size, industry match, pain point signals)
 - Leads scoring >= 60 are QUALIFIED
@@ -82,9 +102,7 @@ Call save_lead_result for EVERY lead. Never skip a lead.
 - For DISQUALIFIED leads: set qualified=false, still provide score and bestAngle
 
 ## RULES
-- Always call search_leads first before anything else
-- Call save_lead_result for every lead returned — no lead left unprocessed
-- Do not call search_leads more than once
+${isImportMode ? "- DO NOT call search_leads — leads are pre-loaded, use the leadIds from the user message\n" : "- Always call search_leads first before anything else\n- Do not call search_leads more than once\n"}- Call save_lead_result for every lead — no lead left unprocessed
 - Finish only after all leads are saved`;
 }
 
@@ -97,10 +115,16 @@ export async function runLeadGenOrchestrator(
 ): Promise<OrchestratorResult> {
   const systemPrompt = buildSystemPrompt(input);
 
+  const isImportMode = !!input.preloadedLeads?.length;
+
+  const initialUserMessage = isImportMode
+    ? `Here are the ${input.preloadedLeads!.length} pre-loaded leads to qualify and generate outreach for. Use the exact leadId values when calling save_lead_result.\n\n${JSON.stringify(input.preloadedLeads, null, 2)}\n\nProcess every lead above. Do NOT call search_leads.`
+    : `Start the lead generation workflow now. Find ${input.leadsPerRun} leads for ${input.businessProfile.companyName} and process every one of them.`;
+
   const messages: MessageParam[] = [
     {
       role: "user",
-      content: `Start the lead generation workflow now. Find ${input.leadsPerRun} leads for ${input.businessProfile.companyName} and process every one of them.`,
+      content: initialUserMessage,
     },
   ];
 
@@ -108,11 +132,15 @@ export async function runLeadGenOrchestrator(
   const MAX_ITERATIONS = 150; // safety ceiling — prevents runaway loops
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    const tools = isImportMode
+      ? LEAD_GEN_TOOLS.filter((t) => t.name !== "search_leads")
+      : LEAD_GEN_TOOLS;
+
     const response = await claude.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 8192,
       system: systemPrompt,
-      tools: LEAD_GEN_TOOLS,
+      tools,
       messages,
     });
 

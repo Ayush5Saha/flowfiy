@@ -119,6 +119,18 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
         },
         leadsPerRun: existingLeads.length,
         calendlyLink: calendlyCreds?.schedulingLink,
+        // Pass pre-loaded leads so the orchestrator skips search_leads entirely
+        preloadedLeads: existingLeads.map((l) => ({
+          leadId: l.id,
+          firstName: l.firstName,
+          lastName: l.lastName,
+          title: l.title,
+          email: l.email,
+          companyName: l.companyName,
+          companyWebsite: l.companyWebsite,
+          companySize: l.companySize,
+          industry: l.industry,
+        })),
       });
 
       await incrementGenerationCount(organizationId, existingLeads.length);

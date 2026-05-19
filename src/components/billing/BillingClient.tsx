@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, Loader2, Zap, XCircle, AlertTriangle, Check } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { getLocalisedPrice, type LocalisedPrice } from "@/lib/currency";
 
 interface Plan {
   key: string;
@@ -23,6 +24,8 @@ interface BillingClientProps {
     generationLimit: number;
     subscriptionStatus: string | null;
     razorpaySubscriptionId: string | null;
+    stripeSubscriptionId: string | null;
+    billingGateway: string | null;
   };
   usageThisMonth: number;
   plans: Plan[];
@@ -45,9 +48,6 @@ function loadRazorpayScript(): Promise<void> {
   });
 }
 
-function formatInr(amount: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
-}
 
 export function BillingClient({ organization, usageThisMonth, plans }: BillingClientProps) {
   const searchParams = useSearchParams();
@@ -56,6 +56,15 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+  const [country, setCountry] = useState<string>("IN"); // default IN until geo loads
+
+  // Detect visitor country once on mount
+  useEffect(() => {
+    fetch("/api/geo")
+      .then((r) => r.json())
+      .then((d: { country?: string }) => { if (d.country) setCountry(d.country); })
+      .catch(() => null); // silent fail — keep default
+  }, []);
 
   // Handle ?success=true&plan=GROWTH redirect from Razorpay handler
   useEffect(() => {
@@ -84,18 +93,42 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
       const res = await fetch("/api/billing/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId: organization.id, plan: planKey }),
+        body: JSON.stringify({ organizationId: organization.id, plan: planKey, country }),
       });
       const data = await res.json() as {
+        // shared
+        gateway?: "razorpay" | "stripe";
+        planName?: string;
+        error?: string;
+        // razorpay
         subscriptionId?: string;
         keyId?: string;
-        planName?: string;
         priceInr?: number;
         prefill?: { name: string; email: string };
-        error?: string;
+        // stripe
+        checkoutUrl?: string;
+        priceUsd?: number;
       };
 
-      if (!res.ok || !data.subscriptionId || !data.keyId) {
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create checkout. Please try again.");
+        setLoading(null);
+        return;
+      }
+
+      // ── Stripe: redirect to hosted checkout ───────────────────────────────
+      if (data.gateway === "stripe") {
+        if (!data.checkoutUrl) {
+          setError("Failed to create Stripe checkout session.");
+          setLoading(null);
+          return;
+        }
+        window.location.href = data.checkoutUrl;
+        return; // page navigates away — no need to reset loading
+      }
+
+      // ── Razorpay: open embedded modal ─────────────────────────────────────
+      if (!data.subscriptionId || !data.keyId) {
         setError(data.error ?? "Failed to create checkout. Please try again.");
         setLoading(null);
         return;
@@ -107,8 +140,8 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         key: data.keyId,
         subscription_id: data.subscriptionId,
         name: "Flowfiy",
-        description: `${data.planName} Plan — ${data.priceInr ? formatInr(data.priceInr) : ""}/month`,
-        image: "/logo.png",         // optional — add your logo at /public/logo.png
+        description: `${data.planName} Plan — ${data.priceInr ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(data.priceInr) : ""}/month`,
+        image: "/logo.png",
         prefill: data.prefill ?? {},
         handler: () => {
           window.location.href = `/billing?success=true&plan=${planKey}`;
@@ -119,10 +152,7 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
           confirm_close: true,
         },
         theme: { color: "#6366f1" },
-        notes: {
-          organizationId: organization.id,
-          orgName: organization.name,
-        },
+        notes: { organizationId: organization.id, orgName: organization.name },
       });
 
       rzp.open();
@@ -143,12 +173,21 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organizationId: organization.id }),
       });
+      const data = await res.json() as { gateway?: string; portalUrl?: string; error?: string };
+
       if (!res.ok) {
-        const data = await res.json() as { error?: string };
         setError(data.error ?? "Failed to cancel subscription.");
-      } else {
-        setCancelRequested(true);
+        return;
       }
+
+      // Stripe: redirect to self-service portal
+      if (data.gateway === "stripe" && data.portalUrl) {
+        window.location.href = data.portalUrl;
+        return;
+      }
+
+      // Razorpay: cancellation handled server-side
+      setCancelRequested(true);
     } finally {
       setCancelLoading(false);
     }
@@ -220,14 +259,14 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
             </div>
           </div>
 
-          {organization.razorpaySubscriptionId && organization.plan !== "FREE" && !cancelRequested && statusLabel !== "cancelled" && (
+          {(organization.razorpaySubscriptionId || organization.stripeSubscriptionId) && organization.plan !== "FREE" && !cancelRequested && statusLabel !== "cancelled" && (
             <button
               onClick={handleCancel}
               disabled={cancelLoading}
               className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm hover:bg-secondary transition-colors disabled:opacity-50 text-muted-foreground"
             >
               {cancelLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-              Cancel plan
+              {organization.billingGateway === "stripe" ? "Manage subscription" : "Cancel plan"}
             </button>
           )}
         </div>
@@ -312,8 +351,18 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
 
                   {/* Right: price + button */}
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold font-mono">{formatInr(plan.priceInr)}</p>
-                    <p className="text-xs text-muted-foreground">/month · ~${plan.priceUsd} USD</p>
+                    {(() => {
+                      const lp: LocalisedPrice = getLocalisedPrice(plan.priceInr, country);
+                      return (
+                        <>
+                          <p className="text-2xl font-bold font-mono">{lp.formatted}</p>
+                          <p className="text-xs text-muted-foreground">/month</p>
+                          {lp.currency.code !== "INR" && (
+                            <p className="text-xs text-muted-foreground/70 mt-0.5">{lp.note}</p>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {!isCurrent ? (
                       <button
@@ -344,7 +393,7 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Payments are processed securely by Razorpay. Prices in INR. Unused generations don&apos;t roll over. Cancellation takes effect at the end of the billing period.
+        Payments processed securely by {country === "IN" ? "Razorpay (INR)" : "Stripe (USD)"}. Unused generations don&apos;t roll over. Cancellation takes effect at the end of the billing period.
       </p>
     </div>
   );
