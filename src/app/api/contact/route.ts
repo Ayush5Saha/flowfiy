@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const { error } = await resend.emails.send({
       from: "Flowfiy Contact <onboarding@resend.dev>",
-      to: ["support@flowfiy.com"],
+      to: ["sahaayush6000@gmail.com"],
       replyTo: email,
       subject: `[${subject}] from ${name}`,
       html: `
