@@ -50,10 +50,21 @@ export default function ContactPage() {
     setError("");
 
     try {
-      // Send via mailto as fallback — replace with email API when available
-      const mailtoLink = `mailto:support@flowfiy.com?subject=${encodeURIComponent(`[${form.subject}] from ${form.name}`)}&body=${encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\nSubject: ${form.subject}\n\nMessage:\n${form.message}`)}`;
-      window.location.href = mailtoLink;
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please email us directly at support@flowfiy.com");
+        return;
+      }
+
       setSent(true);
+      setForm({ name: "", email: "", subject: SUBJECTS[0], message: "" });
     } catch {
       setError("Something went wrong. Please email us directly at support@flowfiy.com");
     } finally {
@@ -121,9 +132,11 @@ export default function ContactPage() {
                 <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
                   <Mail className="w-6 h-6 text-emerald-400" />
                 </div>
-                <p className="text-white font-medium mb-1">Your email client should have opened</p>
+                <p className="text-white font-medium mb-1">Message sent!</p>
                 <p className="text-zinc-400 text-sm">
-                  If it didn&apos;t, email us directly at{" "}
+                  We&apos;ve received your message and will reply to{" "}
+                  <span className="text-violet-400">{form.email || "your email"}</span>{" "}
+                  within 24 hours. You can also reach us directly at{" "}
                   <a href="mailto:support@flowfiy.com" className="text-violet-400 hover:underline">
                     support@flowfiy.com
                   </a>
@@ -198,7 +211,7 @@ export default function ContactPage() {
                   disabled={loading}
                   className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {loading ? "Opening email client..." : "Send message"}
+                  {loading ? "Sending..." : "Send message"}
                 </button>
               </form>
             )}
