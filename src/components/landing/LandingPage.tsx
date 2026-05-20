@@ -462,7 +462,7 @@ function Hero() {
       {/* Hero text — parallax up on scroll */}
       <motion.div
         style={{ y: textY, opacity: textOpacity }}
-        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-32 pb-12"
+        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-24 sm:pt-32 pb-12"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -478,7 +478,7 @@ function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.05]"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]"
         >
           Turn Any Market{" "}
           <span className="relative inline-block">
@@ -573,7 +573,7 @@ function Hero() {
             </div>
 
             <div className="flex" style={{ minHeight: 340 }}>
-              <div className="w-44 border-r border-white/5 bg-zinc-950/60 p-3 flex flex-col gap-1 shrink-0">
+              <div className="hidden sm:flex sm:flex-col w-44 border-r border-white/5 bg-zinc-950/60 p-3 gap-1 shrink-0">
                 <div className="flex items-center gap-2 px-2 py-2 mb-3">
                   <Image src="/icon.svg" alt="Flowfiy" width={22} height={22} className="rounded-md" />
                   <span className="text-xs font-bold text-white">Flowfiy</span>
@@ -586,7 +586,7 @@ function Hero() {
                 ))}
               </div>
 
-              <div className="flex-1 p-5 overflow-hidden">
+              <div className="flex-1 p-3 sm:p-5 overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-xs font-semibold text-white">Dashboard</p>
@@ -597,7 +597,7 @@ function Hero() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                   {[["1,247", "Leads Generated"], ["389", "Qualified"], ["214", "Emails Sent"], ["12", "Meetings"]].map(([val, label]) => (
                     <div key={label} className="bg-zinc-800/50 rounded-lg p-2.5 border border-white/5">
                       <p className="text-sm font-bold text-white font-mono">{val}</p>
@@ -740,7 +740,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section ref={sectionRef} id="how-it-works" className="bg-[#030305] py-28 px-4 sm:px-6 overflow-hidden">
+    <section ref={sectionRef} id="how-it-works" className="bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6 overflow-hidden">
       {/* Floating orbs */}
       <FloatingOrb size={400} color="radial-gradient(circle, rgba(109,40,217,1), rgba(79,70,229,0))" x="-10%" top="10%" speedY={-120} blur={100} />
       <FloatingOrb size={300} color="radial-gradient(circle, rgba(139,92,246,1), rgba(99,102,241,0))" x="80%" top="60%" speedY={80} blur={120} />
@@ -816,7 +816,7 @@ function Features() {
   ];
 
   return (
-    <section id="features" className="relative bg-[#030305] py-28 px-4 sm:px-6 overflow-hidden">
+    <section id="features" className="relative bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6 overflow-hidden">
       {/* Decorative top line */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
 
@@ -863,7 +863,7 @@ function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="relative bg-[#030305] py-28 px-4 sm:px-6 overflow-hidden">
+    <section id="pricing" className="relative bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6 overflow-hidden">
       <FloatingOrb size={600} color="radial-gradient(circle, rgba(109,40,217,0.4), rgba(79,70,229,0))" x="20%" top="30%" speedY={-80} blur={150} />
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -943,7 +943,7 @@ function Testimonials() {
   ];
 
   return (
-    <section className="bg-[#030305] py-28 px-4 sm:px-6 border-t border-white/5">
+    <section className="bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6 border-t border-white/5">
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Testimonials</span>
@@ -994,12 +994,12 @@ function FinalCTA() {
   const springScale = useSpring(scale, { stiffness: 60, damping: 20 });
 
   return (
-    <section className="bg-[#030305] py-28 px-4 sm:px-6" style={{ perspective: 1400 }}>
+    <section className="bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6" style={{ perspective: 1400 }}>
       <FadeIn>
         <motion.div
           ref={ref}
           style={{ rotateX: springRotateX, scale: springScale, transformStyle: "preserve-3d" }}
-          className="relative max-w-3xl mx-auto text-center overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-b from-violet-950/40 to-zinc-900/40 p-16"
+          className="relative max-w-3xl mx-auto text-center overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-b from-violet-950/40 to-zinc-900/40 p-8 sm:p-12 md:p-16"
         >
           {/* Glows */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-violet-600/20 blur-3xl" />
