@@ -478,7 +478,7 @@ function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]"
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-[82px] font-black tracking-tight text-white mb-6 leading-[1.06]"
         >
           Turn Any Market{" "}
           <span className="relative inline-block">
@@ -528,14 +528,30 @@ function Hero() {
           </a>
         </motion.div>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-xs text-zinc-600 mt-6"
+          className="mt-8"
         >
-          No credit card required · 50 free lead generations · Cancel anytime
-        </motion.p>
+          <p className="text-xs text-zinc-600 mb-5">
+            No credit card required · 100 free lead generations · Cancel anytime
+          </p>
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {[
+              { icon: "🤖", text: "Claude Sonnet — managed" },
+              { icon: "🔍", text: "275M+ Apollo contacts" },
+              { icon: "🔒", text: "AES-256 encrypted" },
+              { icon: "📧", text: "Gmail-native delivery" },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <span className="text-sm">{icon}</span>
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* 3D Dashboard — scroll-driven tilt + depth */}
@@ -649,10 +665,10 @@ function StatsBar() {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
   const stats = [
-    { value: 275, suffix: "M+", label: "Contacts in Apollo DB" },
-    { value: 5, suffix: "x", label: "Faster lead research" },
-    { value: 87, suffix: "%", label: "Avg qualification accuracy" },
-    { value: 0, suffix: "$", label: "Claude API cost to you" },
+    { value: 275,  suffix: "M+", label: "Contacts in Apollo DB" },
+    { value: 5,    suffix: "x",  label: "Faster than manual research" },
+    { value: 87,   suffix: "%",  label: "Avg qualification accuracy" },
+    { value: 10,   suffix: " min", label: "Time to first qualified leads" },
   ];
 
   return (
@@ -665,12 +681,8 @@ function StatsBar() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x divide-white/5">
           {stats.map(({ value, suffix, label }, i) => (
             <FadeIn key={label} delay={i * 0.1} className="text-center px-6">
-              <p className="text-4xl font-bold font-mono text-white mb-1">
-                {suffix === "$" ? (
-                  <span>$<Counter value={value} /></span>
-                ) : (
-                  <Counter value={value} suffix={suffix} />
-                )}
+              <p className="text-4xl font-black font-mono text-white mb-1 tracking-tight">
+                <Counter value={value} suffix={suffix} />
               </p>
               <p className="text-sm text-zinc-500">{label}</p>
             </FadeIn>
@@ -939,7 +951,7 @@ function Testimonials() {
   const quotes = [
     { text: "We went from 2 hours of manual research per lead to 90 seconds fully automated. The qualification scoring alone saved us from chasing dead-end prospects.", name: "Jordan Blake", role: "Head of Growth, CloudBridge", stars: 5 },
     { text: "The personalization is genuinely impressive. Each email references something specific about the prospect's company. Our reply rate went from 3% to 18% in the first month.", name: "Sarah Chen", role: "VP Engineering, Streamline Labs", stars: 5 },
-    { text: "As an agency running outbound for 8 clients, the multi-tenant setup and team seats are exactly what we needed. BYOK model means our margins stay healthy.", name: "Marcus Rivera", role: "Founder, RevOps Agency", stars: 5 },
+    { text: "As an agency running outbound for 8 clients, the multi-tenant setup and team seats are exactly what we needed. Claude is managed by Flowfiy — no infrastructure headaches for us.", name: "Marcus Rivera", role: "Founder, RevOps Agency", stars: 5 },
   ];
 
   return (

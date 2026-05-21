@@ -16,11 +16,13 @@ export default async function AdminLayout({
   const isAuthenticated = token ? verifyAdminToken(token) : false;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-zinc-950 text-white">
       {isAuthenticated ? (
         <div className="flex h-screen overflow-hidden">
           <AdminSidebar />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto bg-[#09090b]">
+            {/* Amber top bar — visual indicator this is admin */}
+            <div className="h-0.5 bg-gradient-to-r from-amber-600/80 via-amber-400/60 to-amber-600/80" />
             <div className="p-6 lg:p-8">{children}</div>
           </main>
         </div>

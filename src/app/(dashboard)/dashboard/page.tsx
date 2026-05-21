@@ -1,14 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone } from "lucide-react";
+import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone, Zap } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  // These are cache hits — layout already called them this request
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const membership = await getOrgMembership(user.id);
@@ -98,94 +97,135 @@ export default async function DashboardPage() {
     },
   ];
 
-  const usagePercent = organization.generationLimit === -1
-    ? 0
-    : Math.round((organization.generationCount / organization.generationLimit) * 100);
-
   const replyRate = totalSent > 0 ? Math.round((totalReplied / totalSent) * 100) : 0;
 
   const stats = [
-    { label: "Total Leads", value: totalLeads, icon: Users, color: "text-blue-400" },
-    { label: "Qualified", value: qualifiedLeads, icon: TrendingUp, color: "text-green-400" },
-    { label: "Emails Sent", value: totalSent, icon: Mail, color: "text-purple-400" },
-    { label: "Reply Rate", value: `${replyRate}%`, icon: MessageSquare, color: "text-yellow-400" },
+    {
+      label: "Total Leads",
+      value: totalLeads,
+      icon: Users,
+      accentFrom: "from-blue-500/40",
+      accentTo: "to-blue-500/0",
+      iconColor: "text-blue-400",
+      iconBg: "bg-blue-500/10",
+    },
+    {
+      label: "Qualified",
+      value: qualifiedLeads,
+      icon: TrendingUp,
+      accentFrom: "from-emerald-500/40",
+      accentTo: "to-emerald-500/0",
+      iconColor: "text-emerald-400",
+      iconBg: "bg-emerald-500/10",
+    },
+    {
+      label: "Emails Sent",
+      value: totalSent,
+      icon: Mail,
+      accentFrom: "from-violet-500/40",
+      accentTo: "to-violet-500/0",
+      iconColor: "text-violet-400",
+      iconBg: "bg-violet-500/10",
+    },
+    {
+      label: "Reply Rate",
+      value: `${replyRate}%`,
+      icon: MessageSquare,
+      accentFrom: "from-amber-500/40",
+      accentTo: "to-amber-500/0",
+      iconColor: "text-amber-400",
+      iconBg: "bg-amber-500/10",
+    },
   ];
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+
+      {/* ── Header ─────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Welcome back — here&apos;s your outbound overview
           </p>
         </div>
         <Link
           href="/leads"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-px"
         >
           <Plus className="w-4 h-4" />
           Generate Leads
         </Link>
       </div>
 
-      {/* Onboarding checklist */}
+      {/* ── Onboarding checklist ─────────────────────── */}
       <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} />
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-muted-foreground text-xs">{label}</span>
-              <Icon className={`w-4 h-4 ${color}`} />
+      {/* ── Stats grid ───────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {stats.map(({ label, value, icon: Icon, accentFrom, accentTo, iconColor, iconBg }) => (
+          <div key={label} className="relative bg-card border border-border rounded-xl p-5 overflow-hidden group hover:border-border/80 transition-colors">
+            {/* Gradient top accent */}
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accentFrom} via-transparent ${accentTo}`} />
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-medium text-muted-foreground">{label}</span>
+              <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center`}>
+                <Icon className={`w-4 h-4 ${iconColor}`} />
+              </div>
             </div>
-            <p className="text-2xl font-semibold font-mono">{value.toLocaleString()}</p>
+            <p className="text-3xl font-bold font-mono tracking-tight">
+              {typeof value === "number" ? value.toLocaleString() : value}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Today's activity strip */}
+      {/* ── Today's activity strip ───────────────────── */}
       {(sentToday > 0 || repliedToday > 0) && (
         <div className="flex items-center gap-3 mb-6 p-4 bg-card border border-border rounded-xl">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
           <p className="text-sm text-muted-foreground">
             <strong className="text-foreground font-mono">{sentToday}</strong> emails sent today
             {repliedToday > 0 && (
-              <> · <strong className="text-green-400 font-mono">{repliedToday}</strong> new repl{repliedToday === 1 ? "y" : "ies"} today</>
+              <> · <strong className="text-emerald-400 font-mono">{repliedToday}</strong> new repl{repliedToday === 1 ? "y" : "ies"} today</>
             )}
           </p>
-          <Link href="/campaigns" className="ml-auto text-xs text-primary hover:underline">
+          <Link href="/campaigns" className="ml-auto text-xs text-primary hover:underline shrink-0">
             View campaigns →
           </Link>
         </div>
       )}
 
+      {/* ── Main content grid ─────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         {/* Recent lead lists */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-medium">Recent Lead Lists</h2>
-            <Link href="/leads" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+        <div className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="font-semibold text-sm">Recent Lead Lists</h2>
+            <Link href="/leads" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
           {recentLists.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">No lead lists yet</p>
-              <Link href="/leads" className="text-primary text-sm hover:underline mt-1 inline-block">
+            <div className="text-center py-12">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-muted-foreground text-sm font-medium">No lead lists yet</p>
+              <p className="text-muted-foreground/60 text-xs mt-1">Generate your first leads to get started</p>
+              <Link href="/leads" className="text-primary text-sm hover:underline mt-3 inline-block font-medium">
                 Generate your first leads →
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-border">
               {recentLists.map((list) => (
                 <Link
                   key={list.id}
                   href={`/leads/${list.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary transition-colors group"
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-secondary/40 transition-colors group"
                 >
                   <div>
                     <p className="text-sm font-medium group-hover:text-primary transition-colors">{list.name}</p>
@@ -193,87 +233,81 @@ export default async function DashboardPage() {
                       {list.totalLeads} leads · {list.qualifiedLeads} qualified
                     </p>
                   </div>
-                  <StatusBadge status={list.status} />
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={list.status} />
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </Link>
               ))}
             </div>
           )}
         </div>
 
-        {/* Right column: Quick actions + Usage */}
+        {/* Right column */}
         <div className="space-y-4">
+
           {/* Quick Actions */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <h2 className="font-medium mb-3">Quick Actions</h2>
-            <div className="space-y-2">
-              <Link href="/leads" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
-                <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Users className="w-3.5 h-3.5 text-blue-400" />
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-border">
+              <h2 className="font-semibold text-sm">Quick Actions</h2>
+            </div>
+            <div className="p-3 space-y-1.5">
+              <Link href="/leads" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 text-blue-400" />
                 </div>
-                <span className="text-sm flex-1">Generate Leads</span>
+                <span className="text-sm flex-1 font-medium">Generate Leads</span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link href="/campaigns/new" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
-                <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <Megaphone className="w-3.5 h-3.5 text-purple-400" />
+              <Link href="/campaigns/new" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                  <Megaphone className="w-4 h-4 text-violet-400" />
                 </div>
                 <div className="flex-1">
-                  <span className="text-sm">New Campaign</span>
+                  <span className="text-sm font-medium">New Campaign</span>
                   {activeCampaigns > 0 && (
-                    <span className="ml-2 text-xs bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded-full">
+                    <span className="ml-2 text-xs bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium">
                       {activeCampaigns} active
                     </span>
                   )}
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link href="/settings" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group">
-                <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                  <TrendingUp className="w-3.5 h-3.5 text-green-400" />
+              <Link href="/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
-                <span className="text-sm flex-1">Edit ICP / Profile</span>
+                <span className="text-sm flex-1 font-medium">Edit ICP / Profile</span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
           </div>
 
-          {/* Usage */}
+          {/* AI Engine status */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <h2 className="font-medium mb-3">Usage</h2>
-            <div className="mb-3">
-              <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-muted-foreground">Generations used</span>
-                <span className="font-mono text-xs">
-                  {organization.generationCount}
-                  {organization.generationLimit !== -1 && ` / ${organization.generationLimit}`}
-                </span>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-primary" />
               </div>
-              {organization.generationLimit !== -1 && (
-                <div className="w-full bg-secondary rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${usagePercent > 80 ? "bg-destructive" : "bg-primary"}`}
-                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                  />
-                </div>
-              )}
+              <h2 className="font-semibold text-sm">AI Engine</h2>
+              <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Active
+              </span>
             </div>
-            <div className="border border-border rounded-lg p-3 mb-3">
-              <p className="text-xs font-medium capitalize">{organization.plan.toLowerCase()} Plan</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {organization.generationLimit === -1
-                  ? "Unlimited generations"
-                  : `${Math.max(0, organization.generationLimit - organization.generationCount)} remaining`}
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Claude Sonnet is fully managed by Flowfiy. No API key required — AI is included in your plan.
+            </p>
             {organization.plan === "FREE" && (
               <Link
                 href="/billing"
-                className="block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="mt-3 block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 Upgrade Plan
               </Link>
             )}
           </div>
+
         </div>
       </div>
     </div>
@@ -282,12 +316,12 @@ export default async function DashboardPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: "Draft", class: "bg-secondary text-muted-foreground" },
-    QUEUED: { label: "Queued", class: "bg-yellow-500/10 text-yellow-400" },
-    RESEARCHING: { label: "Running", class: "bg-blue-500/10 text-blue-400" },
-    READY: { label: "Ready", class: "bg-green-500/10 text-green-400" },
-    FAILED: { label: "Failed", class: "bg-destructive/10 text-destructive" },
-    ARCHIVED: { label: "Archived", class: "bg-secondary text-muted-foreground" },
+    DRAFT:       { label: "Draft",     class: "bg-secondary text-muted-foreground" },
+    QUEUED:      { label: "Queued",    class: "bg-amber-500/10 text-amber-400" },
+    RESEARCHING: { label: "Running",   class: "bg-blue-500/10 text-blue-400" },
+    READY:       { label: "Ready",     class: "bg-emerald-500/10 text-emerald-400" },
+    FAILED:      { label: "Failed",    class: "bg-destructive/10 text-destructive" },
+    ARCHIVED:    { label: "Archived",  class: "bg-secondary text-muted-foreground" },
   };
   const { label, class: cls } = config[status] ?? { label: status, class: "bg-secondary text-muted-foreground" };
   return (
