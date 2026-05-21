@@ -44,6 +44,7 @@ export interface OrchestratorResult {
   totalLeads: number;
   qualifiedLeads: number;
   toolCallCount: number;
+  tokenUsage: { inputTokens: number; outputTokens: number };
 }
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -129,6 +130,8 @@ export async function runLeadGenOrchestrator(
   ];
 
   let toolCallCount = 0;
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
   const MAX_ITERATIONS = 150; // safety ceiling — prevents runaway loops
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
@@ -143,6 +146,10 @@ export async function runLeadGenOrchestrator(
       tools,
       messages,
     });
+
+    // Accumulate token usage
+    totalInputTokens += response.usage.input_tokens;
+    totalOutputTokens += response.usage.output_tokens;
 
     // Append the assistant turn to conversation history
     messages.push({ role: "assistant", content: response.content });
@@ -202,5 +209,6 @@ export async function runLeadGenOrchestrator(
     totalLeads: ctx.stats.totalLeads,
     qualifiedLeads: ctx.stats.qualifiedLeads,
     toolCallCount,
+    tokenUsage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
   };
 }

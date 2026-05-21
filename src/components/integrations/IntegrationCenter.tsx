@@ -30,24 +30,6 @@ interface IntegrationConfig {
 
 const INTEGRATIONS: IntegrationConfig[] = [
   {
-    type: "CLAUDE",
-    label: "Claude AI",
-    description: "Powers all AI research, qualification, and outreach generation",
-    icon: "🤖",
-    fields: [{ key: "apiKey", label: "API Key", placeholder: "sk-ant-...", type: "password" }],
-    docsUrl: "https://console.anthropic.com/settings/keys",
-    howToGet: {
-      title: "How to get your Anthropic API Key",
-      steps: [
-        "Go to console.anthropic.com and sign in (or create a free account)",
-        "Click your profile icon → Settings → API Keys",
-        'Click "Create Key", give it a name like "Flowfiy", and copy the key',
-        "Paste it above — it starts with sk-ant-",
-      ],
-      note: "Free tier includes $5 credit. Usage-based billing applies beyond that.",
-    },
-  },
-  {
     type: "APOLLO",
     label: "Apollo.io",
     description: "Lead discovery — finds contacts matching your ICP",
@@ -127,6 +109,26 @@ const INTEGRATIONS: IntegrationConfig[] = [
 export function IntegrationCenter({ organizationId, statusMap }: IntegrationCenterProps) {
   return (
     <div className="space-y-4">
+      {/* Managed AI banner — replaces the old Claude BYOK card */}
+      <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="font-medium text-sm">AI Engine — Claude Sonnet</p>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">Managed by Flowfiy</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Powering all AI research, qualification, and outreach generation. No setup required.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <span className="text-xs text-green-400">Active</span>
+        </div>
+      </div>
+
       <div className="grid gap-4">
         {INTEGRATIONS.map((integration) => (
           <IntegrationCard

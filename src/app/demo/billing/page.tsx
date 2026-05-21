@@ -6,6 +6,7 @@ const mockOrg = {
   razorpayCustomerId: null, razorpaySubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null, billingGateway: null, subscriptionStatus: "active",
   generationCount: 847, generationLimit: 7500, createdAt: new Date(), updatedAt: new Date(), members: [],
   referralCode: null, referralCreditMonths: 0,
+  monthlyTokensUsed: BigInt(0), tokenBudgetResetAt: null,
 };
 
 const plans = [

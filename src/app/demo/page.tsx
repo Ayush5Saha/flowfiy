@@ -20,6 +20,8 @@ const mockOrg = {
   members: [],
   referralCode: null,
   referralCreditMonths: 0,
+  monthlyTokensUsed: BigInt(0),
+  tokenBudgetResetAt: null,
 };
 
 export default function DemoPage() {

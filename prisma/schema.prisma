@@ -29,6 +29,9 @@ model Organization {
   referralCode         String?   @unique @map("referral_code")
   referralCreditMonths Int       @default(0) @map("referral_credit_months")
 
+  monthlyTokensUsed  BigInt    @default(0) @map("monthly_tokens_used")
+  tokenBudgetResetAt DateTime? @map("token_budget_reset_at")
+
   members           OrganizationMember[]
   businessProfile   BusinessProfile?
   integrations      Integration[]

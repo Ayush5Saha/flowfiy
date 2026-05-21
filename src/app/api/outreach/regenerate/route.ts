@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getClaudeClient } from "@/ai/client";
 import { runPersonalization } from "@/ai/agents/personalization";
-import { decryptCredentials } from "@/lib/encryption";
+import { decryptCredentials } from "@/lib/encryption"; // still needed for Calendly
 
 const schema = z.object({
   leadId: z.string().uuid(),
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     ? decryptCredentials(calendlyIntegration.encryptedCredentials).schedulingLink
     : undefined;
 
-  const claude = await getClaudeClient(organizationId);
+  const claude = getClaudeClient();
   const outreach = await runPersonalization(claude, {
     lead: {
       firstName: lead.firstName ?? undefined,

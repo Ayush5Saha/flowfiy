@@ -7,7 +7,6 @@ import { Check, Loader2, ChevronRight } from "lucide-react";
 const STEPS = [
   { id: 1, label: "Workspace" },
   { id: 2, label: "Business Profile" },
-  { id: 3, label: "Connect Claude" },
 ];
 
 const INDUSTRIES = [
@@ -46,10 +45,6 @@ export function OnboardingWizard({ userId }: { userId: string }) {
   const [painPointsSolved, setPainPointsSolved] = useState("");
   const [offerPositioning, setOfferPositioning] = useState("");
   const [outreachTone, setOutreachTone] = useState("professional");
-
-  // Step 3
-  const [claudeApiKey, setClaudeApiKey] = useState("");
-  const [validating, setValidating] = useState(false);
 
   function toggleArray(arr: string[], setArr: (v: string[]) => void, value: string) {
     if (arr.includes(value)) {
@@ -110,47 +105,6 @@ export function OnboardingWizard({ userId }: { userId: string }) {
     if (!res.ok) {
       const data = await res.json() as { error?: string };
       setError(typeof data.error === "string" ? data.error : "Failed to save profile");
-      return;
-    }
-
-    setStep(3);
-  }
-
-  async function handleStep3(e: React.FormEvent) {
-    e.preventDefault();
-    if (!orgId) return;
-    setValidating(true);
-    setError("");
-
-    // Validate the key
-    const validateRes = await fetch("/api/integrations/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "CLAUDE", credentials: { apiKey: claudeApiKey } }),
-    });
-
-    const validateData = await validateRes.json() as { valid: boolean; message: string };
-    setValidating(false);
-
-    if (!validateData.valid) {
-      setError(validateData.message ?? "Invalid Claude API key");
-      return;
-    }
-
-    setLoading(true);
-    const saveRes = await fetch("/api/integrations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        organizationId: orgId,
-        type: "CLAUDE",
-        credentials: { apiKey: claudeApiKey },
-      }),
-    });
-
-    setLoading(false);
-    if (!saveRes.ok) {
-      setError("Failed to save API key");
       return;
     }
 
@@ -350,53 +304,6 @@ export function OnboardingWizard({ userId }: { userId: string }) {
           </form>
         )}
 
-        {/* Step 3: Claude API Key */}
-        {step === 3 && (
-          <form onSubmit={handleStep3} className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold mb-1">Connect Claude AI</h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                Your API key is encrypted and stored securely. It&apos;s used only for your outbound research.
-              </p>
-            </div>
-
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-sm">
-              <p className="text-blue-400 font-medium mb-1">Get your API key</p>
-              <p className="text-muted-foreground text-xs">
-                Go to{" "}
-                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-                  console.anthropic.com
-                </a>
-                {" "}→ API Keys → Create Key. You need a paid Anthropic account.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Claude API Key</label>
-              <input
-                type="password"
-                value={claudeApiKey}
-                onChange={(e) => setClaudeApiKey(e.target.value)}
-                required
-                placeholder="sk-ant-api03-..."
-                className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={validating || loading || !claudeApiKey}
-              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {(validating || loading) ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {validating ? "Validating key..." : loading ? "Saving..." : "Complete Setup"}
-            </button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              You can connect Apollo, Apify, Gmail, and Calendly in the Integrations page after setup.
-            </p>
-          </form>
-        )}
       </div>
     </div>
   );

@@ -2,11 +2,11 @@ import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClient } from "@/ai/client";
+import { incrementGenerationCount, checkTokenBudget, incrementTokenUsage } from "@/lib/usage";
 import { runLeadGenOrchestrator } from "@/ai/orchestrator";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
-import { incrementGenerationCount } from "@/lib/usage";
 import { appendLog, clearLogs } from "@/lib/job-logs";
 
 export interface LeadGenerationJobData {
@@ -52,9 +52,13 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     await log(`ICP loaded: targeting ${businessProfile.targetIndustries.slice(0, 3).join(", ")} in ${businessProfile.targetGeographies.slice(0, 2).join(", ")}`, "success");
 
-    // ── Step 2: Set up clients ────────────────────────────────────────────────
+    // ── Step 2: Check token budget & set up clients ──────────────────────────
     await log("Initializing AI and integration clients...", "info");
-    const claude = await getClaudeClient(organizationId);
+    const tokenCheck = await checkTokenBudget(organizationId);
+    if (!tokenCheck.allowed) {
+      throw new Error("Monthly AI token budget exceeded. Resets at the start of next month.");
+    }
+    const claude = getClaudeClient();
 
     const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
     const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey) : null;
@@ -134,6 +138,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       });
 
       await incrementGenerationCount(organizationId, existingLeads.length);
+      await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
       await prisma.leadList.update({
         where: { id: leadListId },
         data: {
@@ -195,6 +200,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     // ── Step 5: Finalise ──────────────────────────────────────────────────────
     await incrementGenerationCount(organizationId, result.totalLeads);
+    await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
 
     await prisma.leadList.update({
       where: { id: leadListId },

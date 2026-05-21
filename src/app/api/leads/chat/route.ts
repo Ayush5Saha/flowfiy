@@ -90,7 +90,7 @@ When asked for strategic advice, be direct and concise. No filler.
 LEAD & COMPANY CONTEXT:
 ${context}`;
 
-  const claude = await getClaudeClient(organizationId);
+  const claude = getClaudeClient();
 
   // Stream the response
   const encoder = new TextEncoder();

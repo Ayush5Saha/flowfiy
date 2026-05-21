@@ -3,10 +3,9 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
-import Anthropic from "@anthropic-ai/sdk";
 
 const schema = z.object({
-  type: z.enum(["CLAUDE", "APOLLO", "APIFY", "CALENDLY"]),
+  type: z.enum(["APOLLO", "APIFY", "CALENDLY"]),
   credentials: z.record(z.string()),
 });
 
@@ -23,16 +22,6 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (type) {
-      case "CLAUDE": {
-        const client = new Anthropic({ apiKey: credentials.apiKey });
-        await client.messages.create({
-          model: "claude-haiku-4-5",
-          max_tokens: 10,
-          messages: [{ role: "user", content: "Hi" }],
-        });
-        return NextResponse.json({ valid: true, message: "Claude API key is valid" });
-      }
-
       case "APOLLO": {
         const client = new ApolloClient(credentials.apiKey);
         const valid = await client.validateKey();
