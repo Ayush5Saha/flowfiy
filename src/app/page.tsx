@@ -4,7 +4,7 @@ import LandingPage from "@/components/landing/LandingPage";
 export const metadata: Metadata = {
   title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
   description:
-    "5 specialized Claude AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. Powered by Claude AI. BYOK. Zero per-lead cost.",
+    "5 specialized Claude AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. Fully managed Claude Sonnet — no API key required.",
   keywords: [
     "AI sales outreach",
     "B2B lead generation",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "Claude AI sales",
     "outbound sales platform",
     "lead qualification AI",
-    "BYOK AI sales tool",
+    "AI-powered outbound platform",
     "sales pipeline automation",
   ],
   authors: [{ name: "Flowfiy" }],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: "Flowfiy",
     title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 specialized AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. BYOK. Zero per-lead cost.",
+      "5 specialized AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. Fully managed Claude Sonnet — no API key required.",
     images: [
       {
         url: "/og-image.png",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 Claude AI agents research, qualify, and write personalized outreach for every lead. Powered by Claude AI. BYOK.",
+      "5 Claude AI agents research, qualify, and write personalized outreach for every lead. Powered by Claude Sonnet — fully managed, no setup required.",
     images: ["/og-image.png"],
     creator: "@Flowfiy",
   },
@@ -112,7 +112,7 @@ const jsonLd = {
     "AI Lead Qualification Scoring",
     "Hyper-Personalized Email Copy Generation",
     "Gmail Integration for Outreach",
-    "Bring Your Own Claude API Key (BYOK)",
+    "Managed Claude Sonnet AI — No API Key Required",
     "Multi-tenant SaaS with AES-256 encryption",
   ],
   aggregateRating: {

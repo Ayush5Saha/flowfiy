@@ -471,7 +471,7 @@ function Hero() {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium mb-8"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Powered by Claude AI · BYOK · Zero per-lead cost
+          Powered by Claude Sonnet · Fully managed · No API key needed
         </motion.div>
 
         <motion.h1
@@ -807,7 +807,7 @@ function FeatureCard({ f, index }: { f: { icon: string; title: string; desc: str
 
 function Features() {
   const features = [
-    { icon: "🔐", title: "BYOK — Zero Platform Cost", desc: "Bring your own Claude API key. Every token billed directly to your Anthropic account. Flowfiy charges only for platform access — not per generation." },
+    { icon: "⚡", title: "Plug-and-Play AI — No Setup", desc: "Claude Sonnet is fully managed by Flowfiy. No Anthropic account, no API keys, no token billing headaches. Sign up and start generating leads in minutes." },
     { icon: "🏢", title: "Multi-Tenant Workspaces", desc: "Invite your whole team. Owner, admin, and member roles with full isolation. Each workspace has its own ICP, leads, and campaigns." },
     { icon: "📊", title: "Lead Qualification Scoring", desc: "Every lead receives a 0–100 qualification score with reasoning. Filter, sort, and focus only on the prospects that will actually convert." },
     { icon: "✏️", title: "Editable AI Copy", desc: "Claude writes the first draft. You own the final version. Edit, regenerate, or approve outreach copy before a single email is sent." },
@@ -870,7 +870,7 @@ function Pricing() {
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Pricing</span>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Simple, transparent pricing.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Pay for the platform. AI API costs go directly to your Anthropic account — not us.</p>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">One flat price. Claude Sonnet AI included. No API keys, no per-token billing, no surprises.</p>
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
@@ -1081,7 +1081,7 @@ function Footer() {
               <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.
+              AI-powered outbound sales platform. Plug in, generate qualified leads, and send hyper-personalized outreach — at scale. Powered by Claude Sonnet, fully managed.
             </p>
           </div>
 

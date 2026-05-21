@@ -69,13 +69,6 @@ export default async function DashboardPage() {
       done: !!businessProfile,
     },
     {
-      id: "claude-key",
-      label: "Connect your Claude API key",
-      description: "Add your Anthropic API key — Claude powers the entire research pipeline",
-      href: "/integrations",
-      done: connectedTypes.has("CLAUDE"),
-    },
-    {
       id: "apollo-key",
       label: "Connect Apollo for lead discovery",
       description: "Apollo finds contacts matching your ICP from 275M+ verified professionals",
