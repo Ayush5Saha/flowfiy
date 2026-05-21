@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CheckCircle, Loader2, Zap, XCircle, AlertTriangle, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { CheckCircle, Loader2, Zap, XCircle, AlertTriangle, Check, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { getLocalisedPrice, type LocalisedPrice } from "@/lib/currency";
 
@@ -58,6 +58,13 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [country, setCountry] = useState<string>("IN"); // default IN until geo loads
 
+  // Referral code state
+  const [showRefInput, setShowRefInput] = useState(false);
+  const [refCode, setRefCode] = useState("");
+  const [refStatus, setRefStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [refName, setRefName] = useState<string | null>(null); // referrer org name
+  const refDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Detect visitor country once on mount
   useEffect(() => {
     fetch("/api/geo")
@@ -74,6 +81,8 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
       setSuccessBanner(`🎉 You're now on the ${plan.charAt(0) + plan.slice(1).toLowerCase()} plan! Your limits have been updated.`);
       // Clean up the URL without reload
       window.history.replaceState({}, "", "/billing");
+      // Clear referral code from localStorage on successful upgrade
+      localStorage.removeItem("flowfiy_ref");
     }
     const errorParam = searchParams.get("error");
     if (errorParam) {
@@ -81,6 +90,54 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
       window.history.replaceState({}, "", "/billing");
     }
   }, [searchParams]);
+
+  // Pre-fill referral code from localStorage (set when visiting /signup?ref=CODE)
+  useEffect(() => {
+    const stored = localStorage.getItem("flowfiy_ref");
+    if (stored) {
+      setRefCode(stored);
+      setShowRefInput(true);
+    }
+  }, []);
+
+  // Debounced validation when referral code changes
+  useEffect(() => {
+    const code = refCode.trim().toUpperCase();
+    if (!code) {
+      setRefStatus("idle");
+      setRefName(null);
+      return;
+    }
+    if (code.length < 8) {
+      setRefStatus("idle");
+      setRefName(null);
+      return;
+    }
+    if (refDebounceRef.current) clearTimeout(refDebounceRef.current);
+    refDebounceRef.current = setTimeout(async () => {
+      setRefStatus("validating");
+      setRefName(null);
+      try {
+        const res = await fetch("/api/referral", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, organizationId: organization.id }),
+        });
+        const data = await res.json() as { valid: boolean; referrerName?: string; error?: string };
+        if (data.valid) {
+          setRefStatus("valid");
+          setRefName(data.referrerName ?? null);
+        } else {
+          setRefStatus("invalid");
+          setRefName(null);
+        }
+      } catch {
+        setRefStatus("invalid");
+      }
+    }, 500);
+    return () => { if (refDebounceRef.current) clearTimeout(refDebounceRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refCode]);
 
   const usagePercent = organization.generationLimit === -1
     ? 0
@@ -90,10 +147,15 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
     setLoading(planKey);
     setError(null);
     try {
+      const body: Record<string, string> = { organizationId: organization.id, plan: planKey, country };
+      // Include validated referral code
+      if (refStatus === "valid" && refCode.trim()) {
+        body.referralCode = refCode.trim().toUpperCase();
+      }
       const res = await fetch("/api/billing/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId: organization.id, plan: planKey, country }),
+        body: JSON.stringify(body),
       });
       const data = await res.json() as {
         // shared
@@ -305,6 +367,66 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
           </div>
         </div>
       </div>
+
+      {/* Referral code */}
+      {organization.plan === "FREE" && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <button
+            type="button"
+            onClick={() => setShowRefInput((v) => !v)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+          >
+            <Tag className="w-4 h-4" />
+            <span>Have a referral code?</span>
+            {showRefInput ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+          </button>
+
+          {showRefInput && (
+            <div className="mt-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={refCode}
+                  onChange={(e) => setRefCode(e.target.value.toUpperCase())}
+                  placeholder="Enter 8-character code (e.g. FLOW1XY9)"
+                  maxLength={8}
+                  className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-28"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs">
+                  {refStatus === "validating" && (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Checking…
+                    </span>
+                  )}
+                  {refStatus === "valid" && (
+                    <span className="flex items-center gap-1 text-green-400">
+                      <CheckCircle className="w-3 h-3" />
+                      Valid
+                    </span>
+                  )}
+                  {refStatus === "invalid" && (
+                    <span className="flex items-center gap-1 text-destructive">
+                      <XCircle className="w-3 h-3" />
+                      Invalid
+                    </span>
+                  )}
+                </div>
+              </div>
+              {refStatus === "valid" && refName && (
+                <p className="text-xs text-green-400 mt-1.5">
+                  ✓ Referred by <strong>{refName}</strong> — your first month will earn them a free month!
+                </p>
+              )}
+              {refStatus === "invalid" && (
+                <p className="text-xs text-destructive mt-1.5">
+                  Code not recognised. Please double-check and try again.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pricing plans */}
       <div>

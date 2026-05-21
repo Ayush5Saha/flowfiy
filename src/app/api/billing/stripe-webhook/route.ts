@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       // ── First payment completed via Checkout Session ───────────────────────
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const { organizationId, planKey } = session.metadata ?? {};
+        const { organizationId, planKey, referredOrgId, referrerOrgId } = session.metadata ?? {};
         const subId = session.subscription as string | null;
 
         if (!organizationId || !planKey || !subId) break;
@@ -76,6 +76,16 @@ export async function POST(req: NextRequest) {
           resourceId: subId,
           metadata: { plan: planKey, gateway: "stripe" },
         });
+
+        // ── Apply referral reward to the referrer ─────────────────────────
+        if (referredOrgId && referrerOrgId) {
+          await applyStripeReferralReward({
+            referredOrgId,
+            referrerOrgId,
+            planKey: planKey as keyof typeof STRIPE_PLANS,
+          });
+        }
+
         break;
       }
 
@@ -185,4 +195,78 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+// ─── Referral reward helper ───────────────────────────────────────────────────
+
+/**
+ * Applies a 1-month free credit to the referrer's Stripe customer balance.
+ * Stripe automatically applies negative customer balance to the next invoice.
+ */
+async function applyStripeReferralReward({
+  referredOrgId,
+  referrerOrgId,
+  planKey,
+}: {
+  referredOrgId: string;
+  referrerOrgId: string;
+  planKey: keyof typeof STRIPE_PLANS;
+}) {
+  try {
+    // Find the pending referral
+    const referral = await prisma.referral.findFirst({
+      where: {
+        referredOrgId,
+        referrerOrgId,
+        rewardApplied: false,
+      },
+    });
+    if (!referral) return; // no pending referral
+
+    // Get referrer org
+    const referrerOrg = await prisma.organization.findUnique({
+      where: { id: referrerOrgId },
+      select: { stripeCustomerId: true },
+    });
+
+    if (!referrerOrg?.stripeCustomerId) {
+      // Referrer uses Razorpay — increment credit months instead
+      await prisma.organization.update({
+        where: { id: referrerOrgId },
+        data: { referralCreditMonths: { increment: 1 } },
+      });
+    } else {
+      // Referrer uses Stripe — apply customer balance credit
+      const planConfig = STRIPE_PLANS[planKey];
+      const amountCents = planConfig.priceUsd * 100; // cents
+
+      await getStripe().customers.createBalanceTransaction(
+        referrerOrg.stripeCustomerId,
+        {
+          amount: -amountCents, // negative = credit on their account
+          currency: "usd",
+          description: `Referral reward — 1 free month (${planConfig.name} plan)`,
+        }
+      );
+    }
+
+    // Mark referral as rewarded
+    await prisma.referral.update({
+      where: { id: referral.id },
+      data: { rewardApplied: true, rewardAppliedAt: new Date() },
+    });
+
+    await createAuditLog({
+      organizationId: referrerOrgId,
+      action: "referral.reward_applied",
+      resourceType: "referral",
+      resourceId: referral.id,
+      metadata: { referredOrgId, plan: planKey, gateway: "stripe" },
+    });
+
+    console.log(`[stripe-webhook] Referral reward applied: referrer=${referrerOrgId}, plan=${planKey}`);
+  } catch (err) {
+    console.error("[stripe-webhook] Failed to apply referral reward:", err);
+    // Non-fatal — don't fail the webhook
+  }
 }

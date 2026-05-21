@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { PLANS, getPlanByRazorpayPlanId } from "@/lib/razorpay";
+import { getRazorpay, PLANS, getPlanByRazorpayPlanId } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
 
@@ -76,6 +76,9 @@ export async function POST(req: NextRequest) {
             resourceId: sub.id as string,
             metadata: { plan: planKey },
           });
+
+          // ── Apply referral reward ─────────────────────────────────────────
+          await applyRazorpayReferralReward({ referredOrgId: organizationId });
         }
         break;
       }
@@ -83,6 +86,7 @@ export async function POST(req: NextRequest) {
       // ── Renewal payment succeeded ───────────────────────────────────────────
       case "subscription.charged": {
         if (!sub) break;
+        const chargedPayment = event.payload.payment?.entity as Record<string, unknown> | undefined;
         const org = await prisma.organization.findFirst({
           where: { razorpaySubscriptionId: sub.id as string },
         });
@@ -91,6 +95,15 @@ export async function POST(req: NextRequest) {
             where: { id: org.id },
             data: { subscriptionStatus: "active" },
           });
+
+          // ── Redeem a referral credit month (refund this renewal) ──────────
+          if (org.referralCreditMonths > 0 && chargedPayment?.id) {
+            await redeemRazorpayCreditMonth({
+              org,
+              paymentId: chargedPayment.id as string,
+              paymentAmount: chargedPayment.amount as number,
+            });
+          }
         }
         break;
       }
@@ -212,4 +225,78 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+// ─── Referral reward helpers ──────────────────────────────────────────────────
+
+/**
+ * When a referred user's Razorpay subscription activates, find the pending
+ * referral and increment the referrer's credit months balance.
+ */
+async function applyRazorpayReferralReward({ referredOrgId }: { referredOrgId: string }) {
+  try {
+    const referral = await prisma.referral.findFirst({
+      where: { referredOrgId, rewardApplied: false },
+    });
+    if (!referral) return;
+
+    await prisma.$transaction([
+      prisma.organization.update({
+        where: { id: referral.referrerOrgId },
+        data: { referralCreditMonths: { increment: 1 } },
+      }),
+      prisma.referral.update({
+        where: { id: referral.id },
+        data: { rewardApplied: true, rewardAppliedAt: new Date() },
+      }),
+    ]);
+
+    await createAuditLog({
+      organizationId: referral.referrerOrgId,
+      action: "referral.reward_applied",
+      resourceType: "referral",
+      resourceId: referral.id,
+      metadata: { referredOrgId, gateway: "razorpay" },
+    });
+
+    console.log(`[webhook] Referral reward credited to org=${referral.referrerOrgId}`);
+  } catch (err) {
+    console.error("[webhook] Failed to apply referral reward:", err);
+  }
+}
+
+/**
+ * On the referrer's renewal, if they have credit months, issue a full refund
+ * for that charge — giving them a free month.
+ */
+async function redeemRazorpayCreditMonth({
+  org,
+  paymentId,
+  paymentAmount,
+}: {
+  org: { id: string; referralCreditMonths: number };
+  paymentId: string;
+  paymentAmount: number; // in paise
+}) {
+  try {
+    const rzp = getRazorpay();
+    await rzp.payments.refund(paymentId, { amount: paymentAmount });
+
+    await prisma.organization.update({
+      where: { id: org.id },
+      data: { referralCreditMonths: { decrement: 1 } },
+    });
+
+    await createAuditLog({
+      organizationId: org.id,
+      action: "referral.month_refunded",
+      resourceType: "payment",
+      resourceId: paymentId,
+      metadata: { amountRefunded: paymentAmount, gateway: "razorpay" },
+    });
+
+    console.log(`[webhook] Referral free month redeemed for org=${org.id}, refunded payment=${paymentId}`);
+  } catch (err) {
+    console.error("[webhook] Failed to redeem referral credit month:", err);
+  }
 }

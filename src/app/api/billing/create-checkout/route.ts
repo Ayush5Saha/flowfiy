@@ -10,6 +10,8 @@ const schema = z.object({
   plan: z.enum(["STARTER", "GROWTH", "AGENCY"]),
   /** Country code from /api/geo — determines which gateway to use */
   country: z.string().length(2).optional().default("IN"),
+  /** Optional referral code entered by the buyer */
+  referralCode: z.string().min(1).max(20).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { organizationId, plan, country } = parsed.data;
+  const { organizationId, plan, country, referralCode } = parsed.data;
 
   const member = await prisma.organizationMember.findUnique({
     where: { organizationId_userId: { organizationId, userId: user.id } },
@@ -33,11 +35,45 @@ export async function POST(req: NextRequest) {
   }
 
   const { organization } = member;
+
+  // ── Resolve referral ──────────────────────────────────────────────────────
+  let referrerOrgId: string | null = null;
+  if (referralCode) {
+    const referrerOrg = await prisma.organization.findUnique({
+      where: { referralCode: referralCode.toUpperCase() },
+      select: { id: true },
+    });
+    // Validate: exists, not self
+    if (referrerOrg && referrerOrg.id !== organizationId) {
+      referrerOrgId = referrerOrg.id;
+      // Create pending referral record (reward applied on webhook after payment)
+      await prisma.referral.upsert({
+        where: {
+          referrerOrgId_referredOrgId: {
+            referrerOrgId: referrerOrg.id,
+            referredOrgId: organizationId,
+          },
+        },
+        create: {
+          referrerOrgId: referrerOrg.id,
+          referredOrgId: organizationId,
+          referredPlan: plan as never,
+          rewardApplied: false,
+        },
+        update: {
+          referredPlan: plan as never,
+          rewardApplied: false,
+          rewardAppliedAt: null,
+        },
+      });
+    }
+  }
+
   const gateway = resolveGateway(country);
 
   // ── Stripe checkout ───────────────────────────────────────────────────────
   if (gateway === "stripe") {
-    return handleStripeCheckout({ organizationId, plan: plan as StripePlanKey, organization, userEmail: user.email ?? "" });
+    return handleStripeCheckout({ organizationId, plan: plan as StripePlanKey, organization, userEmail: user.email ?? "", referredOrgId: organizationId, referrerOrgId });
   }
 
   // ── Razorpay checkout (India) ─────────────────────────────────────────────
@@ -114,12 +150,14 @@ async function handleRazorpayCheckout({
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 
 async function handleStripeCheckout({
-  organizationId, plan, organization, userEmail,
+  organizationId, plan, organization, userEmail, referredOrgId, referrerOrgId,
 }: {
   organizationId: string;
   plan: StripePlanKey;
   organization: { id: string; name: string; stripeCustomerId: string | null };
   userEmail: string;
+  referredOrgId?: string | null;
+  referrerOrgId?: string | null;
 }) {
   const planConfig = STRIPE_PLANS[plan];
 
@@ -156,9 +194,19 @@ async function handleStripeCheckout({
     success_url: `${appUrl}/billing?success=true&plan=${plan}&gateway=stripe`,
     cancel_url: `${appUrl}/billing`,
     subscription_data: {
-      metadata: { organizationId, planKey: plan },
+      metadata: {
+        organizationId,
+        planKey: plan,
+        ...(referredOrgId ? { referredOrgId } : {}),
+        ...(referrerOrgId ? { referrerOrgId } : {}),
+      },
     },
-    metadata: { organizationId, planKey: plan },
+    metadata: {
+      organizationId,
+      planKey: plan,
+      ...(referredOrgId ? { referredOrgId } : {}),
+      ...(referrerOrgId ? { referrerOrgId } : {}),
+    },
     allow_promotion_codes: true,
   });
 

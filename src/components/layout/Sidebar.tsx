@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   BarChart2,
+  Gift,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,7 @@ const navItems = [
 ];
 
 const bottomItems = [
+  { href: "/referral", icon: Gift, label: "Referral" },
   { href: "/billing", icon: CreditCard, label: "Billing" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];

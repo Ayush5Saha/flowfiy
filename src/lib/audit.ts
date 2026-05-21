@@ -12,7 +12,9 @@ type AuditAction =
   | "campaign.created"
   | "campaign.sent"
   | "billing.upgraded"
-  | "billing.cancelled";
+  | "billing.cancelled"
+  | "referral.reward_applied"
+  | "referral.month_refunded";
 
 export async function createAuditLog({
   organizationId,

@@ -18,6 +18,8 @@ const mockOrg = {
   createdAt: new Date(),
   updatedAt: new Date(),
   members: [],
+  referralCode: null,
+  referralCreditMonths: 0,
 };
 
 export default function DemoPage() {

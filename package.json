@@ -46,6 +46,7 @@
     "googleapis": "^144.0.0",
     "ioredis": "^5.4.2",
     "lucide-react": "^0.468.0",
+    "nanoid": "^5.1.11",
     "next": "15.2.8",
     "prisma": "^6.0.0",
     "razorpay": "^2.9.6",

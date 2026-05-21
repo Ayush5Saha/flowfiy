@@ -26,6 +26,9 @@ model Organization {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
+  referralCode         String?   @unique @map("referral_code")
+  referralCreditMonths Int       @default(0) @map("referral_credit_months")
+
   members           OrganizationMember[]
   businessProfile   BusinessProfile?
   integrations      Integration[]
@@ -35,6 +38,8 @@ model Organization {
   auditLogs         AuditLog[]
   suppressedEmails  SuppressedEmail[]
   webhookEndpoints  WebhookEndpoint[]
+  referralsMade     Referral[] @relation("referrerOrg")
+  referredBy        Referral[] @relation("referredOrg")
 
   @@map("organizations")
 }
@@ -380,6 +385,24 @@ model WebhookEndpoint {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("webhook_endpoints")
+}
+
+// ─── Referrals ────────────────────────────────────────────────────────────────
+
+model Referral {
+  id              String    @id @default(uuid())
+  referrerOrgId   String    @map("referrer_org_id")
+  referredOrgId   String    @map("referred_org_id")
+  referredPlan    Plan      @map("referred_plan")
+  rewardApplied   Boolean   @default(false) @map("reward_applied")
+  rewardAppliedAt DateTime? @map("reward_applied_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  referrerOrg Organization @relation("referrerOrg", fields: [referrerOrgId], references: [id])
+  referredOrg Organization @relation("referredOrg", fields: [referredOrgId], references: [id])
+
+  @@unique([referrerOrgId, referredOrgId])
+  @@map("referrals")
 }
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────
