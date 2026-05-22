@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone, Zap } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { SystemHealthCheck } from "@/components/dashboard/SystemHealthCheck";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,42 @@ export default async function DashboardPage() {
     ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
+
+  // ── System health data ───────────────────────────────────────────────────────
+  const healthIntegrations = [
+    {
+      type: "APOLLO",
+      label: "Apollo.io",
+      icon: "🚀",
+      description: "Lead discovery — required to run the generation pipeline",
+      tier: "required" as const,
+      connected: connectedTypes.has("APOLLO"),
+    },
+    {
+      type: "GMAIL",
+      label: "Gmail",
+      icon: "📧",
+      description: "Email sending — required to launch outreach campaigns",
+      tier: "required" as const,
+      connected: connectedTypes.has("GMAIL"),
+    },
+    {
+      type: "APIFY",
+      label: "Apify",
+      icon: "🕷️",
+      description: "Web research — enriches company context for better qualification",
+      tier: "recommended" as const,
+      connected: connectedTypes.has("APIFY"),
+    },
+    {
+      type: "CALENDLY",
+      label: "Calendly",
+      icon: "📅",
+      description: "Meeting booking — auto-inserts your scheduling link into emails",
+      tier: "optional" as const,
+      connected: connectedTypes.has("CALENDLY"),
+    },
+  ];
 
   const checklistSteps = [
     {
@@ -157,6 +194,9 @@ export default async function DashboardPage() {
           Generate Leads
         </Link>
       </div>
+
+      {/* ── System health check ──────────────────────── */}
+      <SystemHealthCheck integrations={healthIntegrations} />
 
       {/* ── Onboarding checklist ─────────────────────── */}
       <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} />

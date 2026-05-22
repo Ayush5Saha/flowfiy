@@ -18,6 +18,7 @@ interface IntegrationConfig {
   label: string;
   description: string;
   icon: string;
+  tier: "required" | "recommended" | "optional";
   fields: Array<{ key: string; label: string; placeholder: string; type?: string }>;
   isOAuth?: boolean;
   docsUrl?: string;
@@ -28,11 +29,18 @@ interface IntegrationConfig {
   };
 }
 
+const TIER_STYLE: Record<string, { label: string; class: string }> = {
+  required:    { label: "Required",    class: "bg-red-500/10 text-red-400 border border-red-500/20" },
+  recommended: { label: "Recommended", class: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+  optional:    { label: "Optional",    class: "bg-secondary text-muted-foreground border border-border" },
+};
+
 const INTEGRATIONS: IntegrationConfig[] = [
   {
     type: "APOLLO",
     label: "Apollo.io",
     description: "Lead discovery — finds contacts matching your ICP",
+    tier: "required",
     icon: "🚀",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "Apollo API key", type: "password" }],
     docsUrl: "https://app.apollo.io/#/settings/integrations/api",
@@ -51,6 +59,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     type: "APIFY",
     label: "Apify",
     description: "Web scraping — extracts company website content for analysis",
+    tier: "recommended",
     icon: "🕷️",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "apify_api_...", type: "password" }],
     docsUrl: "https://console.apify.com/account/integrations",
@@ -69,6 +78,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     type: "GMAIL",
     label: "Gmail",
     description: "Sends personalized outreach emails from your account",
+    tier: "required",
     icon: "📧",
     fields: [],
     isOAuth: true,
@@ -87,6 +97,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     type: "CALENDLY",
     label: "Calendly",
     description: "Meeting booking — link auto-inserted into outreach emails",
+    tier: "optional",
     icon: "📅",
     fields: [
       { key: "apiKey", label: "Personal Access Token", placeholder: "eyJraWQi...", type: "password" },
@@ -262,12 +273,16 @@ function IntegrationCard({
         <div className="flex items-center gap-3">
           <span className="text-2xl">{config.icon}</span>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="font-medium text-sm">{config.label}</p>
+              {/* Tier badge */}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TIER_STYLE[config.tier].class}`}>
+                {TIER_STYLE[config.tier].label}
+              </span>
               {isConnected && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
               {status && !isConnected && <XCircle className="w-3.5 h-3.5 text-muted-foreground" />}
             </div>
-            <p className="text-xs text-muted-foreground">{config.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{config.description}</p>
           </div>
         </div>
 

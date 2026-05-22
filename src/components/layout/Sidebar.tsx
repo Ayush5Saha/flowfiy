@@ -46,6 +46,8 @@ interface SidebarProps {
   userEmail: string;
   userFullName: string;
   activeCampaignReplies?: number;
+  /** Number of required integrations that are not yet connected */
+  missingIntegrations?: number;
 }
 
 function getInitials(name: string, email: string) {
@@ -63,17 +65,24 @@ function NavItem({
   icon: Icon,
   label,
   badge,
+  badgeVariant = "green",
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   badge?: number;
+  badgeVariant?: "green" | "red";
 }) {
   const pathname = usePathname();
   const active =
     href === "/dashboard"
       ? pathname === "/dashboard"
       : pathname.startsWith(href);
+
+  const badgeColor =
+    badgeVariant === "red"
+      ? "bg-red-500 text-white"
+      : "bg-emerald-500 text-white";
 
   return (
     <Link
@@ -95,7 +104,7 @@ function NavItem({
       />
       <span className="flex-1 truncate">{label}</span>
       {badge != null && badge > 0 && (
-        <span className="ml-auto min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-bold leading-none">
+        <span className={`ml-auto min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none ${badgeColor}`}>
           {badge > 99 ? "99+" : badge}
         </span>
       )}
@@ -108,6 +117,7 @@ export function Sidebar({
   userEmail,
   userFullName,
   activeCampaignReplies = 0,
+  missingIntegrations = 0,
 }: SidebarProps) {
   const router = useRouter();
   const plan = planMeta[organization.plan] ?? planMeta.FREE;
@@ -168,7 +178,14 @@ export function Sidebar({
             href={href}
             icon={icon}
             label={label}
-            badge={href === "/campaigns" ? activeCampaignReplies : undefined}
+            badge={
+              href === "/campaigns"
+                ? activeCampaignReplies
+                : href === "/integrations"
+                ? missingIntegrations
+                : undefined
+            }
+            badgeVariant={href === "/integrations" ? "red" : "green"}
           />
         ))}
 
