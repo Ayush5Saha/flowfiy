@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildQualificationPrompt, type QualificationInput } from "@/ai/prompts/qualification";
+import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
 
 export interface QualificationResult {
   score: number;
@@ -17,8 +18,9 @@ export async function runQualification(
   const prompt = buildQualificationPrompt(input);
 
   const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 512,
+    model: CLAUDE_MODELS.fast,
+    max_tokens: AGENT_MAX_TOKENS.qualification,
+    temperature: TEMPERATURE,
     messages: [{ role: "user", content: prompt }],
   });
 

@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildICPAnalyzerPrompt, type ICPAnalyzerInput } from "@/ai/prompts/icp-analyzer";
+import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
 
 export interface ICPAnalysis {
   buyerPersonas: string[];
@@ -21,8 +22,9 @@ export async function runICPAnalyzer(
   const prompt = buildICPAnalyzerPrompt(input);
 
   const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 1024,
+    model: CLAUDE_MODELS.fast,
+    max_tokens: AGENT_MAX_TOKENS.icpAnalyzer,
+    temperature: TEMPERATURE,
     messages: [{ role: "user", content: prompt }],
   });
 

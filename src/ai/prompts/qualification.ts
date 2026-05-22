@@ -1,3 +1,5 @@
+import { INPUT_LIMITS, FIELD_CHAR_LIMITS } from "@/ai/config";
+
 export interface QualificationInput {
   lead: {
     firstName?: string;
@@ -13,6 +15,12 @@ export interface QualificationInput {
 }
 
 export function buildQualificationPrompt(input: QualificationInput): string {
+  // Compact serialization (no pretty-print) + truncation to keep input tokens fixed
+  const companyAnalysisJson = JSON.stringify(input.companyAnalysis).slice(0, INPUT_LIMITS.companyAnalysisJson);
+  const truncatedIcp = input.icpSummary.slice(0, INPUT_LIMITS.icpSummary);
+  const truncatedCriteria = input.qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria);
+  const L = FIELD_CHAR_LIMITS;
+
   return `You are a B2B sales qualification specialist. Score this lead based on ICP fit.
 
 ## Lead
@@ -23,25 +31,25 @@ Industry: ${input.lead.industry ?? "Unknown"}
 Company Size: ${input.lead.companySize ?? "Unknown"}
 
 ## Company Analysis
-${JSON.stringify(input.companyAnalysis, null, 2)}
+${companyAnalysisJson}
 
 ## ICP Summary
-${input.icpSummary}
+${truncatedIcp}
 
 ## Qualification Criteria
-${input.qualificationCriteria}
+${truncatedCriteria}
 
 ## Task
-Return a JSON object:
+Return a JSON object. Stay within the character limits shown.
 
 \`\`\`json
 {
   "score": 0-100,
   "qualified": true/false,
-  "primaryReason": "One sentence on the top reason for this score",
-  "bestAngle": "The specific outreach angle to use for this lead",
-  "painPointMatch": "Which pain point from the ICP best matches this company",
-  "personalizationHooks": ["2-3 specific facts from their profile to use in outreach"]
+  "primaryReason": "≤${L.primaryReason} chars",
+  "bestAngle": "≤${L.bestAngle} chars",
+  "painPointMatch": "≤${L.painPointMatch} chars",
+  "personalizationHooks": ["2-3 hooks, each ≤${L.personalizationHook} chars"]
 }
 \`\`\`
 

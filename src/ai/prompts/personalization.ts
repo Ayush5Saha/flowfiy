@@ -1,3 +1,5 @@
+import { FIELD_CHAR_LIMITS } from "@/ai/config";
+
 export interface PersonalizationInput {
   lead: {
     firstName?: string;
@@ -30,6 +32,8 @@ export function buildPersonalizationPrompt(input: PersonalizationInput): string 
     ? `Include a booking link: ${input.calendlyLink}`
     : "Ask for a 15-minute call.";
 
+  const L = FIELD_CHAR_LIMITS;
+
   return `You are an expert cold email copywriter. Write highly personalized B2B outreach for this specific lead.
 
 ## About the Sender
@@ -50,21 +54,23 @@ Pain Point: ${input.painPointMatch}
 Personalization Hooks: ${hooks}
 
 ## Requirements
-- Subject line: Max 7 words. Curiosity or insight-driven. No generic subjects.
-- Email body: 4-6 sentences max. Open with insight about THEM, not about us.
+- Subject line: Max 7 words. Curiosity or insight-driven. No generic subjects. Hard limit: ${L.subjectLine} chars.
+- Email body: 4-5 sentences. Open with insight about THEM, not about us. Hard limit: ${L.emailBody} chars.
 - No "I hope this email finds you well." No "My name is X and I work at Y."
 - End with a soft CTA. ${calendlyText}
-- Follow-up 1: Different angle. 3 sentences. Reference no response. Send 3 days later.
-- Follow-up 2: Final break-up email. 2 sentences. Graceful exit + value statement.
+- Follow-up 1: Different angle. 3 sentences. Reference no response. Hard limit: ${L.followUp1} chars.
+- Follow-up 2: Final break-up email. 2 sentences. Graceful exit + value statement. Hard limit: ${L.followUp2} chars.
+
+IMPORTANT: Each field MUST stay within its character limit. Shorter is better.
 
 Return ONLY a JSON object:
 
 \`\`\`json
 {
-  "subjectLine": "...",
-  "emailBody": "...",
-  "followUp1": "...",
-  "followUp2": "..."
+  "subjectLine": "≤${L.subjectLine} chars",
+  "emailBody": "≤${L.emailBody} chars",
+  "followUp1": "≤${L.followUp1} chars",
+  "followUp2": "≤${L.followUp2} chars"
 }
 \`\`\``;
 }

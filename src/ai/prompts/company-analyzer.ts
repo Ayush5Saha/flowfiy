@@ -1,3 +1,5 @@
+import { INPUT_LIMITS, FIELD_CHAR_LIMITS } from "@/ai/config";
+
 export interface CompanyAnalyzerInput {
   companyName: string;
   companyWebsite: string;
@@ -8,7 +10,10 @@ export interface CompanyAnalyzerInput {
 }
 
 export function buildCompanyAnalyzerPrompt(input: CompanyAnalyzerInput): string {
-  const truncatedContent = input.websiteContent.slice(0, 3000);
+  // Hard input truncation — keeps token cost predictable regardless of scraped content size
+  const truncatedContent = input.websiteContent.slice(0, INPUT_LIMITS.websiteContent);
+  const truncatedIcp = input.icpSummary.slice(0, INPUT_LIMITS.icpSummary);
+  const L = FIELD_CHAR_LIMITS;
 
   return `You are a B2B sales intelligence analyst. Analyze this company and produce a structured intelligence report.
 
@@ -19,24 +24,24 @@ Industry: ${input.industry}
 Size: ${input.companySize ?? "Unknown"}
 
 ## ICP Context
-${input.icpSummary}
+${truncatedIcp}
 
 ## Website Content (scraped)
 ${truncatedContent}
 
 ## Analysis Required
-Produce a JSON object:
+Produce a JSON object. Strict character limits — stay within them.
 
 \`\`\`json
 {
   "brandMaturity": "emerging|established|enterprise",
   "marketingQuality": "weak|moderate|strong",
-  "acquisitionGaps": ["list of 2-4 specific growth/acquisition weaknesses you can identify"],
-  "growthBottlenecks": ["list of 2-3 likely growth constraints based on their stage and signals"],
-  "techStack": ["any tech tools mentioned or implied"],
-  "recentSignals": ["any recent hires, funding, expansion signals from website"],
-  "fitAssessment": "A 2-sentence assessment of why this company would or wouldn't benefit from the service",
-  "bestOutreachAngle": "The single most compelling angle for outreach based on their profile",
+  "acquisitionGaps": ["2-4 weaknesses, each ≤${L.acquisitionGap} chars"],
+  "growthBottlenecks": ["2-3 constraints, each ≤${L.growthBottleneck} chars"],
+  "techStack": ["tools only, each ≤${L.techStackItem} chars"],
+  "recentSignals": ["signals only, each ≤${L.recentSignal} chars"],
+  "fitAssessment": "2-sentence assessment ≤${L.fitAssessment} chars",
+  "bestOutreachAngle": "Single best angle ≤${L.bestOutreachAngle} chars",
   "confidence": 0-100
 }
 \`\`\`

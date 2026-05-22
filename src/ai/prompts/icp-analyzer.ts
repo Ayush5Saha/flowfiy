@@ -1,3 +1,5 @@
+import { FIELD_CHAR_LIMITS } from "@/ai/config";
+
 export interface ICPAnalyzerInput {
   companyName: string;
   serviceOffered: string;
@@ -11,6 +13,8 @@ export interface ICPAnalyzerInput {
 }
 
 export function buildICPAnalyzerPrompt(input: ICPAnalyzerInput): string {
+  const L = FIELD_CHAR_LIMITS;
+
   return `You are an expert B2B sales strategist. Analyze the following business profile and produce a structured ICP (Ideal Customer Profile) analysis that will be used to guide lead generation and qualification.
 
 ## Business Profile
@@ -26,19 +30,20 @@ Outreach Tone: ${input.outreachTone}
 
 ## Task
 Produce a JSON object with the following structure. Be specific and actionable.
+Strict character limits apply — exceed them and the output will be truncated.
 
 \`\`\`json
 {
-  "buyerPersonas": ["array of 2-3 specific job titles most likely to be the decision maker"],
-  "qualifyingSignals": ["array of 5-7 observable signals that indicate a company is a strong fit"],
-  "disqualifyingSignals": ["array of 3-5 signals that indicate poor fit"],
+  "buyerPersonas": ["2-3 job titles, each ≤${L.buyerPersona} chars"],
+  "qualifyingSignals": ["5-7 observable signals, each ≤${L.qualifyingSignal} chars"],
+  "disqualifyingSignals": ["3-5 signals, each ≤${L.disqualifyingSignal} chars"],
   "apolloSearchFilters": {
-    "jobTitles": ["job titles for Apollo people search"],
-    "industries": ["industry categories matching Apollo's taxonomy"],
-    "companySizes": ["employee count ranges, e.g. '1,10' '11,50'"]
+    "jobTitles": ["job titles for Apollo search, each ≤${L.apolloJobTitle} chars"],
+    "industries": ["Apollo taxonomy industries, each ≤${L.apolloIndustry} chars"],
+    "companySizes": ["employee ranges e.g. '1,10' '11,50'"]
   },
-  "outreachAngles": ["array of 3 distinct messaging angles ranked by effectiveness"],
-  "qualificationCriteria": "A paragraph describing how to score leads 0-100"
+  "outreachAngles": ["3 messaging angles ranked by effectiveness, each ≤${L.outreachAngle} chars"],
+  "qualificationCriteria": "Paragraph on how to score leads 0-100. ≤${L.qualificationCriteria} chars total."
 }
 \`\`\`
 

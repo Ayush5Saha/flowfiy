@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildPersonalizationPrompt, type PersonalizationInput } from "@/ai/prompts/personalization";
+import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
 
 export interface PersonalizationResult {
   subjectLine: string;
@@ -15,8 +16,9 @@ export async function runPersonalization(
   const prompt = buildPersonalizationPrompt(input);
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1500,
+    model: CLAUDE_MODELS.smart,
+    max_tokens: AGENT_MAX_TOKENS.personalization,
+    temperature: TEMPERATURE,
     messages: [{ role: "user", content: prompt }],
   });
 
