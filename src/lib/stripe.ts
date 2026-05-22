@@ -21,11 +21,20 @@ export function getStripe(): Stripe {
 // Amounts in USD cents — shown in UI, not charged (Stripe uses the price object).
 
 export const STRIPE_PLANS = {
-  STARTER: {
-    name: "Starter",
-    priceUsd: 59,
+  INDIE: {
+    name: "Indie",
+    priceUsd: 20,
     currency: "usd",
     generationLimit: 2500,
+    apiMode: "BYOK" as const,   // BYOK only — no central API
+    stripePriceId: process.env.STRIPE_INDIE_PRICE_ID ?? null,
+  },
+  STARTER: {
+    name: "Starter",
+    priceUsd: 49,
+    currency: "usd",
+    generationLimit: 2500,
+    apiMode: "CHOICE" as const, // Central API (default) or BYOK
     stripePriceId: process.env.STRIPE_STARTER_PRICE_ID ?? null,
   },
   GROWTH: {
@@ -33,6 +42,7 @@ export const STRIPE_PLANS = {
     priceUsd: 119,
     currency: "usd",
     generationLimit: 7500,
+    apiMode: "CHOICE" as const, // Central API (default) or BYOK
     stripePriceId: process.env.STRIPE_GROWTH_PRICE_ID ?? null,
   },
   AGENCY: {
@@ -40,6 +50,7 @@ export const STRIPE_PLANS = {
     priceUsd: 299,
     currency: "usd",
     generationLimit: -1,
+    apiMode: "CHOICE" as const, // Central API (default) or BYOK
     stripePriceId: process.env.STRIPE_AGENCY_PRICE_ID ?? null,
   },
 } as const;

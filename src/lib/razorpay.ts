@@ -35,17 +35,30 @@ export const PLANS = {
     currency: "INR",
     generationLimit: 100,
     seats: 1,
-    features: ["100 generations/mo", "1 seat", "1 campaign", "Gmail integration", "Community support"],
+    apiMode: "BYOK" as const,   // BYOK only — user must connect own Anthropic key
+    features: ["100 generations/mo", "1 seat", "1 campaign", "Gmail integration", "BYOK (own Anthropic key)", "Community support"],
     razorpayPlanId: null as string | null,
+  },
+  INDIE: {
+    name: "Indie",
+    priceUsd: 20,
+    priceInr: 1700,        // ₹1,700/mo
+    currency: "INR",
+    generationLimit: 2500,
+    seats: 1,
+    apiMode: "BYOK" as const,   // BYOK only — no central API access
+    features: ["2,500 generations/mo", "1 seat", "3 campaigns", "Gmail integration", "BYOK (own Anthropic key)", "Email support"],
+    razorpayPlanId: process.env.RAZORPAY_INDIE_PLAN_ID ?? null,
   },
   STARTER: {
     name: "Starter",
-    priceUsd: 59,
+    priceUsd: 49,
     priceInr: 4900,        // ₹4,900/mo
     currency: "INR",
     generationLimit: 2500,
     seats: 1,
-    features: ["2,500 generations/mo", "1 seat", "5 campaigns", "CSV import", "Email outreach", "Email support"],
+    apiMode: "CHOICE" as const,  // Central API (default) or BYOK — user's choice
+    features: ["2,500 generations/mo", "1 seat", "5 campaigns", "CSV import", "Email outreach", "Central AI or BYOK", "Email support"],
     razorpayPlanId: process.env.RAZORPAY_STARTER_PLAN_ID ?? null,
   },
   GROWTH: {
@@ -55,7 +68,8 @@ export const PLANS = {
     currency: "INR",
     generationLimit: 7500,
     seats: 5,
-    features: ["7,500 generations/mo", "5 seats", "Unlimited campaigns", "Priority queue", "Analytics", "A/B testing", "Webhooks & export"],
+    apiMode: "CHOICE" as const,  // Central API (default) or BYOK — user's choice
+    features: ["7,500 generations/mo", "5 seats", "Unlimited campaigns", "Priority queue", "Analytics", "A/B testing", "Webhooks & export", "Central AI or BYOK"],
     razorpayPlanId: process.env.RAZORPAY_GROWTH_PLAN_ID ?? null,
   },
   AGENCY: {
@@ -65,7 +79,8 @@ export const PLANS = {
     currency: "INR",
     generationLimit: -1,   // unlimited
     seats: 20,
-    features: ["Unlimited generations", "20 seats", "Unlimited campaigns", "White-label ready", "API access", "Dedicated support"],
+    apiMode: "CHOICE" as const,  // Central API (default) or BYOK — user's choice
+    features: ["Unlimited generations", "20 seats", "Unlimited campaigns", "White-label ready", "API access", "Central AI or BYOK", "Dedicated support"],
     razorpayPlanId: process.env.RAZORPAY_AGENCY_PLAN_ID ?? null,
   },
 } as const;

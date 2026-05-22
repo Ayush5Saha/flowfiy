@@ -58,6 +58,9 @@ export async function POST(req: NextRequest) {
         const planConfig = STRIPE_PLANS[planKey as keyof typeof STRIPE_PLANS];
         if (!planConfig) break;
 
+        // INDIE is BYOK-only; STARTER+ defaults to Central API
+        const apiMode = planConfig.apiMode === "BYOK" ? "BYOK" : "CENTRAL";
+
         await prisma.organization.update({
           where: { id: organizationId },
           data: {
@@ -66,6 +69,7 @@ export async function POST(req: NextRequest) {
             billingGateway: "stripe",
             subscriptionStatus: "active",
             generationLimit: planConfig.generationLimit,
+            apiMode: apiMode as never,
           },
         });
 
@@ -145,8 +149,11 @@ export async function POST(req: NextRequest) {
         };
 
         if (newPlanKey && STRIPE_PLANS[newPlanKey]) {
+          const newPlanConfig = STRIPE_PLANS[newPlanKey];
           updates.plan = newPlanKey;
-          updates.generationLimit = STRIPE_PLANS[newPlanKey].generationLimit;
+          updates.generationLimit = newPlanConfig.generationLimit;
+          // INDIE stays BYOK; upgrading to STARTER+ resets to Central API default
+          updates.apiMode = newPlanConfig.apiMode === "BYOK" ? "BYOK" : "CENTRAL";
         }
 
         await prisma.organization.update({

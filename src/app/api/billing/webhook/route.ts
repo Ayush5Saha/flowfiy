@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
 
         if (organizationId && planKey && PLANS[planKey]) {
           const planConfig = PLANS[planKey];
+          // INDIE is BYOK-only; STARTER+ defaults to Central API
+          const apiMode = planConfig.apiMode === "BYOK" ? "BYOK" : "CENTRAL";
           await prisma.organization.update({
             where: { id: organizationId },
             data: {
@@ -67,6 +69,7 @@ export async function POST(req: NextRequest) {
               razorpaySubscriptionId: sub.id as string,
               subscriptionStatus: "active",
               generationLimit: planConfig.generationLimit,
+              apiMode: apiMode as never,
             },
           });
           await createAuditLog({
@@ -118,12 +121,16 @@ export async function POST(req: NextRequest) {
         if (org && planId) {
           const newPlanKey = getPlanByRazorpayPlanId(planId);
           if (newPlanKey && PLANS[newPlanKey]) {
+            const newPlanConfig = PLANS[newPlanKey];
+            // INDIE stays BYOK; upgrading to STARTER+ resets to Central API default
+            const apiMode = newPlanConfig.apiMode === "BYOK" ? "BYOK" : "CENTRAL";
             await prisma.organization.update({
               where: { id: org.id },
               data: {
                 plan: newPlanKey as never,
-                generationLimit: PLANS[newPlanKey].generationLimit,
+                generationLimit: newPlanConfig.generationLimit,
                 subscriptionStatus: "active",
+                apiMode: apiMode as never,
               },
             });
           }
