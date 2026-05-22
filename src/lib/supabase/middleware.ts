@@ -26,8 +26,10 @@ function isAuthOnlyRoute(pathname: string): boolean {
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/onboarding")
+    pathname.startsWith("/forgot-password")
+    // NOTE: /onboarding is intentionally NOT here — authenticated users
+    // who haven't set up an org need to reach this page. The onboarding
+    // page itself handles redirecting already-onboarded users to /dashboard.
   );
 }
 
