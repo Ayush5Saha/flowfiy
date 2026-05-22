@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s | Flowfiy",
   },
   description:
-    "Flowfiy automates B2B outbound sales with 5 Claude AI agents. Research leads, score prospects 0–100, and send hyper-personalized cold emails — all at $0 per lead with your own Claude API key.",
+    "Flowfiy automates B2B outbound sales with 5 Claude AI agents. Research leads, score prospects 0–100, and send hyper-personalized cold emails — Claude is fully managed, no API key required.",
   keywords: [
     "AI sales outreach",
     "B2B lead generation",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "outbound sales software",
     "AI lead scoring",
     "personalized cold email",
-    "BYOK sales platform",
+    "AI outbound platform",
     "sales prospecting tool",
     "AI SDR",
   ],
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     siteName: "Flowfiy",
     title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 Claude AI agents research leads, score prospects, and write personalized cold emails at $0 per lead. Connect Apollo, add your Claude key, start sending.",
+      "5 Claude AI agents research leads, score prospects, and write personalized cold emails. Claude is fully managed — no API key setup needed.",
     images: [
       {
         url: "/og-image.png",
@@ -62,14 +62,24 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Flowfiy — AI-Powered B2B Sales Outreach",
     description:
-      "5 Claude AI agents for B2B outbound. Research, score, personalize, send. $0 per lead with BYOK.",
+      "5 Claude AI agents for B2B outbound. Research, score, personalize, send. Claude managed by Flowfiy — zero setup.",
     images: ["/og-image.png"],
   },
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    // PNG icons — required for Google Search, browsers, and PWA
+    icon: [
+      { url: "/favicon-16x16.png",  sizes: "16x16",  type: "image/png" },
+      { url: "/favicon-32x32.png",  sizes: "32x32",  type: "image/png" },
+      { url: "/favicon-192x192.png",sizes: "192x192", type: "image/png" },
+      { url: "/favicon-512x512.png",sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
+    other: [
+      { rel: "icon", url: "/favicon.ico" },
+    ],
   },
+  manifest: "/site.webmanifest",
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
   },
@@ -80,7 +90,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Flowfiy",
   url: BASE_URL,
-  logo: `${BASE_URL}/icon.svg`,
+  logo: `${BASE_URL}/favicon-192x192.png`,
   description:
     "AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
   foundingDate: "2026",
@@ -95,7 +105,7 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: BASE_URL,
   description:
-    "AI-powered B2B sales outreach platform. 5 Claude AI agents research leads, score prospects 0–100, and generate personalized cold emails at $0 per lead (BYOK).",
+    "AI-powered B2B sales outreach platform. 5 Claude AI agents research leads, score prospects 0–100, and generate personalized cold emails. Claude is managed by Flowfiy — no API key needed.",
   offers: {
     "@type": "Offer",
     price: "0",
