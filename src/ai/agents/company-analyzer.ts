@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildCompanyAnalyzerPrompt, type CompanyAnalyzerInput } from "@/ai/prompts/company-analyzer";
-import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
+import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
 export interface CompanyAnalysis {
   brandMaturity: "emerging" | "established" | "enterprise";
@@ -16,14 +16,16 @@ export interface CompanyAnalysis {
 
 export async function runCompanyAnalyzer(
   client: Anthropic,
-  input: CompanyAnalyzerInput
+  input: CompanyAnalyzerInput,
+  mode: RunMode = "CENTRAL"
 ): Promise<CompanyAnalysis> {
-  const prompt = buildCompanyAnalyzerPrompt(input);
+  const prompt = buildCompanyAnalyzerPrompt(input, mode);
+  const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
     model: CLAUDE_MODELS.smart,
-    max_tokens: AGENT_MAX_TOKENS.companyAnalyzer,
-    temperature: TEMPERATURE,
+    max_tokens: cfg.maxTokens.companyAnalyzer,
+    ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
     messages: [{ role: "user", content: prompt }],
   });
 

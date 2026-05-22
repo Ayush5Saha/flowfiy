@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildQualificationPrompt, type QualificationInput } from "@/ai/prompts/qualification";
-import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
+import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
 export interface QualificationResult {
   score: number;
@@ -13,14 +13,16 @@ export interface QualificationResult {
 
 export async function runQualification(
   client: Anthropic,
-  input: QualificationInput
+  input: QualificationInput,
+  mode: RunMode = "CENTRAL"
 ): Promise<QualificationResult> {
-  const prompt = buildQualificationPrompt(input);
+  const prompt = buildQualificationPrompt(input, mode);
+  const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
     model: CLAUDE_MODELS.fast,
-    max_tokens: AGENT_MAX_TOKENS.qualification,
-    temperature: TEMPERATURE,
+    max_tokens: cfg.maxTokens.qualification,
+    ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
     messages: [{ role: "user", content: prompt }],
   });
 

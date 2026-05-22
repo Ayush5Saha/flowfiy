@@ -32,6 +32,8 @@ export default async function IntegrationsPage() {
       <IntegrationCenter
         organizationId={membership.organization.id}
         statusMap={statusMap as Record<string, { status: string; lastValidatedAt: Date | null }>}
+        plan={membership.organization.plan}
+        apiMode={membership.organization.apiMode}
       />
     </div>
   );

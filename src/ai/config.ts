@@ -1,3 +1,30 @@
+export type RunMode = "CENTRAL" | "BYOK";
+
+/**
+ * Returns agent parameters based on run mode.
+ * CENTRAL: optimized (temperature=0, tight limits, char limit prompts)
+ * BYOK: natural Claude (temperature=1, generous limits, no char limit injection)
+ */
+export function getRunConfig(mode: RunMode) {
+  if (mode === "CENTRAL") {
+    return {
+      temperature: TEMPERATURE as number | undefined,
+      maxTokens: AGENT_MAX_TOKENS,
+      injectCharLimits: true,
+    };
+  }
+  return {
+    temperature: undefined as number | undefined, // use model default (1)
+    maxTokens: {
+      icpAnalyzer:      1024,
+      companyAnalyzer:  1024,
+      qualification:     512,
+      personalization:  1536,
+    },
+    injectCharLimits: false,
+  };
+}
+
 /**
  * Central configuration for all Claude API calls.
  *

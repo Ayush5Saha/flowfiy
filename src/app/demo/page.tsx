@@ -22,6 +22,7 @@ const mockOrg = {
   referralCreditMonths: 0,
   monthlyTokensUsed: BigInt(0),
   tokenBudgetResetAt: null,
+  apiMode: "CENTRAL" as const,
 };
 
 export default function DemoPage() {

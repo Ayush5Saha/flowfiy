@@ -1,7 +1,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
-import { getClaudeClient } from "@/ai/client";
+import { getClaudeClientForOrg } from "@/ai/client";
 import { incrementGenerationCount, checkTokenBudget, incrementTokenUsage } from "@/lib/usage";
 import { runLeadGenOrchestrator } from "@/ai/orchestrator";
 import type { ToolContext } from "@/ai/tools/handlers";
@@ -54,23 +54,36 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     // ── Step 2: Check token budget & set up clients ──────────────────────────
     await log("Initializing AI and integration clients...", "info");
+
+    // Get the org plan to apply INDIE restrictions
+    const org = await prisma.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { plan: true },
+    });
+
+    // Only check central token budget for plans that use it
     const tokenCheck = await checkTokenBudget(organizationId);
     if (!tokenCheck.allowed) {
       throw new Error("Monthly AI token budget exceeded. Resets at the start of next month.");
     }
-    const claude = getClaudeClient();
+
+    // Get the Claude client and run mode (CENTRAL or BYOK)
+    const { client: claude, mode: runMode } = await getClaudeClientForOrg(organizationId);
 
     const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
-    const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey) : null;
+    const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey as string) : null;
 
     const apifyCreds = await getIntegrationCredentials(organizationId, "APIFY");
-    const apifyClient = apifyCreds?.apiKey ? new ApifyClient(apifyCreds.apiKey) : null;
+    // INDIE plan: Apify is not available even if connected
+    const apifyClient = (org.plan !== "INDIE" && apifyCreds?.apiKey)
+      ? new ApifyClient(apifyCreds.apiKey as string)
+      : null;
 
     const calendlyCreds = await getIntegrationCredentials(organizationId, "CALENDLY");
 
     const apolloConnected = !!apolloCreds?.apiKey;
-    const apifyConnected = !!apifyCreds?.apiKey;
-    await log(`Apollo: ${apolloConnected ? "connected" : "not connected"} · Apify: ${apifyConnected ? "connected" : "not connected"}`, "info");
+    const apifyConnected = !!apifyCreds?.apiKey && org.plan !== "INDIE";
+    await log(`Apollo: ${apolloConnected ? "connected" : "not connected"} · Apify: ${apifyConnected ? "connected" : "not connected"} · Mode: ${runMode}`, "info");
 
     // ── Step 3: Handle import mode (leads already in DB) ─────────────────────
     if (mode === "import") {
@@ -122,7 +135,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
           outreachTone: businessProfile.outreachTone,
         },
         leadsPerRun: existingLeads.length,
-        calendlyLink: calendlyCreds?.schedulingLink,
+        calendlyLink: calendlyCreds?.schedulingLink as string | undefined,
         // Pass pre-loaded leads so the orchestrator skips search_leads entirely
         preloadedLeads: existingLeads.map((l) => ({
           leadId: l.id,
@@ -135,10 +148,13 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
           companySize: l.companySize,
           industry: l.industry,
         })),
-      });
+      }, runMode);
 
       await incrementGenerationCount(organizationId, existingLeads.length);
-      await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
+      // Only track central token usage for non-BYOK runs
+      if (runMode === "CENTRAL") {
+        await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
+      }
       await prisma.leadList.update({
         where: { id: leadListId },
         data: {
@@ -189,8 +205,8 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
         outreachTone: businessProfile.outreachTone,
       },
       leadsPerRun,
-      calendlyLink: calendlyCreds?.schedulingLink,
-    });
+      calendlyLink: calendlyCreds?.schedulingLink as string | undefined,
+    }, runMode);
 
     if (result.totalLeads === 0) {
       await log("No leads were found. Check Apollo filters or broaden the ICP.", "error");
@@ -200,7 +216,10 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     // ── Step 5: Finalise ──────────────────────────────────────────────────────
     await incrementGenerationCount(organizationId, result.totalLeads);
-    await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
+    // Only track central token usage for non-BYOK runs
+    if (runMode === "CENTRAL") {
+      await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
+    }
 
     await prisma.leadList.update({
       where: { id: leadListId },

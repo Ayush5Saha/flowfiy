@@ -5,6 +5,7 @@ import type {
 } from "@anthropic-ai/sdk/resources/messages";
 import { LEAD_GEN_TOOLS } from "./tools/definitions";
 import { executeLeadGenTool, type ToolContext } from "./tools/handlers";
+import type { RunMode } from "@/ai/config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -112,8 +113,10 @@ ${isImportMode ? "- DO NOT call search_leads — leads are pre-loaded, use the l
 export async function runLeadGenOrchestrator(
   claude: Anthropic,
   ctx: ToolContext,
-  input: OrchestratorInput
+  input: OrchestratorInput,
+  runMode: RunMode = "CENTRAL"
 ): Promise<OrchestratorResult> {
+  void runMode; // reserved for future per-mode orchestrator tuning
   const systemPrompt = buildSystemPrompt(input);
 
   const isImportMode = !!input.preloadedLeads?.length;

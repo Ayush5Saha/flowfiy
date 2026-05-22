@@ -868,10 +868,36 @@ function Pricing() {
   }, []);
 
   const plans = [
-    { name: "Free",    priceInr: 0,     desc: "Try it out",       gens: "100/mo",        seats: 1,  features: ["1 campaign", "Gmail integration", "All AI agents", "Community support"],                              cta: "Get started",    highlight: false },
-    { name: "Starter", priceInr: 4900,  desc: "Solo founders",    gens: "2,500/mo",       seats: 1,  features: ["5 campaigns", "CSV import", "Email outreach", "Email support"],                                      cta: "Start free trial", highlight: false },
-    { name: "Growth",  priceInr: 9900,  desc: "Growing teams",    gens: "7,500/mo",       seats: 5,  features: ["Unlimited campaigns", "Team workspace", "A/B testing", "Priority queue & analytics"],                cta: "Start free trial", highlight: true  },
-    { name: "Agency",  priceInr: 24900, desc: "Agencies & scale", gens: "Unlimited",      seats: 20, features: ["Unlimited everything", "20 team seats", "White-label ready", "Dedicated support"],                   cta: "Contact sales",  highlight: false },
+    {
+      name: "Free", priceInr: 0, desc: "Try it out", gens: "100/mo", seats: 1,
+      apiMode: "byok" as const,
+      features: ["All 5 AI agents", "1 campaign", "Gmail integration", "BYOK (your API key)", "Community support"],
+      cta: "Get started", highlight: false,
+    },
+    {
+      name: "Indie", priceInr: 1700, desc: "Solo builders", gens: "2,500/mo", seats: 1,
+      apiMode: "byok" as const,
+      features: ["All 5 AI agents", "3 campaigns", "CSV import", "BYOK (your API key)", "Email support"],
+      cta: "Start free trial", highlight: false,
+    },
+    {
+      name: "Starter", priceInr: 4900, desc: "Solo founders", gens: "2,500/mo", seats: 1,
+      apiMode: "both" as const,
+      features: ["All 5 AI agents", "5 campaigns", "Managed AI included", "BYOK option", "Email support"],
+      cta: "Start free trial", highlight: false,
+    },
+    {
+      name: "Growth", priceInr: 9900, desc: "Growing teams", gens: "7,500/mo", seats: 5,
+      apiMode: "both" as const,
+      features: ["Unlimited campaigns", "Team workspace", "Managed AI included", "BYOK option", "A/B testing", "Priority support"],
+      cta: "Start free trial", highlight: true,
+    },
+    {
+      name: "Agency", priceInr: 24900, desc: "Agencies & scale", gens: "Unlimited", seats: 20,
+      apiMode: "both" as const,
+      features: ["Unlimited everything", "20 team seats", "Managed AI included", "BYOK option", "Webhooks", "Dedicated support"],
+      cta: "Contact sales", highlight: false,
+    },
   ];
 
   return (
@@ -882,10 +908,10 @@ function Pricing() {
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Pricing</span>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Simple, transparent pricing.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">One flat price. Claude Sonnet AI included. No API keys, no per-token billing, no surprises.</p>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Choose managed AI (included) or bring your own Anthropic key. You decide.</p>
         </FadeIn>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
           {plans.map((plan, i) => {
             const lp = getLocalisedPrice(plan.priceInr, country);
             return (
@@ -904,6 +930,13 @@ function Pricing() {
                     <div className="mb-5">
                       <p className="font-semibold text-white mb-0.5">{plan.name}</p>
                       <p className="text-xs text-zinc-500">{plan.desc}</p>
+                      <span className={`inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        plan.apiMode === "byok"
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          : "bg-green-500/10 text-green-400 border border-green-500/20"
+                      }`}>
+                        {plan.apiMode === "byok" ? "🔑 BYOK" : "🤖 Managed + BYOK"}
+                      </span>
                     </div>
                     <div className="mb-5">
                       <span className="text-4xl font-bold font-mono text-white">{lp.formatted}</span>

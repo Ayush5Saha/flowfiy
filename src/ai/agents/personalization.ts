@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildPersonalizationPrompt, type PersonalizationInput } from "@/ai/prompts/personalization";
-import { CLAUDE_MODELS, AGENT_MAX_TOKENS, TEMPERATURE } from "@/ai/config";
+import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
 export interface PersonalizationResult {
   subjectLine: string;
@@ -12,14 +12,16 @@ export interface PersonalizationResult {
 
 export async function runPersonalization(
   client: Anthropic,
-  input: PersonalizationInput
+  input: PersonalizationInput,
+  mode: RunMode = "CENTRAL"
 ): Promise<PersonalizationResult> {
-  const prompt = buildPersonalizationPrompt(input);
+  const prompt = buildPersonalizationPrompt(input, mode);
+  const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
     model: CLAUDE_MODELS.smart,
-    max_tokens: AGENT_MAX_TOKENS.personalization,
-    temperature: TEMPERATURE,
+    max_tokens: cfg.maxTokens.personalization,
+    ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
     messages: [{ role: "user", content: prompt }],
   });
 

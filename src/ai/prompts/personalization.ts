@@ -1,4 +1,4 @@
-import { FIELD_CHAR_LIMITS } from "@/ai/config";
+import { FIELD_CHAR_LIMITS, type RunMode } from "@/ai/config";
 
 export interface PersonalizationInput {
   lead: {
@@ -20,7 +20,7 @@ export interface PersonalizationInput {
   calendlyLink?: string;
 }
 
-export function buildPersonalizationPrompt(input: PersonalizationInput): string {
+export function buildPersonalizationPrompt(input: PersonalizationInput, mode: RunMode = "CENTRAL"): string {
   const toneGuidance = {
     professional: "Formal but warm. No slang. Clear and direct.",
     conversational: "Casual and human. Short sentences. Like a peer reaching out.",
@@ -33,6 +33,7 @@ export function buildPersonalizationPrompt(input: PersonalizationInput): string 
     : "Ask for a 15-minute call.";
 
   const L = FIELD_CHAR_LIMITS;
+  const c = mode === "CENTRAL";
 
   return `You are an expert cold email copywriter. Write highly personalized B2B outreach for this specific lead.
 
@@ -54,25 +55,25 @@ Pain Point: ${input.painPointMatch}
 Personalization Hooks: ${hooks}
 
 ## Requirements
-- Subject line: Max 7 words. Curiosity or insight-driven. No generic subjects. Hard limit: ${L.subjectLine} chars.
-- Email body: 4-5 sentences. Open with insight about THEM, not about us. Hard limit: ${L.emailBody} chars.
+- Subject line: Max 7 words. Curiosity or insight-driven. No generic subjects.${c ? ` Hard limit: ${L.subjectLine} chars.` : ""}
+- Email body: 4-5 sentences. Open with insight about THEM, not about us.${c ? ` Hard limit: ${L.emailBody} chars.` : ""}
 - No "I hope this email finds you well." No "My name is X and I work at Y."
 - End with a soft CTA. ${calendlyText}
-- Follow-up 1 (3 days later): Different angle. 3 sentences. Reference no response. Add new value. Hard limit: ${L.followUp1} chars.
-- Follow-up 2 (7 days later): Shift the frame. 2 sentences. Ask a genuine question or share a quick insight. Hard limit: ${L.followUp2} chars.
-- Follow-up 3 (14 days later): Final graceful exit. 2 sentences. Close the loop, leave the door open. Hard limit: ${L.followUp3} chars.
+- Follow-up 1 (3 days later): Different angle. 3 sentences. Reference no response. Add new value.${c ? ` Hard limit: ${L.followUp1} chars.` : ""}
+- Follow-up 2 (7 days later): Shift the frame. 2 sentences. Ask a genuine question or share a quick insight.${c ? ` Hard limit: ${L.followUp2} chars.` : ""}
+- Follow-up 3 (14 days later): Final graceful exit. 2 sentences. Close the loop, leave the door open.${c ? ` Hard limit: ${L.followUp3} chars.` : ""}
 
-IMPORTANT: All 6 fields are REQUIRED. Each MUST stay within its character limit. Shorter is better.
+IMPORTANT: All 6 fields are REQUIRED.${c ? " Each MUST stay within its character limit. Shorter is better." : " Make each message genuinely compelling and personalized."}
 
 Return ONLY a JSON object:
 
 \`\`\`json
 {
-  "subjectLine": "≤${L.subjectLine} chars",
-  "emailBody": "≤${L.emailBody} chars",
-  "followUp1": "≤${L.followUp1} chars",
-  "followUp2": "≤${L.followUp2} chars",
-  "followUp3": "≤${L.followUp3} chars"
+  "subjectLine": "${c ? `≤${L.subjectLine} chars` : "compelling subject line"}",
+  "emailBody": "${c ? `≤${L.emailBody} chars` : "personalized email body"}",
+  "followUp1": "${c ? `≤${L.followUp1} chars` : "first follow-up message"}",
+  "followUp2": "${c ? `≤${L.followUp2} chars` : "second follow-up message"}",
+  "followUp3": "${c ? `≤${L.followUp3} chars` : "final follow-up message"}"
 }
 \`\`\``;
 }

@@ -31,6 +31,7 @@ model Organization {
 
   monthlyTokensUsed  BigInt    @default(0) @map("monthly_tokens_used")
   tokenBudgetResetAt DateTime? @map("token_budget_reset_at")
+  apiMode  ApiMode  @default(CENTRAL) @map("api_mode")
 
   members           OrganizationMember[]
   businessProfile   BusinessProfile?
@@ -49,9 +50,15 @@ model Organization {
 
 enum Plan {
   FREE
+  INDIE
   STARTER
   GROWTH
   AGENCY
+}
+
+enum ApiMode {
+  CENTRAL
+  BYOK
 }
 
 model OrganizationMember {

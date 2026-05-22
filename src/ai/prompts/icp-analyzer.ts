@@ -1,4 +1,4 @@
-import { FIELD_CHAR_LIMITS } from "@/ai/config";
+import { FIELD_CHAR_LIMITS, type RunMode } from "@/ai/config";
 
 export interface ICPAnalyzerInput {
   companyName: string;
@@ -12,8 +12,9 @@ export interface ICPAnalyzerInput {
   outreachTone: string;
 }
 
-export function buildICPAnalyzerPrompt(input: ICPAnalyzerInput): string {
+export function buildICPAnalyzerPrompt(input: ICPAnalyzerInput, mode: RunMode = "CENTRAL"): string {
   const L = FIELD_CHAR_LIMITS;
+  const c = mode === "CENTRAL";
 
   return `You are an expert B2B sales strategist. Analyze the following business profile and produce a structured ICP (Ideal Customer Profile) analysis that will be used to guide lead generation and qualification.
 
@@ -30,20 +31,20 @@ Outreach Tone: ${input.outreachTone}
 
 ## Task
 Produce a JSON object with the following structure. Be specific and actionable.
-Strict character limits apply — exceed them and the output will be truncated.
+${c ? "Strict character limits apply — exceed them and the output will be truncated." : "Be thorough and detailed in each field."}
 
 \`\`\`json
 {
-  "buyerPersonas": ["2-3 job titles, each ≤${L.buyerPersona} chars"],
-  "qualifyingSignals": ["5-7 observable signals, each ≤${L.qualifyingSignal} chars"],
-  "disqualifyingSignals": ["3-5 signals, each ≤${L.disqualifyingSignal} chars"],
+  "buyerPersonas": ["2-3 specific job titles${c ? `, each ≤${L.buyerPersona} chars` : ""}"],
+  "qualifyingSignals": ["5-7 observable signals${c ? `, each ≤${L.qualifyingSignal} chars` : ""}"],
+  "disqualifyingSignals": ["3-5 signals${c ? `, each ≤${L.disqualifyingSignal} chars` : ""}"],
   "apolloSearchFilters": {
-    "jobTitles": ["job titles for Apollo search, each ≤${L.apolloJobTitle} chars"],
-    "industries": ["Apollo taxonomy industries, each ≤${L.apolloIndustry} chars"],
+    "jobTitles": ["job titles for Apollo search${c ? `, each ≤${L.apolloJobTitle} chars` : ""}"],
+    "industries": ["Apollo taxonomy industries${c ? `, each ≤${L.apolloIndustry} chars` : ""}"],
     "companySizes": ["employee ranges e.g. '1,10' '11,50'"]
   },
-  "outreachAngles": ["3 messaging angles ranked by effectiveness, each ≤${L.outreachAngle} chars"],
-  "qualificationCriteria": "Paragraph on how to score leads 0-100. ≤${L.qualificationCriteria} chars total."
+  "outreachAngles": ["3 messaging angles ranked by effectiveness${c ? `, each ≤${L.outreachAngle} chars` : ""}"],
+  "qualificationCriteria": "Paragraph on how to score leads 0-100.${c ? ` ≤${L.qualificationCriteria} chars total.` : ""}"
 }
 \`\`\`
 

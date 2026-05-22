@@ -11,6 +11,8 @@ interface IntegrationStatus {
 interface IntegrationCenterProps {
   organizationId: string;
   statusMap: Record<string, IntegrationStatus>;
+  plan: string;
+  apiMode: string;
 }
 
 interface IntegrationConfig {
@@ -33,6 +35,26 @@ const TIER_STYLE: Record<string, { label: string; class: string }> = {
   required:    { label: "Required",    class: "bg-red-500/10 text-red-400 border border-red-500/20" },
   recommended: { label: "Recommended", class: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
   optional:    { label: "Optional",    class: "bg-secondary text-muted-foreground border border-border" },
+};
+
+const CLAUDE_INTEGRATION: IntegrationConfig = {
+  type: "CLAUDE",
+  label: "Anthropic API Key",
+  description: "Your own Claude API key — you control usage and costs",
+  tier: "required",
+  icon: "🔑",
+  fields: [{ key: "apiKey", label: "API Key", placeholder: "sk-ant-api03-...", type: "password" }],
+  docsUrl: "https://console.anthropic.com/settings/keys",
+  howToGet: {
+    title: "How to get your Anthropic API Key",
+    steps: [
+      "Go to console.anthropic.com and sign in (or create an account)",
+      "Navigate to Settings → API Keys",
+      'Click "Create Key", give it a name, and copy the key',
+      "Paste it above — it starts with sk-ant-api03-",
+    ],
+    note: "You'll be billed directly by Anthropic based on your usage. ~$1.05 per 100 leads with Claude Sonnet 4-5.",
+  },
 };
 
 const INTEGRATIONS: IntegrationConfig[] = [
@@ -88,7 +110,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
         'Click "Connect with Google" below',
         "Choose the Gmail account you want to send outreach from",
         'Grant the requested permissions (send email on your behalf)',
-        "You\'ll be redirected back here once connected",
+        "You'll be redirected back here once connected",
       ],
       note: "Flowfiy only sends emails — it never reads your inbox or deletes messages.",
     },
@@ -117,28 +139,128 @@ const INTEGRATIONS: IntegrationConfig[] = [
   },
 ];
 
-export function IntegrationCenter({ organizationId, statusMap }: IntegrationCenterProps) {
+const BYOK_ONLY_PLANS = ["FREE", "INDIE"];
+const CHOICE_PLANS = ["STARTER", "GROWTH", "AGENCY"];
+
+export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: initialApiMode }: IntegrationCenterProps) {
+  const [currentApiMode, setCurrentApiMode] = useState(initialApiMode);
+  const [modeLoading, setModeLoading] = useState(false);
+  const [modeError, setModeError] = useState("");
+
+  const isByokOnly = BYOK_ONLY_PLANS.includes(plan.toUpperCase());
+  const hasChoice = CHOICE_PLANS.includes(plan.toUpperCase());
+
+  async function handleModeSwitch(mode: "CENTRAL" | "BYOK") {
+    if (mode === currentApiMode) return;
+    setModeLoading(true);
+    setModeError("");
+    try {
+      const res = await fetch("/api/org/api-mode", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
+      if (res.ok) {
+        setCurrentApiMode(mode);
+      } else {
+        const data = await res.json() as { error?: string };
+        setModeError(data.error ?? "Failed to update mode");
+      }
+    } catch {
+      setModeError("Network error");
+    } finally {
+      setModeLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
-      {/* Managed AI banner — replaces the old Claude BYOK card */}
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🤖</span>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="font-medium text-sm">AI Engine — Claude Sonnet</p>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">Managed by Flowfiy</span>
+      {/* AI Engine section */}
+      {isByokOnly ? (
+        // FREE / INDIE: BYOK required card
+        <IntegrationCard
+          config={CLAUDE_INTEGRATION}
+          status={statusMap["CLAUDE"]}
+          organizationId={organizationId}
+        />
+      ) : hasChoice ? (
+        // STARTER / GROWTH / AGENCY: toggle between Managed and BYOK
+        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">🤖</span>
+            <p className="font-medium text-sm">AI Engine</p>
+          </div>
+          {modeError && (
+            <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2 border border-destructive/20">
+              {modeError}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Powering all AI research, qualification, and outreach generation. No setup required.
-            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleModeSwitch("CENTRAL")}
+              disabled={modeLoading}
+              className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
+                currentApiMode === "CENTRAL"
+                  ? "border-green-500/40 bg-green-500/10"
+                  : "border-border bg-secondary/30 hover:border-border/60"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Flowfiy Managed</span>
+                {currentApiMode === "CENTRAL" && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400">Active</span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">Claude Sonnet — included in your plan</span>
+            </button>
+            <button
+              onClick={() => handleModeSwitch("BYOK")}
+              disabled={modeLoading}
+              className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
+                currentApiMode === "BYOK"
+                  ? "border-amber-500/40 bg-amber-500/10"
+                  : "border-border bg-secondary/30 hover:border-border/60"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Bring Your Own Key</span>
+                {currentApiMode === "BYOK" && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">Active</span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">Use your own Anthropic API key</span>
+            </button>
+          </div>
+          {/* Show CLAUDE card if BYOK mode is active */}
+          {currentApiMode === "BYOK" && (
+            <IntegrationCard
+              config={CLAUDE_INTEGRATION}
+              status={statusMap["CLAUDE"]}
+              organizationId={organizationId}
+            />
+          )}
+        </div>
+      ) : (
+        // Fallback: managed AI banner (shouldn't be needed but safe default)
+        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🤖</span>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-medium text-sm">AI Engine — Claude Sonnet</p>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">Managed by Flowfiy</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Powering all AI research, qualification, and outreach generation. No setup required.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+            <span className="text-xs text-green-400">Active</span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-          <span className="text-xs text-green-400">Active</span>
-        </div>
-      </div>
+      )}
 
       <div className="grid gap-4">
         {INTEGRATIONS.map((integration) => (

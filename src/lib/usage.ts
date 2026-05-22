@@ -2,10 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { Plan } from "@prisma/client";
 
 export const PLAN_LIMITS: Record<Plan, number> = {
-  FREE: 100,
+  FREE:    100,
+  INDIE:   2500,
   STARTER: 2500,
-  GROWTH: 7500,
-  AGENCY: -1, // unlimited
+  GROWTH:  7500,
+  AGENCY:  -1, // unlimited
 };
 
 export async function checkGenerationLimit(
@@ -51,10 +52,11 @@ export async function incrementGenerationCount(
 // ─── Token Budget (secondary safety gate for central API cost control) ────────
 
 export const PLAN_TOKEN_BUDGETS: Record<Plan, number> = {
-  FREE:    500_000,
+  FREE:    0,          // BYOK only — no central tokens
+  INDIE:   0,          // BYOK only — no central tokens
   STARTER: 6_000_000,
   GROWTH:  20_000_000,
-  AGENCY:  -1, // unlimited
+  AGENCY:  -1,         // unlimited
 };
 
 export async function checkTokenBudget(
@@ -64,6 +66,12 @@ export async function checkTokenBudget(
     where: { id: organizationId },
     select: { plan: true, monthlyTokensUsed: true, tokenBudgetResetAt: true },
   });
+
+  const budget = PLAN_TOKEN_BUDGETS[org.plan];
+
+  // BYOK-only plans have no central token budget to check
+  if (budget === 0) return { allowed: true, remaining: 0 };
+  if (budget === -1) return { allowed: true, remaining: -1 };
 
   // Auto-reset if we're in a new calendar month
   const now = new Date();
@@ -77,11 +85,8 @@ export async function checkTokenBudget(
       where: { id: organizationId },
       data: { monthlyTokensUsed: 0, tokenBudgetResetAt: now },
     });
-    return { allowed: true, remaining: PLAN_TOKEN_BUDGETS[org.plan] };
+    return { allowed: true, remaining: budget };
   }
-
-  const budget = PLAN_TOKEN_BUDGETS[org.plan];
-  if (budget === -1) return { allowed: true, remaining: -1 };
 
   const used = Number(org.monthlyTokensUsed);
   const remaining = Math.max(0, budget - used);
