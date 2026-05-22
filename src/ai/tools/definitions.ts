@@ -123,11 +123,15 @@ export const LEAD_GEN_TOOLS: Tool[] = [
         },
         followUp1: {
           type: "string",
-          description: "First follow-up email body (required if qualified=true). Shorter, add new value.",
+          description: "First follow-up email body (required if qualified=true). Different angle, 3 sentences, add new value. Sent 3 days after initial.",
         },
         followUp2: {
           type: "string",
-          description: "Second follow-up email body (required if qualified=true). Short break-up style.",
+          description: "Second follow-up email body (required if qualified=true). Shift the frame, 2 sentences. Sent 7 days after initial.",
+        },
+        followUp3: {
+          type: "string",
+          description: "Third and final follow-up (required if qualified=true). Graceful exit, 2 sentences, leave the door open. Sent 14 days after initial.",
         },
       },
       required: ["leadId", "qualified", "score", "bestAngle", "painPointMatch", "personalizationHooks"],

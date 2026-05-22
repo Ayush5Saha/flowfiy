@@ -5,7 +5,7 @@
  *   1. Poll Gmail threads for all active campaigns and mark replied leads so
  *      follow-ups are automatically stopped (reply detection runs FIRST so we
  *      never queue a follow-up for a lead who has already replied).
- *   2. When a reply is detected, use Claude (BYOK) to classify its intent:
+ *   2. When a reply is detected, use Claude (managed central key) to classify its intent:
  *      INTERESTED | NOT_INTERESTED | OOO | REFERRAL | UNSUBSCRIBE | OTHER
  *   3. Fire outgoing webhooks for reply.received and unsubscribe.received events.
  *   4. Find campaign leads where follow-up 1, 2, or 3 is now due and enqueue
@@ -16,7 +16,8 @@ import { enqueueEmailJob } from "@/workers/queues";
 import { decryptCredentials } from "@/lib/encryption";
 import { getGoogleOAuthClient } from "@/integrations/gmail";
 import { google } from "googleapis";
-import Anthropic from "@anthropic-ai/sdk";
+import { getClaudeClient } from "@/ai/client";
+import { CLAUDE_MODELS, TEMPERATURE } from "@/ai/config";
 import { fireWebhookEvent } from "@/lib/webhooks";
 import { resolveTimezone, isInSendWindow } from "@/lib/timezones";
 
@@ -51,13 +52,14 @@ function extractGmailBody(
 
 async function classifyReply(
   replyText: string,
-  anthropic: Anthropic
+  anthropic: ReturnType<typeof getClaudeClient>
 ): Promise<ReplyIntent> {
   const truncated = replyText.slice(0, 800);
   try {
     const msg = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
+      model: CLAUDE_MODELS.fast,
       max_tokens: 10,
+      temperature: TEMPERATURE,
       system: `Classify this cold email reply into exactly one category. Reply with only the category name, nothing else.
 
 Categories:
@@ -110,19 +112,10 @@ async function detectRepliesForAllCampaigns(): Promise<number> {
     auth.setCredentials({ refresh_token: refreshToken });
     const gmail = google.gmail({ version: "v1", auth });
 
-    let anthropic: Anthropic | null = null;
-    try {
-      const claudeInt = await prisma.integration.findUnique({
-        where: { organizationId_type: { organizationId, type: "CLAUDE" } },
-        select: { status: true, encryptedCredentials: true },
-      });
-      if (claudeInt?.status === "CONNECTED") {
-        const { apiKey } = decryptCredentials(claudeInt.encryptedCredentials);
-        if (apiKey) anthropic = new Anthropic({ apiKey });
-      }
-    } catch {
-      // Claude not available — classification will default to "OTHER"
-    }
+    // Use the central managed Claude client — no per-org API key needed
+    const anthropic = (() => {
+      try { return getClaudeClient(); } catch { return null; }
+    })();
 
     for (const campaignId of campaignIds) {
       const sentLeads = await prisma.campaignLead.findMany({

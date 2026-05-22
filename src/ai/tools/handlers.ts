@@ -204,7 +204,7 @@ async function handleSaveLeadResult(
         body: input.emailBody,
         followUp1: input.followUp1 ?? null,
         followUp2: input.followUp2 ?? null,
-        followUp3: (input as { followUp3?: string | null }).followUp3 ?? null,
+        followUp3: input.followUp3 ?? null,
       },
     });
     ctx.stats.qualifiedLeads++;

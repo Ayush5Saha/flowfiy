@@ -7,6 +7,7 @@ export interface PersonalizationResult {
   emailBody: string;
   followUp1: string;
   followUp2: string;
+  followUp3: string;
 }
 
 export async function runPersonalization(

@@ -58,10 +58,11 @@ Personalization Hooks: ${hooks}
 - Email body: 4-5 sentences. Open with insight about THEM, not about us. Hard limit: ${L.emailBody} chars.
 - No "I hope this email finds you well." No "My name is X and I work at Y."
 - End with a soft CTA. ${calendlyText}
-- Follow-up 1: Different angle. 3 sentences. Reference no response. Hard limit: ${L.followUp1} chars.
-- Follow-up 2: Final break-up email. 2 sentences. Graceful exit + value statement. Hard limit: ${L.followUp2} chars.
+- Follow-up 1 (3 days later): Different angle. 3 sentences. Reference no response. Add new value. Hard limit: ${L.followUp1} chars.
+- Follow-up 2 (7 days later): Shift the frame. 2 sentences. Ask a genuine question or share a quick insight. Hard limit: ${L.followUp2} chars.
+- Follow-up 3 (14 days later): Final graceful exit. 2 sentences. Close the loop, leave the door open. Hard limit: ${L.followUp3} chars.
 
-IMPORTANT: Each field MUST stay within its character limit. Shorter is better.
+IMPORTANT: All 6 fields are REQUIRED. Each MUST stay within its character limit. Shorter is better.
 
 Return ONLY a JSON object:
 
@@ -70,7 +71,8 @@ Return ONLY a JSON object:
   "subjectLine": "≤${L.subjectLine} chars",
   "emailBody": "≤${L.emailBody} chars",
   "followUp1": "≤${L.followUp1} chars",
-  "followUp2": "≤${L.followUp2} chars"
+  "followUp2": "≤${L.followUp2} chars",
+  "followUp3": "≤${L.followUp3} chars"
 }
 \`\`\``;
 }

@@ -30,13 +30,13 @@ export const CLAUDE_MODELS = {
  *  icpAnalyzer:    ~600 chars of JSON ≈ 180 tokens. 500 gives comfortable headroom.
  *  companyAnalyzer:~700 chars of JSON ≈ 200 tokens. 512 gives headroom.
  *  qualification:  ~350 chars of JSON ≈ 100 tokens. 256 gives headroom.
- *  personalization:~800 chars of emails ≈ 250 tokens. 700 gives headroom.
+ *  personalization:~920 chars of emails (incl. followUp3) ≈ 230 tokens. 900 gives headroom.
  */
 export const AGENT_MAX_TOKENS = {
   icpAnalyzer:      500,
   companyAnalyzer:  512,
   qualification:    256,
-  personalization:  700,
+  personalization:  900,  // bumped from 700 — now generates followUp3 as well
 } as const;
 
 /**
@@ -97,4 +97,5 @@ export const FIELD_CHAR_LIMITS = {
   emailBody:              400,  // 4-5 sentences
   followUp1:              200,  // 3 sentences
   followUp2:              130,  // 2 sentences
+  followUp3:              120,  // 2 sentences — final "closing the loop" touch
 } as const;
