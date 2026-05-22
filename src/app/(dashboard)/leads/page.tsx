@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, ArrowRight, Plug, FileText, Zap, Upload } from "lucide-react";
+import { Users, ArrowRight, Plug, FileText, Upload } from "lucide-react";
 import { GenerateLeadsButton } from "@/components/leads/GenerateLeadsButton";
 import { LeadListRowActions } from "@/components/leads/LeadListRowActions";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
@@ -32,20 +32,15 @@ export default async function LeadsPage() {
   ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
-  const hasClaudeKey = connectedTypes.has("CLAUDE");
   const hasApolloKey = connectedTypes.has("APOLLO");
   const hasBusinessProfile = !!businessProfile;
 
+  // Claude is now managed centrally by Flowfiy — no user key needed
   const blockers = [
     !hasBusinessProfile && {
       label: "Set up your business profile & ICP",
       href: "/settings",
       icon: FileText,
-    },
-    !hasClaudeKey && {
-      label: "Connect your Claude API key",
-      href: "/integrations",
-      icon: Zap,
     },
     !hasApolloKey && {
       label: "Connect your Apollo API key",

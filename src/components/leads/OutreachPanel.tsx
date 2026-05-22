@@ -304,7 +304,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
                 {chatStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">Uses your Claude API key · Shift+Enter for new line</p>
+            <p className="text-xs text-muted-foreground mt-1.5">Powered by Claude Sonnet · Shift+Enter for new line</p>
           </div>
         </div>
       )}

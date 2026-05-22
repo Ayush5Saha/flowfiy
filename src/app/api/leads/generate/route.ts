@@ -48,19 +48,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify required integrations
+  // Verify required integrations — Claude is managed centrally, only Apollo is needed
   const integrations = await prisma.integration.findMany({
     where: {
       organizationId,
-      type: { in: ["CLAUDE", "APOLLO"] },
+      type: { in: ["APOLLO"] },
       status: "CONNECTED",
     },
   });
 
   const connected = new Set(integrations.map((i) => i.type));
-  if (!connected.has("CLAUDE")) {
-    return NextResponse.json({ error: "Claude API key not connected" }, { status: 422 });
-  }
   if (!connected.has("APOLLO")) {
     return NextResponse.json({ error: "Apollo API key not connected" }, { status: 422 });
   }

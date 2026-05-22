@@ -53,14 +53,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Require Claude key (needed for qualification + personalization)
-  const claudeIntegration = await prisma.integration.findUnique({
-    where: { organizationId_type: { organizationId, type: "CLAUDE" } },
-    select: { status: true },
-  });
-  if (claudeIntegration?.status !== "CONNECTED") {
-    return NextResponse.json({ error: "Claude API key not connected" }, { status: 422 });
-  }
+  // Claude is managed centrally by Flowfiy — no per-org key check needed
 
   // Require business profile (needed for ICP analysis + qualification)
   const profile = await prisma.businessProfile.findUnique({ where: { organizationId } });
