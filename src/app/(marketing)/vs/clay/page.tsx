@@ -190,7 +190,7 @@ export default function VsClayPage() {
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Try Flowfiy free — no Clay credits needed</h2>
-            <p className="text-zinc-400 mb-8">50 free lead generations. Bring your Claude API key. Start building pipeline in under 30 minutes.</p>
+            <p className="text-zinc-400 mb-8">100 free lead generations. No credit card required. Start building pipeline in under 30 minutes.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
                 Get started free <ArrowRight className="w-4 h-4" />

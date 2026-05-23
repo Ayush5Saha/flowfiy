@@ -78,7 +78,7 @@ export default function AILeadGenerationPage() {
                 How it works →
               </Link>
             </div>
-            <p className="text-xs text-zinc-600 mt-5">50 free generations · No credit card · BYOK</p>
+            <p className="text-xs text-zinc-600 mt-5">100 free generations · No credit card · BYOK</p>
           </div>
         </section>
 
@@ -190,7 +190,7 @@ export default function AILeadGenerationPage() {
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Start your first AI lead generation run</h2>
-            <p className="text-zinc-400 mb-8">50 free generations. No credit card. First leads in under 30 minutes.</p>
+            <p className="text-zinc-400 mb-8">100 free generations. No credit card. First leads in under 30 minutes.</p>
             <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-primary rounded-xl text-white font-semibold hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30">
               Get started free <ArrowRight className="w-5 h-5" />
             </Link>

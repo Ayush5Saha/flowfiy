@@ -103,7 +103,7 @@ export function MarketingFooter() {
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
           <div>
             <p className="text-sm font-medium text-white mb-0.5">Start generating leads for free</p>
-            <p className="text-xs text-zinc-500">50 free generations. No credit card required.</p>
+            <p className="text-xs text-zinc-500">100 free generations. No credit card required.</p>
           </div>
           <Link
             href="/signup"

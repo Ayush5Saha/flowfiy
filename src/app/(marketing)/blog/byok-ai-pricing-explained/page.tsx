@@ -150,7 +150,7 @@ export default function BlogPostBYOK() {
 
           <div className="bg-gradient-to-br from-violet-950/50 to-zinc-900/50 border border-violet-500/20 rounded-2xl p-8 text-center">
             <h3 className="text-xl font-bold text-white mb-3">See the full pricing breakdown</h3>
-            <p className="text-zinc-400 text-sm mb-6">Start with 50 free generations. Connect your Claude API key in under 5 minutes.</p>
+            <p className="text-zinc-400 text-sm mb-6">Start with 100 free generations. Connect your Claude API key in under 5 minutes.</p>
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
               Start for free <ArrowRight className="w-4 h-4" />
             </Link>

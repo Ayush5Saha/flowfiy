@@ -51,7 +51,7 @@ export default function ColdEmailAutomationPage() {
               Start automating cold email free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-xs text-zinc-600 mt-5">50 free generations · Gmail OAuth · BYOK Claude · No credit card</p>
+          <p className="text-xs text-zinc-600 mt-5">100 free generations · Gmail OAuth · BYOK Claude · No credit card</p>
         </div>
       </section>
 

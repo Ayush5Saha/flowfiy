@@ -1062,7 +1062,7 @@ function FinalCTA() {
               Your pipeline won&apos;t<br />fill itself.
             </h2>
             <p className="text-zinc-400 text-lg mb-10 max-w-md mx-auto">
-              Start with 50 free generations. No credit card required. First leads in under 10 minutes.
+              Start with 100 free generations. No credit card required. First leads in under 10 minutes.
             </p>
             <Link
               href="/signup"

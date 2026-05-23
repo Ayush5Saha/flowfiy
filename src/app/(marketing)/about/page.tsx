@@ -72,7 +72,7 @@ export default function AboutPage() {
       <section className="border-y border-white/5 py-12 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            ["50", "Free generations to start"],
+            ["100", "Free generations to start"],
             ["5", "Specialized AI agents"],
             ["$0", "Per-lead Claude cost to you"],
             ["AES-256", "Credential encryption"],
@@ -157,7 +157,7 @@ export default function AboutPage() {
       <section className="py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to replace your SDR stack?</h2>
-          <p className="text-zinc-400 mb-8">Start with 50 free lead generations. No credit card required.</p>
+          <p className="text-zinc-400 mb-8">Start with 100 free lead generations. No credit card required.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
               Get started free <ArrowRight className="w-4 h-4" />
