@@ -3,13 +3,22 @@ import Link from "next/link";
 import { Zap, Shield, Globe, Code2, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform",
+  title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform India",
   description:
-    "Flowfiy is a multi-tenant SaaS platform that uses 5 Claude AI agents to automate the entire outbound sales pipeline. BYOK. Zero per-lead cost. Built for global revenue teams.",
-  keywords: ["about Flowfiy", "AI sales platform", "Claude AI sales tool", "B2B outreach automation", "BYOK AI SaaS"],
+    "Flowfiy is India's AI outbound sales platform — 5 Claude AI agents automate lead research, qualification scoring, and personalized cold email outreach. Zero SDR needed. Built for Indian startups and agencies.",
+  keywords: [
+    "about Flowfiy",
+    "AI sales platform India",
+    "Claude AI sales tool",
+    "B2B outreach automation India",
+    "AI SDR platform India",
+    "AI outbound sales India",
+    "outbound sales software India",
+    "AI sales automation startup India",
+  ],
   openGraph: {
-    title: "About Flowfiy — AI-Powered B2B Sales Platform",
-    description: "Learn how Flowfiy uses 5 specialized Claude AI agents to replace the manual SDR stack. BYOK model, multi-tenant, AES-256 encrypted.",
+    title: "About Flowfiy — India's AI-Powered B2B Sales Platform",
+    description: "Learn how Flowfiy uses 5 Claude AI agents to replace the manual SDR stack. Built for Indian startups and agencies. Plans from ₹1,700/mo.",
     url: "/about",
   },
   alternates: { canonical: "/about" },

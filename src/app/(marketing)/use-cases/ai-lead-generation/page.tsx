@@ -3,13 +3,24 @@ import Link from "next/link";
 import { Check, ArrowRight, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Lead Generation Software — Automated B2B Prospecting | Flowfiy",
+  title: "AI Lead Generation Software India — Automated B2B Prospecting | Flowfiy",
   description:
-    "Flowfiy uses 5 Claude AI agents to automate the entire B2B lead generation pipeline: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach. Start free.",
-  keywords: ["AI lead generation software", "automated B2B lead generation", "AI prospecting tool", "automated lead generation 2026", "Claude AI lead generation", "AI SDR software"],
+    "India's best AI lead generation software. Flowfiy uses 5 Claude AI agents to automate the entire B2B lead generation pipeline: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach. Start free.",
+  keywords: [
+    "AI lead generation software India",
+    "automated B2B lead generation India",
+    "AI prospecting tool India",
+    "automated lead generation 2026",
+    "Claude AI lead generation",
+    "AI SDR software India",
+    "B2B lead generation software India",
+    "AI-powered lead generation India",
+    "best AI lead generation tool India",
+    "lead generation automation India",
+  ],
   openGraph: {
-    title: "AI Lead Generation Software — Automated B2B Prospecting | Flowfiy",
-    description: "5 Claude AI agents handle your entire lead generation pipeline automatically. ICP → prospect → research → qualify → outreach.",
+    title: "AI Lead Generation Software India — Automated B2B Prospecting | Flowfiy",
+    description: "India's AI lead generation platform. 5 Claude AI agents handle your entire lead pipeline — ICP → prospect → research → qualify → outreach. Plans from ₹1,700/mo.",
     url: "/use-cases/ai-lead-generation",
   },
   alternates: { canonical: "/use-cases/ai-lead-generation" },
@@ -18,10 +29,14 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Flowfiy — AI Lead Generation",
+  name: "Flowfiy — AI Lead Generation India",
   applicationCategory: "BusinessApplication",
-  description: "Automated B2B lead generation using 5 Claude AI agents: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach copy.",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "INR", description: "Free tier with 100 generations/month" },
+  inLanguage: "en-IN",
+  description: "India's AI lead generation software. 5 Claude AI agents automate the full B2B lead pipeline: ICP analysis, Apollo prospecting, company research, qualification scoring, and personalized outreach copy.",
+  offers: [
+    { "@type": "Offer", price: "0", priceCurrency: "INR", description: "Free tier — 100 generations/month" },
+    { "@type": "Offer", price: "1700", priceCurrency: "INR", description: "Indie plan — 2,500 generations/month" },
+  ],
 };
 
 const steps = [

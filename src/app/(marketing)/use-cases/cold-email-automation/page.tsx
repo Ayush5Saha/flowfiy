@@ -3,13 +3,24 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cold Email Automation Software — AI-Personalized Outreach | Flowfiy",
+  title: "Cold Email Automation Software India — AI-Personalized Outreach | Flowfiy",
   description:
-    "Automate cold email outreach with AI. Flowfiy researches every prospect, qualifies them 0–100, and writes hyper-personalized subject lines, email bodies, and follow-ups. Send from Gmail. Start free.",
-  keywords: ["cold email automation software", "automated cold outreach", "AI cold email tool", "personalized cold email automation", "B2B email automation 2026", "Gmail cold email automation"],
+    "India's best cold email automation software. Flowfiy researches every prospect, qualifies them 0–100, and writes hyper-personalized subject lines, email bodies, and follow-ups. Send from Gmail. Start free. Plans from ₹1,700/mo.",
+  keywords: [
+    "cold email automation software India",
+    "automated cold outreach India",
+    "AI cold email tool India",
+    "personalized cold email automation India",
+    "B2B email automation India 2026",
+    "Gmail cold email automation",
+    "cold email software India",
+    "AI-powered cold email India",
+    "best cold email tool India",
+    "cold outreach automation India",
+  ],
   openGraph: {
-    title: "Cold Email Automation — AI-Personalized Outreach at Scale | Flowfiy",
-    description: "Research, qualify, write, and send — AI handles the entire cold email pipeline from your Gmail.",
+    title: "Cold Email Automation India — AI-Personalized Outreach at Scale | Flowfiy",
+    description: "India's AI cold email platform. Research, qualify, write, and send — AI handles the entire cold email pipeline from your Gmail. Plans from ₹1,700/mo.",
     url: "/use-cases/cold-email-automation",
   },
   alternates: { canonical: "/use-cases/cold-email-automation" },

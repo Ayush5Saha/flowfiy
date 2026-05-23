@@ -3,13 +3,22 @@ import Link from "next/link";
 import { ArrowRight, ArrowLeft, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation | Flowfiy Blog",
+  title: "BYOK AI Pricing: Why Flowfiy Doesn't Charge Per Lead | Flowfiy Blog",
   description:
-    "Most AI sales tools charge $0.50–$2.00 per lead. Flowfiy charges $0 per generation because you bring your own Claude API key. Here's the full math on BYOK pricing and why it's the only honest model for AI SaaS.",
-  keywords: ["BYOK AI", "bring your own API key", "AI SaaS pricing", "Claude API BYOK", "AI sales tool cost", "Flowfiy pricing model"],
+    "Most AI sales tools charge $0.50–$2.00 per lead — that's ₹40–₹160 per contact. Flowfiy's BYOK model charges ₹0 per generation on Indie plan. Here's the full math on BYOK pricing and why it's the right model for Indian startups.",
+  keywords: [
+    "BYOK AI India",
+    "bring your own API key India",
+    "AI SaaS pricing India",
+    "Claude API BYOK",
+    "AI sales tool cost India",
+    "Flowfiy pricing India",
+    "affordable AI sales tool India",
+    "cheap AI lead generation India",
+  ],
   openGraph: {
-    title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation",
-    description: "The math behind Bring Your Own Key AI pricing — and why it's better for customers than per-lead fees.",
+    title: "BYOK AI Pricing: Why Flowfiy Doesn't Charge Per Lead",
+    description: "The math behind Bring Your Own Key AI pricing — why it's better for Indian startups than per-lead fees.",
     url: "/blog/byok-ai-pricing-explained",
     type: "article",
   },

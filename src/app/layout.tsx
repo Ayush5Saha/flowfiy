@@ -10,22 +10,47 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
+    default: "Flowfiy — AI-Powered B2B Sales Outreach Platform India",
     template: "%s | Flowfiy",
   },
   description:
-    "Flowfiy automates B2B outbound sales with 5 Claude AI agents. Research leads, score prospects 0–100, and send hyper-personalized cold emails — Claude is fully managed, no API key required.",
+    "Flowfiy is India's AI outbound sales platform — 5 Claude AI agents research leads, score prospects 0–100, and send hyper-personalized cold emails. No SDR needed. Starts free. Plans from ₹1,700/mo.",
   keywords: [
+    // Primary
+    "AI outbound sales platform",
+    "AI lead generation software",
+    "AI SDR platform",
+    "B2B lead generation AI",
+    "AI sales automation",
+    "outbound sales automation tool",
     "AI sales outreach",
-    "B2B lead generation",
-    "cold email automation",
+    "cold email automation software",
+    // India-specific
+    "AI outbound sales platform India",
+    "B2B lead generation software India",
+    "AI lead generation India",
+    "cold email automation India",
+    "best AI sales tool India",
+    "AI outreach tool for startups India",
+    "AI sales automation India",
+    "outbound sales tool India",
+    // Long-tail
+    "AI-powered cold emailing",
+    "AI-driven sales pipeline",
+    "automated B2B lead discovery",
+    "AI email sequence generator",
+    "AI-powered B2B prospecting",
+    "personalized cold email AI",
+    "AI SDR software",
+    "AI sales prospecting tool",
+    // Platform-specific
+    "AI SaaS for lead generation",
+    "AI automation for agencies",
+    "AI-powered outreach for startups",
     "Claude AI sales tool",
-    "outbound sales software",
-    "AI lead scoring",
-    "personalized cold email",
-    "AI outbound platform",
-    "sales prospecting tool",
-    "AI SDR",
+    "B2B outbound automation",
+    "AI lead scoring software",
+    "AI sales pipeline automation",
   ],
   authors: [{ name: "Flowfiy" }],
   creator: "Flowfiy",
@@ -43,27 +68,40 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: BASE_URL,
     siteName: "Flowfiy",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
+    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform India",
     description:
-      "5 Claude AI agents research leads, score prospects, and write personalized cold emails. Claude is fully managed — no API key setup needed.",
+      "5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. India's AI outbound sales platform. Plans from ₹1,700/mo.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Flowfiy — AI-Powered B2B Sales Outreach",
+        alt: "Flowfiy — AI-Powered B2B Sales Outreach India",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach",
+    title: "Flowfiy — AI-Powered B2B Sales Outreach India",
     description:
-      "5 Claude AI agents for B2B outbound. Research, score, personalize, send. Claude managed by Flowfiy — zero setup.",
+      "5 Claude AI agents for B2B outbound. Research, score, personalize, send. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
     images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: BASE_URL,
+    languages: {
+      "en-IN": BASE_URL,
+      "en": BASE_URL,
+    },
+  },
+  other: {
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "geo.position": "20.5937;78.9629",
+    "ICBM": "20.5937, 78.9629",
   },
   icons: {
     // PNG icons — required for Google Search, browsers, and PWA
@@ -92,8 +130,9 @@ const organizationJsonLd = {
   url: BASE_URL,
   logo: `${BASE_URL}/favicon-192x192.png`,
   description:
-    "AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
+    "India's AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
   foundingDate: "2026",
+  addressCountry: "IN",
   sameAs: [],
 };
 
@@ -105,13 +144,27 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: BASE_URL,
   description:
-    "AI-powered B2B sales outreach platform. 5 Claude AI agents research leads, score prospects 0–100, and generate personalized cold emails. Claude is managed by Flowfiy — no API key needed.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-    description: "Free tier — 50 lead generations included",
-  },
+    "India's AI outbound sales platform. 5 Claude AI agents research leads, score prospects 0–100, and generate personalized cold emails. Starts free — plans from ₹1,700/mo.",
+  offers: [
+    {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      description: "Free tier — 100 AI lead generations/month",
+    },
+    {
+      "@type": "Offer",
+      price: "1700",
+      priceCurrency: "INR",
+      description: "Indie plan — 2,500 generations/month",
+    },
+    {
+      "@type": "Offer",
+      price: "4900",
+      priceCurrency: "INR",
+      description: "Starter plan — 10,000 generations/month",
+    },
+  ],
   featureList: [
     "AI ICP Analysis",
     "Apollo API Lead Discovery",
@@ -121,7 +174,10 @@ const softwareJsonLd = {
     "Gmail OAuth Sending",
     "BYOK Claude API",
     "Multi-tenant Workspaces",
+    "AI SDR Automation",
+    "B2B Lead Generation India",
   ],
+  inLanguage: "en-IN",
 };
 
 export default function RootLayout({
@@ -130,7 +186,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en-IN" className="dark" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

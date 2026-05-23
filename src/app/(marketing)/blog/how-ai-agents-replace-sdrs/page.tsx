@@ -5,11 +5,20 @@ import { ArrowRight, ArrowLeft, Clock } from "lucide-react";
 export const metadata: Metadata = {
   title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026 | Flowfiy Blog",
   description:
-    "Manual SDR work costs $80k–$120k per rep per year. AI agents do the same work in seconds. Learn how the 5-agent pipeline replaces ICP research, lead discovery, company analysis, qualification, and email writing.",
-  keywords: ["AI SDR", "replace sales development rep with AI", "AI lead generation agent", "Claude AI sales", "automated SDR", "AI outbound sales 2026"],
+    "AI SDR tools are replacing manual sales development reps in India and globally. Learn how 5 AI agents replace ICP research, lead discovery, company analysis, qualification scoring, and email writing — at near-zero cost.",
+  keywords: [
+    "AI SDR India",
+    "replace sales development rep with AI",
+    "AI lead generation agent India",
+    "Claude AI sales India",
+    "automated SDR India",
+    "AI outbound sales 2026",
+    "AI SDR platform India",
+    "AI sales automation India",
+  ],
   openGraph: {
     title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026",
-    description: "The full breakdown of how AI agents replace manual SDR work — from ICP research to personalized email copy.",
+    description: "How AI agents replace manual SDR work in India — from ICP research to personalized email copy. At near-zero cost.",
     url: "/blog/how-ai-agents-replace-sdrs",
     type: "article",
   },

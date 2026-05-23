@@ -3,13 +3,22 @@ import Link from "next/link";
 import { ArrowRight, ArrowLeft, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Why Personalization Depth Beats Volume: Cold Email in 2026 | Flowfiy Blog",
+  title: "Why Personalization Depth Beats Volume: Cold Email India 2026 | Flowfiy Blog",
   description:
-    "Spray-and-pray cold email is dead. We analyzed 50,000 cold emails and found personalization depth predicts reply rate better than sending volume. Here's what actually works in 2026.",
-  keywords: ["cold email 2026", "cold email personalization", "B2B cold email reply rate", "cold email open rate", "outbound email strategy", "AI personalized cold email"],
+    "Spray-and-pray cold email is dead in India too. We analyzed 50,000 cold emails and found personalization depth predicts reply rate better than sending volume. Here's what actually works for Indian B2B outreach in 2026.",
+  keywords: [
+    "cold email India 2026",
+    "cold email personalization India",
+    "B2B cold email reply rate India",
+    "cold email open rate India",
+    "outbound email strategy India",
+    "AI personalized cold email India",
+    "cold email best practices India",
+    "B2B email outreach India",
+  ],
   openGraph: {
-    title: "Why Personalization Depth Beats Volume: Cold Email in 2026",
-    description: "The data-backed guide to cold email personalization that drives replies — not just opens.",
+    title: "Why Personalization Depth Beats Volume: Cold Email India 2026",
+    description: "The data-backed guide to cold email personalization for Indian B2B outreach — drives replies, not just opens.",
     url: "/blog/cold-email-personalization-2026",
     type: "article",
   },

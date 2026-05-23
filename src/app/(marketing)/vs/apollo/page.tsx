@@ -3,13 +3,22 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Apollo.io — AI Sales Outreach Comparison 2026",
+  title: "Flowfiy vs Apollo.io — AI B2B Outreach Comparison India 2026",
   description:
-    "Flowfiy vs Apollo.io for AI-powered B2B outreach. Apollo is a contact database and sequencer; Flowfiy adds 5 Claude agents for research, qualification scoring, and hyper-personalized email copy.",
-  keywords: ["Flowfiy vs Apollo", "Apollo.io alternative", "Apollo competitor", "Apollo vs Flowfiy", "Claude AI sales tool comparison", "Apollo alternative BYOK"],
+    "Flowfiy vs Apollo.io for AI-powered B2B outreach in India. Apollo gives you a contact database; Flowfiy adds 5 Claude AI agents for research, qualification scoring, and hyper-personalized email copy. India plans from ₹1,700/mo.",
+  keywords: [
+    "Flowfiy vs Apollo",
+    "Apollo.io alternative India",
+    "Apollo competitor India",
+    "Apollo vs Flowfiy",
+    "AI sales tool India comparison 2026",
+    "Apollo alternative India pricing",
+    "best Apollo alternative for Indian startups",
+    "AI lead generation India vs Apollo",
+  ],
   openGraph: {
-    title: "Flowfiy vs Apollo.io — AI Sales Platform Comparison 2026",
-    description: "How Flowfiy compares to Apollo.io for B2B lead generation and outreach automation.",
+    title: "Flowfiy vs Apollo.io — AI Sales Platform Comparison India 2026",
+    description: "How Flowfiy compares to Apollo.io for B2B lead generation and outreach automation in India. Plans from ₹1,700/mo.",
     url: "/vs/apollo",
   },
   alternates: { canonical: "/vs/apollo" },

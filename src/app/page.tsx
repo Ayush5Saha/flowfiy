@@ -2,20 +2,35 @@
 import LandingPage from "@/components/landing/LandingPage";
 
 export const metadata: Metadata = {
-  title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
+  title: "Flowfiy — AI-Powered B2B Sales Outreach Platform India | AI Lead Generation",
   description:
-    "5 specialized Claude AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. Fully managed Claude Sonnet — no API key required.",
+    "India's AI outbound sales platform. 5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. No SDR needed. Fully managed AI — starts free, plans from ₹1,700/mo.",
   keywords: [
+    // Primary India-targeted
+    "AI outbound sales platform India",
+    "AI lead generation software India",
+    "AI SDR platform India",
+    "B2B lead generation AI India",
+    "AI sales automation India",
+    "cold email automation India",
+    "outbound sales tool India",
+    // Primary global
     "AI sales outreach",
-    "B2B lead generation",
+    "AI lead generation software",
     "AI SDR",
-    "sales automation",
+    "B2B lead generation",
     "personalized cold email",
-    "Claude AI sales",
+    "Claude AI sales tool",
     "outbound sales platform",
-    "lead qualification AI",
-    "AI-powered outbound platform",
-    "sales pipeline automation",
+    // Long-tail
+    "AI-powered B2B prospecting India",
+    "automated lead generation India",
+    "AI email outreach India",
+    "best AI sales tool for startups India",
+    "AI outreach tool for agencies India",
+    "AI sales pipeline automation India",
+    "AI-driven cold email India",
+    "B2B outbound automation India",
   ],
   authors: [{ name: "Flowfiy" }],
   creator: "Flowfiy",
@@ -25,29 +40,33 @@ export const metadata: Metadata = {
   ),
   alternates: {
     canonical: "/",
+    languages: {
+      "en-IN": "/",
+      "en": "/",
+    },
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: "/",
     siteName: "Flowfiy",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
+    title: "Flowfiy — India's AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 specialized AI agents research your ICP, discover leads, analyze companies, qualify prospects, and write hyper-personalized outreach. Fully managed Claude Sonnet — no API key required.",
+      "5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Flowfiy — AI-Powered Sales Outreach",
+        alt: "Flowfiy — AI-Powered B2B Sales Outreach India",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
+    title: "Flowfiy — India's AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 Claude AI agents research, qualify, and write personalized outreach for every lead. Powered by Claude Sonnet — fully managed, no setup required.",
+      "5 Claude AI agents research, score, and write personalized outreach for every lead. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
     images: ["/og-image.png"],
     creator: "@Flowfiy",
   },
@@ -62,6 +81,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: {
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "geo.position": "20.5937;78.9629",
+    "ICBM": "20.5937, 78.9629",
+  },
 };
 
 const jsonLd = {
@@ -70,15 +95,24 @@ const jsonLd = {
   name: "Flowfiy",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
+  inLanguage: "en-IN",
   description:
-    "AI-powered B2B sales outreach platform that uses 5 specialized Claude AI agents to research leads, qualify prospects, and generate hyper-personalized outreach at scale.",
+    "India's AI outbound sales platform — 5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. Starts free, plans from ₹1,700/mo.",
   offers: [
     {
       "@type": "Offer",
       name: "Free",
       price: "0",
-      priceCurrency: "USD",
+      priceCurrency: "INR",
       description: "100 generations/month, 1 seat, 1 campaign",
+    },
+    {
+      "@type": "Offer",
+      name: "Indie",
+      price: "1700",
+      priceCurrency: "INR",
+      billingIncrement: "month",
+      description: "2,500 generations/month, 1 seat, 3 campaigns, BYOK",
     },
     {
       "@type": "Offer",
@@ -86,7 +120,7 @@ const jsonLd = {
       price: "4900",
       priceCurrency: "INR",
       billingIncrement: "month",
-      description: "2,500 generations/month, 1 seat, 5 campaigns",
+      description: "10,000 generations/month, 1 seat, 5 campaigns",
     },
     {
       "@type": "Offer",
@@ -94,7 +128,7 @@ const jsonLd = {
       price: "9900",
       priceCurrency: "INR",
       billingIncrement: "month",
-      description: "7,500 generations/month, 5 seats, unlimited campaigns",
+      description: "30,000 generations/month, 5 seats, unlimited campaigns",
     },
     {
       "@type": "Offer",

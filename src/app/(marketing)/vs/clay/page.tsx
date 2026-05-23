@@ -3,13 +3,22 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Clay — AI Sales Outreach Comparison 2026",
+  title: "Flowfiy vs Clay — AI Sales Outreach Comparison India 2026",
   description:
-    "Comparing Flowfiy vs Clay for AI-powered B2B lead generation and outreach. Clay is a data enrichment tool; Flowfiy is a full outbound pipeline with 5 Claude AI agents, Gmail sending, and BYOK pricing.",
-  keywords: ["Flowfiy vs Clay", "Clay alternative", "Clay competitor", "Clay vs Flowfiy", "AI sales tool comparison 2026", "Clay alternative BYOK"],
+    "Flowfiy vs Clay for AI-powered B2B lead generation in India. Clay is enrichment-only; Flowfiy is a full outbound pipeline with 5 Claude AI agents, Gmail sending, and India pricing from ₹1,700/mo.",
+  keywords: [
+    "Flowfiy vs Clay",
+    "Clay alternative India",
+    "Clay competitor",
+    "Clay vs Flowfiy",
+    "AI sales tool comparison 2026",
+    "Clay alternative India pricing",
+    "best Clay alternative for Indian startups",
+    "AI outbound tool India",
+  ],
   openGraph: {
-    title: "Flowfiy vs Clay — Which AI Sales Tool Is Right for You?",
-    description: "Full comparison of Flowfiy and Clay for B2B outreach automation. Pricing, features, and use cases.",
+    title: "Flowfiy vs Clay — Which AI Sales Tool Is Right for India?",
+    description: "Full comparison of Flowfiy and Clay for B2B outreach automation. India pricing, features, and use cases. Flowfiy from ₹1,700/mo.",
     url: "/vs/clay",
   },
   alternates: { canonical: "/vs/clay" },
@@ -18,8 +27,9 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "Flowfiy vs Clay",
-  description: "Comparison of Flowfiy and Clay for AI-powered B2B sales outreach.",
+  name: "Flowfiy vs Clay — India Comparison 2026",
+  description: "Comparison of Flowfiy and Clay for AI-powered B2B sales outreach in India. Flowfiy offers full outbound pipeline from ₹1,700/mo vs Clay's enrichment-only model.",
+  inLanguage: "en-IN",
 };
 
 const rows = [
