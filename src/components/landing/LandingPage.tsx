@@ -13,7 +13,8 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Check, Star, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowRight, Check, Star, ChevronDown } from "lucide-react";
+import { MarketingNav } from "@/components/landing/MarketingNav";
 
 // ─── Scroll Progress Bar ──────────────────────────────────────────────────────
 
@@ -269,140 +270,6 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
     >
       {children}
     </motion.div>
-  );
-}
-
-// ─── Navbar ───────────────────────────────────────────────────────────────────
-
-const RESOURCES_LINKS = [
-  { label: "Blog", href: "/blog", desc: "AI sales tips & guides" },
-  { label: "AI Lead Generation", href: "/use-cases/ai-lead-generation", desc: "Use case deep dive" },
-  { label: "Cold Email Automation", href: "/use-cases/cold-email-automation", desc: "Automate outreach" },
-  { label: "About", href: "/about", desc: "Our story & mission" },
-];
-
-const COMPARE_LINKS = [
-  { label: "Flowfiy vs Clay", href: "/vs/clay", desc: "Workflow builder vs AI pipeline" },
-  { label: "Flowfiy vs Apollo", href: "/vs/apollo", desc: "Database vs end-to-end platform" },
-];
-
-function NavDropdown({ label, items }: { label: string; items: { label: string; href: string; desc: string }[] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button className="flex items-center gap-1 text-sm text-zinc-400 hover:text-white transition-colors">
-        {label} <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
-          >
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block px-4 py-3 hover:bg-white/5 transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                <p className="text-sm text-white font-medium">{item.label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{item.desc}</p>
-              </Link>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { scrollY } = useScroll();
-
-  useEffect(() => {
-    return scrollY.on("change", (v) => setScrolled(v > 20));
-  }, [scrollY]);
-
-  return (
-    <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-black/80 backdrop-blur-xl border-b border-white/5" : "bg-transparent"
-      }`}
-      initial={{ y: -80 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center shrink-0">
-          <Image src="/logo.svg" alt="Flowfiy" width={110} height={32} priority />
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          {[["Features", "#features"], ["How it works", "#how-it-works"], ["Pricing", "#pricing"]].map(([label, href]) => (
-            <a key={href} href={href} className="text-sm text-zinc-400 hover:text-white transition-colors">
-              {label}
-            </a>
-          ))}
-          <NavDropdown label="Resources" items={RESOURCES_LINKS} />
-          <NavDropdown label="Compare" items={COMPARE_LINKS} />
-        </nav>
-
-        <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-1.5">
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all hover:shadow-lg hover:shadow-primary/25"
-          >
-            Get started free
-          </Link>
-        </div>
-
-        <button className="md:hidden text-zinc-400 hover:text-white" onClick={() => setMobileOpen(v => !v)}>
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-black/95 border-b border-white/10 px-4 pb-4 space-y-1"
-          >
-            {[["Features", "#features"], ["How it works", "#how-it-works"], ["Pricing", "#pricing"]].map(([label, href]) => (
-              <a key={href} href={href} onClick={() => setMobileOpen(false)} className="block py-2.5 text-sm text-zinc-300 hover:text-white">
-                {label}
-              </a>
-            ))}
-            <p className="text-xs text-zinc-600 uppercase tracking-widest pt-3 pb-1">Resources</p>
-            {RESOURCES_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-zinc-300 hover:text-white">
-                {item.label}
-              </Link>
-            ))}
-            <p className="text-xs text-zinc-600 uppercase tracking-widest pt-2 pb-1">Compare</p>
-            {COMPARE_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-zinc-300 hover:text-white">
-                {item.label}
-              </Link>
-            ))}
-            <div className="pt-3 flex flex-col gap-2">
-              <Link href="/login" className="text-sm text-center py-2.5 border border-white/10 rounded-lg text-zinc-300">Sign in</Link>
-              <Link href="/signup" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">Get started free</Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.header>
   );
 }
 
@@ -1171,7 +1038,7 @@ export default function LandingPage() {
   return (
     <div className="bg-[#030305] min-h-screen antialiased">
       <ScrollProgressBar />
-      <Navbar />
+      <MarketingNav />
       <Hero />
       <StatsBar />
       <HowItWorks />

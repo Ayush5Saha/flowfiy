@@ -14,16 +14,17 @@ const navLinks = [
   {
     label: "Resources",
     children: [
-      { label: "Blog", href: "/blog", desc: "Tips, guides & AI sales insights" },
-      { label: "Use Cases", href: "/use-cases/ai-lead-generation", desc: "See how teams use Flowfiy" },
-      { label: "About", href: "/about", desc: "Our mission and tech stack" },
+      { label: "Blog", href: "/blog", desc: "AI sales tips & guides" },
+      { label: "AI Lead Generation", href: "/use-cases/ai-lead-generation", desc: "Use case deep dive" },
+      { label: "Cold Email Automation", href: "/use-cases/cold-email-automation", desc: "Automate outreach" },
+      { label: "About", href: "/about", desc: "Our story & mission" },
     ],
   },
   {
     label: "Compare",
     children: [
-      { label: "vs Clay", href: "/vs/clay", desc: "Flowfiy vs Clay" },
-      { label: "vs Apollo", href: "/vs/apollo", desc: "Flowfiy vs Apollo.io" },
+      { label: "vs Clay", href: "/vs/clay", desc: "Workflow builder vs AI pipeline" },
+      { label: "vs Apollo", href: "/vs/apollo", desc: "Database vs end-to-end platform" },
     ],
   },
 ];
