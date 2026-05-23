@@ -48,18 +48,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify required integrations — Claude is managed centrally, only Apollo is needed
+  // Verify required integrations — need Apollo OR Apify for lead discovery.
+  // Apollo gives richer data (emails included). Apify free tier works but has no emails.
   const integrations = await prisma.integration.findMany({
     where: {
       organizationId,
-      type: { in: ["APOLLO"] },
+      type: { in: ["APOLLO", "APIFY"] },
       status: "CONNECTED",
     },
   });
 
   const connected = new Set(integrations.map((i) => i.type));
-  if (!connected.has("APOLLO")) {
-    return NextResponse.json({ error: "Apollo API key not connected" }, { status: 422 });
+  const hasApollo = connected.has("APOLLO");
+  const hasApify = connected.has("APIFY");
+
+  if (!hasApollo && !hasApify) {
+    return NextResponse.json(
+      {
+        error:
+          "No lead source connected. Connect Apollo (recommended, includes emails) or Apify (free tier, no emails) in the Integrations page to generate leads.",
+        missingIntegration: true,
+      },
+      { status: 422 }
+    );
   }
 
   // Verify business profile

@@ -50,80 +50,168 @@ interface SaveLeadResultInput {
 }
 
 // ─── search_leads ─────────────────────────────────────────────────────────────
+//
+// Uses Apollo if connected, falls back to Apify (Google Search scraper) if only
+// Apify is connected. At least one must be present — enforced at job-queue time.
 
 async function handleSearchLeads(
   input: SearchLeadsInput,
   ctx: ToolContext
 ): Promise<unknown> {
-  if (!ctx.apolloClient) {
-    throw new Error("Apollo integration not connected. Cannot search for leads.");
+  const geographies = input.geographies ?? ctx.geographies;
+  const limit = input.limit ?? 25;
+
+  // ── Apollo path ────────────────────────────────────────────────────────────
+  if (ctx.apolloClient) {
+    await ctx.log?.(`Searching Apollo for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
+
+    const rawLeads = await ctx.apolloClient.searchPeople({
+      jobTitles: input.jobTitles,
+      industries: input.industries,
+      companySizes: input.companySizes,
+      geographies,
+      perPage: limit,
+    });
+
+    if (rawLeads.length === 0) {
+      await ctx.log?.("No leads found in Apollo with these filters. Consider broadening the search.", "error");
+      return { leads: [], message: "No leads found with these filters. Consider broadening job titles or industries." };
+    }
+
+    await ctx.log?.(`Found ${rawLeads.length} leads from Apollo. Saving to database...`, "success");
+
+    const savedLeads = await Promise.all(
+      rawLeads.map((raw) =>
+        prisma.lead.create({
+          data: {
+            leadListId: ctx.leadListId,
+            organizationId: ctx.organizationId,
+            firstName: raw.firstName,
+            lastName: raw.lastName,
+            email: raw.email,
+            title: raw.title,
+            companyName: raw.organization?.name,
+            companyWebsite: raw.organization?.websiteUrl,
+            companySize: raw.organization?.employeeCount?.toString(),
+            industry: raw.organization?.industry,
+            linkedinUrl: raw.linkedinUrl,
+            source: "apollo",
+            rawData: raw as never,
+            status: "RESEARCHING",
+          },
+        })
+      )
+    );
+
+    ctx.stats.totalLeads = savedLeads.length;
+
+    await prisma.leadList.update({
+      where: { id: ctx.leadListId },
+      data: { totalLeads: savedLeads.length, jobStatus: "analyzing_companies" },
+    });
+
+    return {
+      leads: savedLeads.map((lead, i) => ({
+        leadId: lead.id,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        title: lead.title,
+        email: lead.email ?? "not available",
+        companyName: lead.companyName ?? "Unknown",
+        companyWebsite: lead.companyWebsite ?? null,
+        companySize: lead.companySize ?? "Unknown",
+        industry: lead.industry ?? "Unknown",
+        linkedinUrl: rawLeads[i]?.linkedinUrl ?? null,
+      })),
+      total: savedLeads.length,
+      source: "apollo",
+    };
   }
 
-  await ctx.log?.(`Searching Apollo for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
+  // ── Apify fallback path ────────────────────────────────────────────────────
+  if (ctx.apifyClient) {
+    await ctx.log?.(
+      `Apollo not connected — using Apify (free tier) to find leads via LinkedIn search. Note: emails may not be available.`,
+      "info"
+    );
+    await ctx.log?.(`Searching Apify for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
 
-  const rawLeads = await ctx.apolloClient.searchPeople({
-    jobTitles: input.jobTitles,
-    industries: input.industries,
-    companySizes: input.companySizes,
-    geographies: input.geographies ?? ctx.geographies,
-    perPage: input.limit ?? 25,
-  });
+    let rawLeads: Awaited<ReturnType<NonNullable<typeof ctx.apifyClient>["searchPeople"]>>;
+    try {
+      rawLeads = await ctx.apifyClient.searchPeople({
+        jobTitles: input.jobTitles,
+        industries: input.industries,
+        geographies,
+        limit,
+      });
+    } catch (err) {
+      await ctx.log?.(`Apify lead search failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+      return {
+        leads: [],
+        message: "Apify lead search failed. Check your Apify API key or try again.",
+      };
+    }
 
-  if (rawLeads.length === 0) {
-    await ctx.log?.("No leads found with these filters. Consider broadening the search.", "error");
-    return { leads: [], message: "No leads found with these filters. Consider broadening job titles or industries." };
+    if (rawLeads.length === 0) {
+      await ctx.log?.("No leads found via Apify with these filters. Consider broadening job titles, industries, or geographies.", "error");
+      return { leads: [], message: "No leads found with these filters. Consider broadening the search criteria." };
+    }
+
+    await ctx.log?.(`Found ${rawLeads.length} leads via Apify. Saving to database...`, "success");
+
+    const savedLeads = await Promise.all(
+      rawLeads.map((raw) =>
+        prisma.lead.create({
+          data: {
+            leadListId: ctx.leadListId,
+            organizationId: ctx.organizationId,
+            firstName: raw.firstName,
+            lastName: raw.lastName,
+            email: raw.email ?? null,
+            title: raw.title ?? null,
+            companyName: raw.organization?.name ?? null,
+            companyWebsite: raw.organization?.websiteUrl ?? null,
+            companySize: raw.organization?.employeeCount?.toString() ?? null,
+            industry: raw.organization?.industry ?? null,
+            linkedinUrl: raw.linkedinUrl ?? null,
+            source: "apify",
+            rawData: raw as never,
+            status: "RESEARCHING",
+          },
+        })
+      )
+    );
+
+    ctx.stats.totalLeads = savedLeads.length;
+
+    await prisma.leadList.update({
+      where: { id: ctx.leadListId },
+      data: { totalLeads: savedLeads.length, jobStatus: "analyzing_companies" },
+    });
+
+    return {
+      leads: savedLeads.map((lead, i) => ({
+        leadId: lead.id,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        title: lead.title ?? "Unknown",
+        email: lead.email ?? "not available — use LinkedIn URL for outreach",
+        companyName: lead.companyName ?? "Unknown",
+        companyWebsite: lead.companyWebsite ?? null,
+        companySize: lead.companySize ?? "Unknown",
+        industry: lead.industry ?? "Unknown",
+        linkedinUrl: rawLeads[i]?.linkedinUrl ?? null,
+      })),
+      total: savedLeads.length,
+      source: "apify",
+      note: "Emails not available via Apify free tier. Personalise outreach using LinkedIn URL and company data. Recommend scraping company website for richer context.",
+    };
   }
 
-  await ctx.log?.(`Found ${rawLeads.length} leads from Apollo. Saving to database...`, "success");
-
-  // Persist leads to DB immediately so save_lead_result can reference them
-  const savedLeads = await Promise.all(
-    rawLeads.map((raw) =>
-      prisma.lead.create({
-        data: {
-          leadListId: ctx.leadListId,
-          organizationId: ctx.organizationId,
-          firstName: raw.firstName,
-          lastName: raw.lastName,
-          email: raw.email,
-          title: raw.title,
-          companyName: raw.organization?.name,
-          companyWebsite: raw.organization?.websiteUrl,
-          companySize: raw.organization?.employeeCount?.toString(),
-          industry: raw.organization?.industry,
-          linkedinUrl: raw.linkedinUrl,
-          source: "apollo",
-          rawData: raw as never,
-          status: "RESEARCHING",
-        },
-      })
-    )
+  // ── Neither connected (should be caught at queue time, but guard here too) ─
+  throw new Error(
+    "No lead source connected. Please connect Apollo (recommended) or Apify in the Integrations page."
   );
-
-  ctx.stats.totalLeads = savedLeads.length;
-
-  // Update list with discovered count
-  await prisma.leadList.update({
-    where: { id: ctx.leadListId },
-    data: { totalLeads: savedLeads.length, jobStatus: "analyzing_companies" },
-  });
-
-  // Return structured lead list to Claude (with DB IDs for save_lead_result)
-  return {
-    leads: savedLeads.map((lead, i) => ({
-      leadId: lead.id,
-      firstName: lead.firstName,
-      lastName: lead.lastName,
-      title: lead.title,
-      email: lead.email ?? "not available",
-      companyName: lead.companyName ?? "Unknown",
-      companyWebsite: lead.companyWebsite ?? null,
-      companySize: lead.companySize ?? "Unknown",
-      industry: lead.industry ?? "Unknown",
-      linkedinUrl: rawLeads[i]?.linkedinUrl ?? null,
-    })),
-    total: savedLeads.length,
-  };
 }
 
 // ─── scrape_website ───────────────────────────────────────────────────────────

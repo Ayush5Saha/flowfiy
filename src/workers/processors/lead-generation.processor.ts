@@ -13,7 +13,7 @@ export interface LeadGenerationJobData {
   organizationId: string;
   leadListId: string;
   leadsPerRun: number;
-  mode?: "apollo" | "import"; // "import" = leads already in DB, skip Apollo discovery
+  mode?: "apollo" | "apify" | "import"; // "import" = leads already in DB, skip discovery
 }
 
 async function getIntegrationCredentials(organizationId: string, type: string) {
@@ -83,7 +83,10 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
     const apolloConnected = !!apolloCreds?.apiKey;
     const apifyConnected = !!apifyCreds?.apiKey && org.plan !== "INDIE";
-    await log(`Apollo: ${apolloConnected ? "connected" : "not connected"} · Apify: ${apifyConnected ? "connected" : "not connected"} · Mode: ${runMode}`, "info");
+
+    // Determine which lead source will be used
+    const leadSource = apolloConnected ? "Apollo" : apifyConnected ? "Apify (free tier)" : "none";
+    await log(`Lead source: ${leadSource} · Apify enrichment: ${apifyConnected ? "enabled" : "disabled"} · AI mode: ${runMode}`, "info");
 
     // ── Step 3: Handle import mode (leads already in DB) ─────────────────────
     if (mode === "import") {
@@ -174,9 +177,15 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       return;
     }
 
-    // ── Step 4: Apollo mode — Claude orchestrates everything ─────────────────
-    if (!apolloClient) {
-      throw new Error("Apollo API key not connected. Cannot generate leads.");
+    // ── Step 4: Lead discovery — Apollo preferred, Apify as fallback ──────────
+    if (!apolloClient && !apifyClient) {
+      throw new Error(
+        "No lead source connected. Please connect Apollo (recommended) or Apify (free tier) in the Integrations page."
+      );
+    }
+
+    if (!apolloClient && apifyClient) {
+      await log("Apollo not connected — using Apify free tier for lead discovery. Note: emails may not be available for all leads.", "info");
     }
 
     await log(`Asking Claude to find ${leadsPerRun} leads matching your ICP...`, "info");

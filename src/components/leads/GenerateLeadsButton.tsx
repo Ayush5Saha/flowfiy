@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Plus, Loader2 } from "lucide-react";
 
 interface GenerateLeadsButtonProps {
   organizationId: string;
   variant?: "default" | "primary";
+}
+
+interface GenerateErrorState {
+  message: string;
+  missingIntegration?: boolean;
 }
 
 export function GenerateLeadsButton({ organizationId, variant = "default" }: GenerateLeadsButtonProps) {
@@ -16,12 +22,12 @@ export function GenerateLeadsButton({ organizationId, variant = "default" }: Gen
   const [description, setDescription] = useState("");
   const [leadsPerRun, setLeadsPerRun] = useState(25);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<GenerateErrorState | null>(null);
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(null);
 
     const res = await fetch("/api/leads/generate", {
       method: "POST",
@@ -33,11 +39,14 @@ export function GenerateLeadsButton({ organizationId, variant = "default" }: Gen
 
     if (!res.ok) {
       if (res.status === 402) {
-        setError("Generation limit reached. Please upgrade your plan.");
+        setError({ message: "Generation limit reached. Please upgrade your plan." });
       } else if (res.status === 422) {
-        setError(data.error ?? "Integration not configured");
+        setError({
+          message: data.error ?? "Integration not configured",
+          missingIntegration: data.missingIntegration === true,
+        });
       } else {
-        setError(data.error ?? "Failed to start generation");
+        setError({ message: data.error ?? "Failed to start generation" });
       }
       setLoading(false);
       return;
@@ -71,8 +80,19 @@ export function GenerateLeadsButton({ organizationId, variant = "default" }: Gen
 
             <form onSubmit={handleGenerate} className="space-y-4">
               {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                  {error}
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm space-y-1">
+                  <p>{error.message}</p>
+                  {error.missingIntegration && (
+                    <p>
+                      <Link
+                        href="/integrations"
+                        className="underline underline-offset-2 font-medium hover:opacity-80"
+                        onClick={() => setOpen(false)}
+                      >
+                        Go to Integrations →
+                      </Link>
+                    </p>
+                  )}
                 </div>
               )}
 
