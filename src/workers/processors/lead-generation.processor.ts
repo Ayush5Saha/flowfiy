@@ -27,6 +27,8 @@ async function getIntegrationCredentials(organizationId: string, type: string) {
 
 export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
   const { organizationId, leadListId, leadsPerRun, mode = "apollo" } = job.data;
+  const attemptNumber = (job.attemptsMade ?? 0) + 1; // 1-based (1st, 2nd, 3rd)
+  const isRetry = attemptNumber > 1;
 
   const log = (msg: string, level: "info" | "success" | "error" | "tool" = "info") =>
     appendLog(leadListId, msg, level);
@@ -40,8 +42,13 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
 
   try {
     // ── Step 1: Load business profile ────────────────────────────────────────
-    await clearLogs(leadListId);
-    await log("Starting lead generation pipeline...", "info");
+    if (isRetry) {
+      // Preserve previous log history — just add a retry separator
+      await log(`━━━ Retry attempt ${attemptNumber}/3 — resuming pipeline ━━━`, "info");
+    } else {
+      await clearLogs(leadListId);
+      await log("Starting lead generation pipeline...", "info");
+    }
     await updateListStatus("RESEARCHING", { jobStatus: "analyzing_icp" });
     await log("Analyzing your Ideal Customer Profile (ICP)...", "info");
 
@@ -177,19 +184,79 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       return;
     }
 
-    // ── Step 4: Lead discovery — Apollo preferred, Apify as fallback ──────────
-    if (!apolloClient && !apifyClient) {
-      throw new Error(
-        "No lead source connected. Please connect Apollo (recommended) or Apify (free tier) in the Integrations page."
+    // ── Step 4: Checkpoint detection (retry path) ────────────────────────────
+    //
+    // On retry, check what the previous attempt already saved. There are three cases:
+    //   A) No leads in DB → previous attempt crashed before/during discovery → full fresh run
+    //   B) Some leads RESEARCHING + some done → crashed mid-qualification → resume those pending
+    //   C) All leads done (QUALIFIED/DISQUALIFIED) → crashed during finalization → just finalise
+    //
+    const checkpointLeads = await prisma.lead.findMany({
+      where: { leadListId, organizationId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        title: true,
+        email: true,
+        companyName: true,
+        companyWebsite: true,
+        companySize: true,
+        industry: true,
+        linkedinUrl: true,
+        status: true,
+      },
+    });
+
+    const pendingLeads = checkpointLeads.filter((l) => l.status === "RESEARCHING");
+    const doneLeads    = checkpointLeads.filter((l) => l.status !== "RESEARCHING");
+    const alreadyQualifiedCount = doneLeads.filter((l) =>
+      ["QUALIFIED", "CONTACTED", "REPLIED", "MEETING_BOOKED"].includes(l.status)
+    ).length;
+
+    // Case C: all leads already processed — previous attempt only failed in finalization
+    if (checkpointLeads.length > 0 && pendingLeads.length === 0) {
+      await log(
+        `Checkpoint: all ${checkpointLeads.length} leads already processed (${alreadyQualifiedCount} qualified). Finalising...`,
+        "success"
       );
+      await prisma.leadList.update({
+        where: { id: leadListId },
+        data: {
+          status: "READY",
+          jobStatus: "complete",
+          totalLeads: checkpointLeads.length,
+          qualifiedLeads: alreadyQualifiedCount,
+        },
+      });
+      await log(`Pipeline complete! ${checkpointLeads.length} leads, ${alreadyQualifiedCount} qualified.`, "success");
+      return;
     }
 
-    if (!apolloClient && apifyClient) {
-      await log("Apollo not connected — using Apify free tier for lead discovery. Note: emails may not be available for all leads.", "info");
-    }
+    // ── Step 5: Lead discovery — Apollo preferred, Apify as fallback ─────────
+    //
+    // Skip discovery entirely if we have a checkpoint (pending leads already in DB).
+    const hasCheckpoint = pendingLeads.length > 0;
 
-    await log(`Asking Claude to find ${leadsPerRun} leads matching your ICP...`, "info");
-    await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
+    if (!hasCheckpoint) {
+      // Normal fresh discovery path
+      if (!apolloClient && !apifyClient) {
+        throw new Error(
+          "No lead source connected. Please connect Apollo (recommended) or Apify (free tier) in the Integrations page."
+        );
+      }
+      if (!apolloClient && apifyClient) {
+        await log("Apollo not connected — using Apify for lead discovery.", "info");
+      }
+      await log(`Asking Claude to find ${leadsPerRun} leads matching your ICP...`, "info");
+      await updateListStatus("RESEARCHING", { jobStatus: "discovering_leads" });
+    } else {
+      await log(
+        `Checkpoint: ${doneLeads.length} leads already done, ${pendingLeads.length} still need qualification. Resuming...`,
+        "info"
+      );
+      await updateListStatus("RESEARCHING", { jobStatus: "analyzing_companies" });
+    }
 
     const ctx: ToolContext = {
       organizationId,
@@ -201,7 +268,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       log,
     };
 
-    const result = await runLeadGenOrchestrator(claude, ctx, {
+    const orchestratorInput = {
       businessProfile: {
         companyName: businessProfile.companyName,
         serviceOffered: businessProfile.serviceOffered,
@@ -215,15 +282,35 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       },
       leadsPerRun,
       calendlyLink: calendlyCreds?.schedulingLink as string | undefined,
-    }, runMode);
+      // Resume: pass only the unfinished leads — orchestrator skips search_leads
+      ...(hasCheckpoint && {
+        resumeLeads: pendingLeads.map((l) => ({
+          leadId: l.id,
+          firstName: l.firstName,
+          lastName: l.lastName,
+          title: l.title,
+          email: l.email,
+          companyName: l.companyName,
+          companyWebsite: l.companyWebsite,
+          companySize: l.companySize,
+          industry: l.industry,
+        })),
+      }),
+    };
 
-    if (result.totalLeads === 0) {
+    const result = await runLeadGenOrchestrator(claude, ctx, orchestratorInput, runMode);
+
+    if (!hasCheckpoint && result.totalLeads === 0) {
       await log("No leads were found. Check Apollo filters or broaden the ICP.", "error");
       await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
       return;
     }
 
-    // ── Step 5: Finalise ──────────────────────────────────────────────────────
+    // ── Step 6: Finalise ──────────────────────────────────────────────────────
+    // Merge newly-processed counts with any leads already done in previous attempts
+    const finalTotalLeads     = hasCheckpoint ? checkpointLeads.length : result.totalLeads;
+    const finalQualifiedLeads = result.qualifiedLeads + alreadyQualifiedCount;
+
     await incrementGenerationCount(organizationId, result.totalLeads);
     // Only track central token usage for non-BYOK runs
     if (runMode === "CENTRAL") {
@@ -235,16 +322,19 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
       data: {
         status: "READY",
         jobStatus: "complete",
-        totalLeads: result.totalLeads,
-        qualifiedLeads: result.qualifiedLeads,
+        totalLeads: finalTotalLeads,
+        qualifiedLeads: finalQualifiedLeads,
       },
     });
 
-    await log(`Pipeline complete! ${result.totalLeads} leads found, ${result.qualifiedLeads} qualified with personalised outreach ready.`, "success");
+    await log(
+      `Pipeline complete! ${finalTotalLeads} leads processed, ${finalQualifiedLeads} qualified with personalised outreach ready.`,
+      "success"
+    );
 
     console.log(
-      `[worker] Lead gen complete — ${result.totalLeads} leads, ` +
-        `${result.qualifiedLeads} qualified, ${result.toolCallCount} tool calls`
+      `[worker] Lead gen complete — ${finalTotalLeads} leads, ` +
+        `${finalQualifiedLeads} qualified, ${result.toolCallCount} tool calls`
     );
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : "Unknown error";

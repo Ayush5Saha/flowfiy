@@ -39,6 +39,12 @@ export interface OrchestratorInput {
   calendlyLink?: string;
   /** Import mode: leads already in DB — skip search_leads entirely */
   preloadedLeads?: PreloadedLead[];
+  /**
+   * Retry/resume mode: a previous attempt partially completed these leads.
+   * Only the RESEARCHING (unfinished) subset is passed here — skip discovery,
+   * pick up qualification from where the last run crashed.
+   */
+  resumeLeads?: PreloadedLead[];
 }
 
 export interface OrchestratorResult {
@@ -51,11 +57,18 @@ export interface OrchestratorResult {
 // ─── System prompt ────────────────────────────────────────────────────────────
 
 function buildSystemPrompt(input: OrchestratorInput): string {
-  const { businessProfile: bp, leadsPerRun, calendlyLink, preloadedLeads } = input;
+  const { businessProfile: bp, leadsPerRun, calendlyLink, preloadedLeads, resumeLeads } = input;
 
   const isImportMode = !!preloadedLeads?.length;
+  const isResumeMode = !!resumeLeads?.length;
+  const skipDiscovery = isImportMode || isResumeMode;
 
-  const discoverySection = isImportMode
+  const discoverySection = isResumeMode
+    ? `## RESUMING FROM CHECKPOINT
+A previous run already completed lead discovery. ${resumeLeads!.length} leads still need qualification.
+These leads are listed in the initial user message with their exact leadIds.
+DO NOT call search_leads — start directly at Step 2 (scrape + qualify each lead).`
+    : isImportMode
     ? `## LEADS ARE ALREADY PROVIDED
 The user has uploaded a CSV. All ${leadsPerRun} leads are listed in the initial user message with their exact leadIds.
 DO NOT call search_leads — it is not available. Start directly from Step 2.`
@@ -66,11 +79,13 @@ Call search_leads once with optimised Apollo filters derived from the ICP above.
 - Set company size ranges that match the ICP
 - Request exactly ${leadsPerRun} leads`;
 
+  const leadCount = isResumeMode ? resumeLeads!.length : leadsPerRun;
+
   return `You are an autonomous B2B sales intelligence agent for ${bp.companyName}.
 
 ## YOUR MISSION
-Process ${leadsPerRun} leads, qualify each one, and generate personalised outreach copy for qualified leads.
-You have ${isImportMode ? "two" : "three"} tools: ${isImportMode ? "" : "search_leads, "}scrape_website, and save_lead_result.
+Process ${leadCount} leads, qualify each one, and generate personalised outreach copy for qualified leads.
+You have ${skipDiscovery ? "two" : "three"} tools: ${skipDiscovery ? "" : "search_leads, "}scrape_website, and save_lead_result.
 
 ## BUSINESS CONTEXT
 - Company: ${bp.companyName}
@@ -104,7 +119,7 @@ Call save_lead_result for EVERY lead. Never skip a lead.
 - For DISQUALIFIED leads: set qualified=false, still provide score and bestAngle
 
 ## RULES
-${isImportMode ? "- DO NOT call search_leads — leads are pre-loaded, use the leadIds from the user message\n" : "- Always call search_leads first before anything else\n- Do not call search_leads more than once\n"}- Call save_lead_result for every lead — no lead left unprocessed
+${skipDiscovery ? "- DO NOT call search_leads — leads are pre-loaded, use the leadIds from the user message\n" : "- Always call search_leads first before anything else\n- Do not call search_leads more than once\n"}- Call save_lead_result for every lead — no lead left unprocessed
 - Finish only after all leads are saved`;
 }
 
@@ -120,10 +135,18 @@ export async function runLeadGenOrchestrator(
   const systemPrompt = buildSystemPrompt(input);
 
   const isImportMode = !!input.preloadedLeads?.length;
+  const isResumeMode = !!input.resumeLeads?.length;
+  const skipDiscovery = isImportMode || isResumeMode;
 
-  const initialUserMessage = isImportMode
+  const activeLeads = isResumeMode ? input.resumeLeads! : input.preloadedLeads;
+
+  const initialUserMessage = isResumeMode
+    ? `Resuming from checkpoint. ${input.resumeLeads!.length} leads were discovered in a previous run but not yet qualified. Process every one of them now. Use the exact leadId values when calling save_lead_result.\n\n${JSON.stringify(input.resumeLeads, null, 2)}\n\nDo NOT call search_leads.`
+    : isImportMode
     ? `Here are the ${input.preloadedLeads!.length} pre-loaded leads to qualify and generate outreach for. Use the exact leadId values when calling save_lead_result.\n\n${JSON.stringify(input.preloadedLeads, null, 2)}\n\nProcess every lead above. Do NOT call search_leads.`
     : `Start the lead generation workflow now. Find ${input.leadsPerRun} leads for ${input.businessProfile.companyName} and process every one of them.`;
+
+  void activeLeads; // used via skipDiscovery / initialUserMessage above
 
   const messages: MessageParam[] = [
     {
@@ -138,7 +161,7 @@ export async function runLeadGenOrchestrator(
   const MAX_ITERATIONS = 150; // safety ceiling — prevents runaway loops
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
-    const tools = isImportMode
+    const tools = skipDiscovery
       ? LEAD_GEN_TOOLS.filter((t) => t.name !== "search_leads")
       : LEAD_GEN_TOOLS;
 

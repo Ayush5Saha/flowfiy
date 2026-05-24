@@ -24,7 +24,11 @@ function makeQueue(name: string, opts: object) {
 export function getLeadGenerationQueue() {
   return makeQueue("lead-generation-pipeline", {
     attempts: 3,
-    backoff: { type: "exponential", delay: 2000 },
+    backoff: {
+      type: "exponential",
+      delay: 60_000, // 1 min → 2 min between retries (gives rate-limits / Claude overload time to clear)
+    },
+    timeout: 20 * 60 * 1000, // 20-minute hard ceiling per attempt
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 50 },
   });
