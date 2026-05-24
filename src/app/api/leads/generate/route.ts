@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify required integrations — need Apollo OR Apify for lead discovery.
-  // Apollo gives richer data (emails included). Apify free tier works but has no emails.
+  // Apollo gives richer data and is preferred. Apify uses the leads-finder actor which also provides validated emails.
   const integrations = await prisma.integration.findMany({
     where: {
       organizationId,
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "No lead source connected. Connect Apollo (recommended, includes emails) or Apify (free tier, no emails) in the Integrations page to generate leads.",
+          "No lead source connected. Connect Apollo (recommended) or Apify (free alternative with validated emails) in the Integrations page to generate leads.",
         missingIntegration: true,
       },
       { status: 422 }

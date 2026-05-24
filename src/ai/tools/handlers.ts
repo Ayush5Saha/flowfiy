@@ -51,7 +51,7 @@ interface SaveLeadResultInput {
 
 // ─── search_leads ─────────────────────────────────────────────────────────────
 //
-// Uses Apollo if connected, falls back to Apify (Google Search scraper) if only
+// Uses Apollo if connected, falls back to Apify (leads-finder actor, provides validated emails) if only
 // Apify is connected. At least one must be present — enforced at job-queue time.
 
 async function handleSearchLeads(

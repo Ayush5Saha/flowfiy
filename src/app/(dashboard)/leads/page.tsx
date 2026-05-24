@@ -32,18 +32,18 @@ export default async function LeadsPage() {
   ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
-  const hasApolloKey = connectedTypes.has("APOLLO");
+  const hasLeadSource = connectedTypes.has("APOLLO") || connectedTypes.has("APIFY");
   const hasBusinessProfile = !!businessProfile;
 
-  // Claude is now managed centrally by Flowfiy — no user key needed
+  // Apollo OR Apify is required as a lead source
   const blockers = [
     !hasBusinessProfile && {
       label: "Set up your business profile & ICP",
       href: "/settings",
       icon: FileText,
     },
-    !hasApolloKey && {
-      label: "Connect your Apollo API key",
+    !hasLeadSource && {
+      label: "Connect Apollo or Apify for lead discovery",
       href: "/integrations",
       icon: Plug,
     },
@@ -94,8 +94,8 @@ export default async function LeadsPage() {
 
           <h2 className="font-semibold text-lg mb-2">Generate your first lead list</h2>
           <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-            Flowfiy researches your ICP, finds matching companies via Apollo, analyzes each
-            one, scores them 0–100, and writes personalized outreach — all automatically.
+            Flowfiy researches your ICP, finds matching contacts via Apollo or Apify, analyzes
+            each company, scores them 0–100, and writes personalized outreach — all automatically.
           </p>
 
           {blockers.length > 0 ? (

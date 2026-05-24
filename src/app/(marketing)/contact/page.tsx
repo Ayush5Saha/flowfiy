@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "What APIs do I need to connect?",
-    a: "At minimum: a Claude API key (Anthropic) to run the AI pipeline. For lead discovery you'll also need Apollo.io. Apify is optional for website scraping, Gmail for sending outreach, and Calendly if you want booking links in your emails.",
+    a: "The AI pipeline is fully managed by Flowfiy — no Claude API key needed. For lead discovery, connect Apollo.io (recommended, 275M+ contacts) or Apify (free alternative with validated emails). Gmail is required to send outreach, and Calendly is optional for booking links.",
   },
 ];
 

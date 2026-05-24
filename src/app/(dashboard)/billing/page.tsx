@@ -54,6 +54,9 @@ export default async function BillingPage() {
             razorpaySubscriptionId: organization.razorpaySubscriptionId,
             stripeSubscriptionId: organization.stripeSubscriptionId,
             billingGateway: organization.billingGateway,
+            apiMode: organization.apiMode,
+            monthlyTokensUsed: Number(organization.monthlyTokensUsed),
+            tokenBudgetResetAt: organization.tokenBudgetResetAt?.toISOString() ?? null,
           }}
           usageThisMonth={usageThisMonth}
           plans={plans}

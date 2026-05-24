@@ -60,6 +60,7 @@ export function ProfileClient({ user, membership }: ProfileClientProps) {
 
   const planColors: Record<string, string> = {
     FREE: "bg-secondary text-muted-foreground",
+    INDIE: "bg-teal-500/10 text-teal-400",
     STARTER: "bg-blue-500/10 text-blue-400",
     GROWTH: "bg-purple-500/10 text-purple-400",
     AGENCY: "bg-yellow-500/10 text-yellow-400",

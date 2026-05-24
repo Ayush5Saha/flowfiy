@@ -35,6 +35,7 @@ const accountNav = [
 
 const planMeta: Record<string, { label: string; color: string; dot: string }> = {
   FREE:    { label: "Free",    color: "text-zinc-400",   dot: "bg-zinc-500" },
+  INDIE:   { label: "Indie",   color: "text-teal-400",   dot: "bg-teal-500" },
   STARTER: { label: "Starter", color: "text-blue-400",   dot: "bg-blue-500" },
   GROWTH:  { label: "Growth",  color: "text-violet-400", dot: "bg-violet-500" },
   AGENCY:  { label: "Agency",  color: "text-amber-400",  dot: "bg-amber-500" },

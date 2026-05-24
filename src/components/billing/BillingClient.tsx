@@ -26,6 +26,9 @@ interface BillingClientProps {
     razorpaySubscriptionId: string | null;
     stripeSubscriptionId: string | null;
     billingGateway: string | null;
+    apiMode: string;
+    monthlyTokensUsed: number;
+    tokenBudgetResetAt: string | null;
   };
   usageThisMonth: number;
   plans: Plan[];
@@ -366,6 +369,50 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
             )}
           </div>
         </div>
+
+        {/* Token budget — only shown for Flowfiy-managed AI (CENTRAL mode) */}
+        {organization.apiMode === "CENTRAL" && (() => {
+          const TOKEN_BUDGETS: Record<string, number> = {
+            STARTER: 6_000_000,
+            GROWTH: 20_000_000,
+            AGENCY: -1,
+          };
+          const budget = TOKEN_BUDGETS[organization.plan];
+          if (!budget) return null;
+          const tokenPct = budget === -1 ? 0 : Math.min(100, Math.round((organization.monthlyTokensUsed / budget) * 100));
+          const tokensUsedM = (organization.monthlyTokensUsed / 1_000_000).toFixed(2);
+          const budgetM = budget === -1 ? "∞" : `${(budget / 1_000_000).toFixed(0)}M`;
+          return (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">AI token budget (Claude Sonnet)</span>
+                <span className="font-mono text-xs">
+                  {tokensUsedM}M / {budgetM} tokens
+                </span>
+              </div>
+              {budget !== -1 && (
+                <div className="w-full bg-secondary rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      tokenPct > 90 ? "bg-destructive" : tokenPct > 70 ? "bg-amber-500" : "bg-violet-500"
+                    }`}
+                    style={{ width: `${tokenPct}%` }}
+                  />
+                </div>
+              )}
+              <div className="flex justify-between mt-1.5">
+                <p className="text-xs text-muted-foreground">
+                  Resets {organization.tokenBudgetResetAt
+                    ? new Date(new Date(organization.tokenBudgetResetAt).getFullYear(), new Date(organization.tokenBudgetResetAt).getMonth() + 1, 1).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                    : "1st of next month"}
+                </p>
+                {tokenPct > 80 && budget !== -1 && (
+                  <p className="text-xs text-amber-400 font-medium">Token budget running low</p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Referral code */}

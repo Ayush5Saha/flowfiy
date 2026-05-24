@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
-// Integrations that must be connected for the core pipeline to work
-const REQUIRED_INTEGRATION_TYPES = ["APOLLO", "GMAIL"] as const;
+// Lead source integrations — at least ONE must be connected (Apollo preferred, Apify accepted)
+const LEAD_SOURCE_TYPES = ["APOLLO", "APIFY"] as const;
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -39,10 +39,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const connectedTypes = new Set(connectedIntegrations.map((i) => i.type));
 
-  // Count how many required integrations are not yet connected
-  const missingRequired = REQUIRED_INTEGRATION_TYPES.filter(
-    (t) => !connectedTypes.has(t)
-  ).length;
+  // Count missing required integrations:
+  // - At least one lead source (Apollo OR Apify) must be connected
+  // - Gmail must be connected
+  const hasLeadSource = LEAD_SOURCE_TYPES.some((t) => connectedTypes.has(t));
+  const hasGmail = connectedTypes.has("GMAIL");
+  const missingRequired = (hasLeadSource ? 0 : 1) + (hasGmail ? 0 : 1);
 
   return (
     <ToastProvider>

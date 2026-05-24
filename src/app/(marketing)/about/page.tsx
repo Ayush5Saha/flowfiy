@@ -28,7 +28,7 @@ const values = [
   { icon: Shield, title: "Security first", desc: "Every API key stored with AES-256-GCM. Your credentials never appear in logs. Full tenant isolation via Supabase RLS." },
   { icon: Globe, title: "Global from day one", desc: "Stripe billing in 135+ currencies. Multi-language ICP support. Built for revenue teams everywhere, not just Silicon Valley." },
   { icon: Code2, title: "Transparent stack", desc: "Next.js 15, Supabase, Prisma, BullMQ, Upstash Redis, Anthropic SDK. No black boxes. Engineers know exactly what runs their pipeline." },
-  { icon: Zap, title: "BYOK always", desc: "Your Claude API key stays yours. We never see your tokens, never mark up your AI costs. Charge only for platform intelligence." },
+  { icon: Zap, title: "AI included, BYOK available", desc: "Paid plans include fully managed Claude Sonnet — no API key needed. Prefer your own Anthropic key? BYOK mode is always an option. No AI cost markup either way." },
 ];
 
 const stack = [

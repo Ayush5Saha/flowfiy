@@ -75,8 +75,8 @@ export default async function DashboardPage() {
       type: "APIFY",
       label: "Apify",
       icon: "🕷️",
-      description: "Web research — enriches company context for better qualification",
-      tier: "recommended" as const,
+      description: "Lead discovery + web scraping — primary lead source if Apollo not connected",
+      tier: "required" as const,
       connected: connectedTypes.has("APIFY"),
     },
     {
@@ -106,10 +106,10 @@ export default async function DashboardPage() {
     },
     {
       id: "apollo-key",
-      label: "Connect Apollo for lead discovery",
-      description: "Apollo finds contacts matching your ICP from 275M+ verified professionals",
+      label: "Connect a lead source (Apollo or Apify)",
+      description: "Apollo finds 275M+ verified contacts — or use Apify as a free alternative with validated emails",
       href: "/integrations",
-      done: connectedTypes.has("APOLLO"),
+      done: connectedTypes.has("APOLLO") || connectedTypes.has("APIFY"),
     },
     {
       id: "gmail",
