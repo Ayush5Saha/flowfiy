@@ -2,13 +2,29 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import AdminOrgPlanEditor from "@/components/admin/AdminOrgPlanEditor";
+import AdminApiModeToggle from "@/components/admin/AdminApiModeToggle";
 
 const planColors: Record<string, string> = {
-  FREE: "bg-zinc-700 text-zinc-300",
+  FREE:    "bg-zinc-700 text-zinc-300",
+  INDIE:   "bg-teal-500/20 text-teal-300",
   STARTER: "bg-blue-500/20 text-blue-300",
-  GROWTH: "bg-violet-500/20 text-violet-300",
-  AGENCY: "bg-amber-500/20 text-amber-300",
+  GROWTH:  "bg-violet-500/20 text-violet-300",
+  AGENCY:  "bg-amber-500/20 text-amber-300",
 };
+
+const PLAN_BUDGETS: Record<string, number> = {
+  FREE:    500_000,
+  INDIE:   2_000_000,
+  STARTER: 6_000_000,
+  GROWTH:  20_000_000,
+  AGENCY:  -1,
+};
+
+function formatTokens(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
 
 export default async function AdminOrgsPage() {
   await requireAdmin();
@@ -16,19 +32,32 @@ export default async function AdminOrgsPage() {
   const orgs = await prisma.organization.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      _count: {
-        select: { members: true, campaigns: true, leadLists: true },
-      },
+      _count: { select: { members: true, campaigns: true, leadLists: true } },
       businessProfile: { select: { companyName: true } },
       integrations: { select: { type: true, status: true } },
     },
   });
 
+  const planCounts: Record<string, number> = {};
+  for (const org of orgs) {
+    planCounts[org.plan] = (planCounts[org.plan] ?? 0) + 1;
+  }
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Organizations</h1>
-        <p className="text-zinc-400 text-sm mt-1">{orgs.length} total organizations</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Organizations</h1>
+          <p className="text-zinc-400 text-sm mt-1">{orgs.length} total organizations</p>
+        </div>
+        {/* Plan summary pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {Object.entries(planCounts).map(([plan, count]) => (
+            <span key={plan} className={`px-2.5 py-1 rounded-full text-xs font-medium ${planColors[plan] ?? "bg-zinc-700 text-zinc-300"}`}>
+              {count} {plan}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -38,7 +67,9 @@ export default async function AdminOrgsPage() {
               <tr className="border-b border-zinc-800">
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Org</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Plan</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Usage</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">API Mode</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Gen Usage</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Token Usage</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Members</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Integrations</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Created</th>
@@ -53,6 +84,12 @@ export default async function AdminOrgsPage() {
                 const connectedIntegrations = org.integrations
                   .filter((i) => i.status === "CONNECTED")
                   .map((i) => i.type);
+
+                const tokensUsed = Number(org.monthlyTokensUsed);
+                const tokenBudget = PLAN_BUDGETS[org.plan] ?? 500_000;
+                const tokenUnlimited = tokenBudget === -1;
+                const tokenPct = tokenUnlimited ? 0 : Math.min(Math.round((tokensUsed / tokenBudget) * 100), 100);
+                const tokenAtLimit = !tokenUnlimited && tokensUsed >= tokenBudget;
 
                 return (
                   <tr key={org.id} className="hover:bg-zinc-800/40 transition-colors">
@@ -69,15 +106,33 @@ export default async function AdminOrgsPage() {
                       <AdminOrgPlanEditor orgId={org.id} currentPlan={org.plan} />
                     </td>
                     <td className="px-4 py-3">
+                      <AdminApiModeToggle orgId={org.id} currentMode={org.apiMode} />
+                    </td>
+                    <td className="px-4 py-3">
                       <div>
                         <p className="text-xs text-white">
                           {org.generationCount} / {org.generationLimit === -1 ? "∞" : org.generationLimit}
                         </p>
                         {org.generationLimit !== -1 && (
-                          <div className="w-24 h-1.5 bg-zinc-700 rounded-full mt-1 overflow-hidden">
+                          <div className="w-20 h-1.5 bg-zinc-700 rounded-full mt-1 overflow-hidden">
                             <div
                               className={`h-full rounded-full ${usagePct > 80 ? "bg-red-500" : "bg-violet-500"}`}
                               style={{ width: `${Math.min(usagePct, 100)}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className={`text-xs font-mono ${tokenAtLimit ? "text-red-400" : "text-white"}`}>
+                          {formatTokens(tokensUsed)}{!tokenUnlimited && ` / ${formatTokens(tokenBudget)}`}
+                        </p>
+                        {!tokenUnlimited && (
+                          <div className="w-20 h-1.5 bg-zinc-700 rounded-full mt-1 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${tokenPct > 90 ? "bg-red-500" : tokenPct > 70 ? "bg-amber-500" : "bg-blue-500"}`}
+                              style={{ width: `${tokenPct}%` }}
                             />
                           </div>
                         )}
@@ -90,7 +145,7 @@ export default async function AdminOrgsPage() {
                           <span className="text-zinc-600 text-xs">None</span>
                         ) : (
                           connectedIntegrations.map((t) => (
-                            <span key={t} className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-xs">
+                            <span key={t} className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px]">
                               {t}
                             </span>
                           ))
@@ -105,7 +160,7 @@ export default async function AdminOrgsPage() {
                         href={`/admin/organizations/${org.id}`}
                         className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
                       >
-                        View →
+                        Manage →
                       </Link>
                     </td>
                   </tr>

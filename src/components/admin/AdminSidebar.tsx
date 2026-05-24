@@ -12,15 +12,22 @@ import {
   ScrollText,
   LogOut,
   ShieldAlert,
+  Activity,
+  Zap,
 } from "lucide-react";
 
-const NAV = [
+const NAV_MAIN = [
   { label: "Overview",      href: "/admin",              icon: LayoutDashboard },
   { label: "Users",         href: "/admin/users",         icon: Users },
   { label: "Organizations", href: "/admin/organizations", icon: Building2 },
   { label: "Campaigns",     href: "/admin/campaigns",     icon: Megaphone },
   { label: "Leads",         href: "/admin/leads",         icon: UserCircle2 },
+];
+
+const NAV_SYSTEM = [
   { label: "Billing",       href: "/admin/billing",       icon: CreditCard },
+  { label: "AI Usage",      href: "/admin/ai-usage",      icon: Zap },
+  { label: "System Health", href: "/admin/system",        icon: Activity },
   { label: "Audit Logs",    href: "/admin/audit-logs",    icon: ScrollText },
 ];
 
@@ -51,37 +58,40 @@ export default function AdminSidebar() {
       </div>
 
       {/* ── Navigation ──────────────────────────────── */}
-      <nav className="flex-1 px-2 py-4 space-y-0.5">
-        {/* Section label */}
+      <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
+        {/* Section: Management */}
         <p className="px-3 pb-2 text-[10px] font-semibold text-zinc-600 tracking-widest uppercase">
           Management
         </p>
-
-        {NAV.map(({ label, href, icon: Icon }) => {
-          const active =
-            href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(href);
-
+        {NAV_MAIN.map(({ label, href, icon: Icon }) => {
+          const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
           return (
-            <Link
-              key={href}
-              href={href}
+            <Link key={href} href={href}
               className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 group ${
-                active
-                  ? "bg-amber-500/10 text-amber-300 font-medium"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70"
+                active ? "bg-amber-500/10 text-amber-300 font-medium" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70"
               }`}
             >
-              {/* Amber left accent for active */}
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-amber-500 rounded-r-sm" />
-              )}
-              <Icon
-                className={`w-4 h-4 shrink-0 transition-colors ${
-                  active ? "text-amber-400" : "text-zinc-500 group-hover:text-zinc-300"
-                }`}
-              />
+              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-amber-500 rounded-r-sm" />}
+              <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-amber-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+              {label}
+            </Link>
+          );
+        })}
+
+        {/* Section: System */}
+        <p className="px-3 pt-4 pb-2 text-[10px] font-semibold text-zinc-600 tracking-widest uppercase">
+          System
+        </p>
+        {NAV_SYSTEM.map(({ label, href, icon: Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link key={href} href={href}
+              className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 group ${
+                active ? "bg-amber-500/10 text-amber-300 font-medium" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70"
+              }`}
+            >
+              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-amber-500 rounded-r-sm" />}
+              <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-amber-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
               {label}
             </Link>
           );

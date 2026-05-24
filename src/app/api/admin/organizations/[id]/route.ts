@@ -23,6 +23,13 @@ export async function PATCH(
   const allowed: Record<string, unknown> = {};
   if (body.plan !== undefined) allowed.plan = body.plan;
   if (body.generationLimit !== undefined) allowed.generationLimit = Number(body.generationLimit);
+  if (body.generationCount !== undefined) allowed.generationCount = Number(body.generationCount);
+  if (body.apiMode !== undefined) allowed.apiMode = body.apiMode;
+  if (body.resetGenerationCount === true) allowed.generationCount = 0;
+  if (body.resetTokenUsage === true) {
+    allowed.monthlyTokensUsed = 0;
+    allowed.tokenBudgetResetAt = new Date();
+  }
 
   if (Object.keys(allowed).length === 0) {
     return NextResponse.json({ error: "No valid fields" }, { status: 400 });
