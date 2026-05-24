@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Hourly cron: finds and resolves stuck lead generation jobs.
+ * Daily cron (2 AM UTC): finds and resolves stuck lead generation jobs.
  *
  * A job is "stuck" if it has been in RESEARCHING/QUEUED state for more than
  * 2 hours without updating. This can happen when:
