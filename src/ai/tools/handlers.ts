@@ -25,7 +25,7 @@ export interface ToolContext {
 interface SearchLeadsInput {
   jobTitles: string[];
   industries: string[];
-  companySizes: string[];
+  companySizes?: string[];
   geographies?: string[];
   limit?: number;
 }
@@ -68,7 +68,7 @@ async function handleSearchLeads(
     const rawLeads = await ctx.apolloClient.searchPeople({
       jobTitles: input.jobTitles,
       industries: input.industries,
-      companySizes: input.companySizes,
+      companySizes: input.companySizes ?? [],
       geographies,
       perPage: limit,
     });
@@ -131,7 +131,7 @@ async function handleSearchLeads(
   // ── Apify fallback path ────────────────────────────────────────────────────
   if (ctx.apifyClient) {
     await ctx.log?.(
-      `Apollo not connected — using Apify (free tier) to find leads via LinkedIn search. Note: emails may not be available.`,
+      `Apollo not connected — using Apify (leads-finder + Google scraper fallback) to find leads.`,
       "info"
     );
     await ctx.log?.(`Searching Apify for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
@@ -139,10 +139,11 @@ async function handleSearchLeads(
     let rawLeads: Awaited<ReturnType<NonNullable<typeof ctx.apifyClient>["searchPeople"]>>;
     try {
       rawLeads = await ctx.apifyClient.searchPeople({
-        jobTitles: input.jobTitles,
-        industries: input.industries,
+        jobTitles:    input.jobTitles,
+        industries:   input.industries,
         geographies,
         limit,
+        companySizes: input.companySizes,
       });
     } catch (err) {
       await ctx.log?.(`Apify lead search failed: ${err instanceof Error ? err.message : String(err)}`, "error");
@@ -157,7 +158,11 @@ async function handleSearchLeads(
       return { leads: [], message: "No leads found with these filters. Consider broadening the search criteria." };
     }
 
-    await ctx.log?.(`Found ${rawLeads.length} leads via Apify. Saving to database...`, "success");
+    const withEmails = rawLeads.filter((l) => l.email).length;
+    await ctx.log?.(
+      `Found ${rawLeads.length} leads via Apify (${withEmails} with emails). Saving to database...`,
+      "success"
+    );
 
     const savedLeads = await Promise.all(
       rawLeads.map((raw) =>
@@ -189,13 +194,17 @@ async function handleSearchLeads(
       data: { totalLeads: savedLeads.length, jobStatus: "analyzing_companies" },
     });
 
+    const emailNote = withEmails > 0
+      ? `${withEmails}/${savedLeads.length} leads have validated emails.`
+      : "No emails found — outreach via LinkedIn URL or company website.";
+
     return {
       leads: savedLeads.map((lead, i) => ({
         leadId: lead.id,
         firstName: lead.firstName,
         lastName: lead.lastName,
         title: lead.title ?? "Unknown",
-        email: lead.email ?? "not available — use LinkedIn URL for outreach",
+        email: lead.email ?? "not available — use LinkedIn URL or scrape company website",
         companyName: lead.companyName ?? "Unknown",
         companyWebsite: lead.companyWebsite ?? null,
         companySize: lead.companySize ?? "Unknown",
@@ -204,7 +213,7 @@ async function handleSearchLeads(
       })),
       total: savedLeads.length,
       source: "apify",
-      note: "Emails not available via Apify free tier. Personalise outreach using LinkedIn URL and company data. Recommend scraping company website for richer context.",
+      note: emailNote,
     };
   }
 

@@ -11,6 +11,9 @@
     },
     "src/app/api/campaigns/process-followups/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/cron/cleanup-stuck-leads/route.ts": {
+      "maxDuration": 30
     }
   },
   "crons": [
@@ -21,6 +24,10 @@
     {
       "path": "/api/billing/reset-usage",
       "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/cleanup-stuck-leads",
+      "schedule": "0 * * * *"
     }
   ]
 }
