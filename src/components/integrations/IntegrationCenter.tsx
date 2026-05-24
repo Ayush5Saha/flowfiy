@@ -20,7 +20,7 @@ interface IntegrationConfig {
   label: string;
   description: string;
   icon: string;
-  tier: "required" | "recommended" | "optional";
+  tier: "required" | "lead-source" | "recommended" | "optional";
   fields: Array<{ key: string; label: string; placeholder: string; type?: string }>;
   isOAuth?: boolean;
   docsUrl?: string;
@@ -32,9 +32,10 @@ interface IntegrationConfig {
 }
 
 const TIER_STYLE: Record<string, { label: string; class: string }> = {
-  required:    { label: "Required",    class: "bg-red-500/10 text-red-400 border border-red-500/20" },
-  recommended: { label: "Recommended", class: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  optional:    { label: "Optional",    class: "bg-secondary text-muted-foreground border border-border" },
+  required:     { label: "Required",     class: "bg-red-500/10 text-red-400 border border-red-500/20" },
+  "lead-source": { label: "Pick one",    class: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
+  recommended:  { label: "Recommended", class: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+  optional:     { label: "Optional",    class: "bg-secondary text-muted-foreground border border-border" },
 };
 
 const CLAUDE_INTEGRATION: IntegrationConfig = {
@@ -62,7 +63,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     type: "APOLLO",
     label: "Apollo.io",
     description: "Lead discovery (preferred) — finds verified contacts with emails matching your ICP",
-    tier: "required",
+    tier: "lead-source",
     icon: "🚀",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "Apollo API key", type: "password" }],
     docsUrl: "https://app.apollo.io/#/settings/integrations/api",
@@ -81,7 +82,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     type: "APIFY",
     label: "Apify",
     description: "Lead discovery + web scraping — finds contacts with validated emails (no Apollo needed) and scrapes company websites for AI analysis",
-    tier: "required",
+    tier: "lead-source",
     icon: "🕷️",
     fields: [{ key: "apiKey", label: "API Key", placeholder: "apify_api_...", type: "password" }],
     docsUrl: "https://console.apify.com/account/integrations",
