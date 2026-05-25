@@ -68,17 +68,17 @@ const sections = [
       },
       {
         number: "1.2",
-        name: "Lead Discovery Agent (Apollo.io)",
+        name: "Lead Discovery Agent (Apollo or Apify)",
         definition:
-          "Searches Apollo.io's 275M+ contact database to find leads that match the ICP criteria — title, company size, industry, and geography.",
-        how: "The agent constructs Apollo people-search queries using ICP signals (job titles, industries, keywords, company size ranges, geographies). It pages through results, deduplicates by email domain, and writes raw lead records to the database. Discovery runs fully autonomously — no manual search configuration required.",
+          "Finds leads matching the ICP from two possible sources: Apollo.io's 275M+ contact database (preferred) or Apify's leads-finder actor (free alternative). Both return validated contact details including verified email addresses.",
+        how: "If Apollo is connected, the agent constructs people-search queries using ICP signals — job titles, industries, company size ranges, geographies — and writes verified contacts to the database. If only Apify is connected, the orchestrator triggers the code_crafter~leads-finder actor, which also returns validated emails plus LinkedIn URLs and firmographic data. Geography and industry inputs are normalised to each API's required enum format before the search runs. The agent deduplicates by LinkedIn URL and writes raw lead records. Discovery runs fully autonomously — no manual configuration required.",
       },
       {
         number: "1.3",
-        name: "Company Analyzer Agent (Apify)",
+        name: "Company Analyzer Agent (Apify Website Scraper)",
         definition:
-          "Scrapes each prospect's company website in real time to gather live intelligence: services, messaging clarity, tech signals, and growth indicators.",
-        how: "For each lead, an Apify actor fetches and crawls the company website. The Claude agent reads the scraped content and extracts structured insights — what the company does, their messaging quality, visible pain points, and growth signals like recent hires or product launches. This data feeds the qualification and personalization agents.",
+          "Scrapes each prospect's company website in real time to gather live intelligence: services, messaging clarity, tech signals, and growth indicators — enriching qualification accuracy beyond what contact databases provide.",
+        how: "For each lead with a company website, an Apify website-content-crawler actor fetches and crawls the site. The Claude agent reads the scraped content and extracts structured insights — what the company does, their messaging quality, visible pain points, and growth signals like recent hires or product launches. This enrichment step is separate from lead discovery: Apify plays two roles in the pipeline — lead finder and website scraper — but each role uses a different actor.",
       },
       {
         number: "1.4",
@@ -98,8 +98,15 @@ const sections = [
         number: "1.6",
         name: "Lead Import Mode",
         definition:
-          "Allows users to upload their own lead list (CSV) and run only the research + qualification + personalization pipeline, skipping Apollo discovery.",
-        how: "Users upload a CSV with columns like firstName, lastName, email, company, title, website. Flowfiy maps and imports the rows into a LeadList, then triggers the orchestrator in import mode — the ICP analyzer and qualification agents run, but the Apollo search step is bypassed entirely. Useful when users already have a list they want enriched.",
+          "Allows users to upload their own lead list (CSV) and run only the research + qualification + personalization pipeline, skipping all discovery.",
+        how: "Users upload a CSV with columns like firstName, lastName, email, company, title, website. Flowfiy maps and imports the rows into a LeadList, then triggers the orchestrator in import mode — the qualification and personalization agents run, but the lead discovery step is bypassed entirely. Useful when users already have a list they want enriched and scored.",
+      },
+      {
+        number: "1.7",
+        name: "Pipeline Retry with Checkpoint Resume",
+        definition:
+          "Automatically retries failed pipeline jobs up to 3 times without repeating work already completed — resuming qualification from the exact lead where the previous attempt crashed.",
+        how: "BullMQ retries failed jobs with exponential backoff (1 min, then 2 min) and a 20-minute hard timeout per attempt. On each retry, the processor queries leads already saved for the list and detects one of three checkpoint states: (A) no leads in DB — discovery crashed, run fresh; (B) some leads still RESEARCHING — pass only those to the orchestrator as pre-loaded leads, skip search_leads entirely, and carry forward the qualified count from the previous attempt; (C) all leads already done — finalization crashed, just mark the list READY. Logs are preserved across retries with a separator so the full run history is visible in the live log panel.",
       },
     ],
   },
@@ -209,10 +216,10 @@ const sections = [
     features: [
       {
         number: "4.1",
-        name: "Claude AI (BYOK — Bring Your Own Key)",
+        name: "AI Engine (Flowfiy Managed or BYOK)",
         definition:
-          "Users connect their own Anthropic API key, which powers all 5 AI agents. Flowfiy never proxies Claude calls — costs go directly to the user's Anthropic account.",
-        how: "The user's API key is encrypted with AES-256-GCM and stored per organization. When any AI agent runs, Flowfiy decrypts the key and initializes a Claude client using it. This means Claude API costs appear directly in the user's Anthropic billing. Flowfiy only charges for platform access, enabling near-100% gross margins on the product.",
+          "Paid plans (Starter, Growth, Agency) include fully managed Claude Sonnet — no API key required. Free and Indie plans use BYOK (Bring Your Own Key), connecting their own Anthropic key. Both modes use the same 5-agent Claude pipeline.",
+        how: "Each organization has an apiMode field: CENTRAL (Flowfiy pays, key from env) or BYOK (user's key from encrypted DB). A shared getClaudeClientForOrg() function reads apiMode and returns the appropriate Anthropic client. CENTRAL mode is the default for Starter and above; FREE and INDIE plans are locked to BYOK. On paid plans, users can toggle between modes from the Integrations page. BYOK keys are encrypted with AES-256-GCM and never logged.",
       },
       {
         number: "4.2",
@@ -230,10 +237,10 @@ const sections = [
       },
       {
         number: "4.4",
-        name: "Apify Integration",
+        name: "Apify Integration (Lead Discovery + Web Scraping)",
         definition:
-          "Connects Apify for automated web scraping of company websites to gather live intelligence that feeds the Company Analyzer agent.",
-        how: "The user provides their Apify API token. During the pipeline, the Company Analyzer agent triggers Apify actors for each lead's company URL. The scraped content — homepage text, about page, services, team size signals — is returned to Claude for analysis. Multiple actors can be chained for richer data coverage.",
+          "Connects Apify for two distinct pipeline roles: (1) lead discovery using the leads-finder actor when Apollo is not connected, and (2) website scraping using the website-content-crawler actor to enrich company research.",
+        how: "The user provides their Apify API token, validated on save. Role 1 — Lead Discovery: the leads-finder actor accepts job titles, industries, and geographies (normalised to enum format) and returns contacts with validated emails and LinkedIn URLs. It activates automatically when Apollo is not connected. Role 2 — Website Scraping: the website-content-crawler actor fetches homepage and about-page content for each lead's company URL, returning scraped text that feeds the Company Analyzer agent. The free tier provides $5/month of compute, typically sufficient for 25-50 lead lists. Apify or Apollo — at least one must be connected to run the pipeline.",
       },
       {
         number: "4.5",
@@ -289,6 +296,20 @@ const sections = [
           "Allows users to manage or cancel their subscription directly from the Flowfiy dashboard, routing to Razorpay or Stripe depending on their billing gateway.",
         how: "The billing portal endpoint checks the organization's billingGateway field. For Razorpay users, it calls the cancel subscription API and sets status to pending_cancellation so the plan remains active until the period ends. For Stripe users, it creates a Stripe Billing Portal Session and returns the portal URL — Stripe's hosted interface then handles cancellation, payment method updates, and invoice history.",
       },
+      {
+        number: "5.6",
+        name: "Indie Plan (Solo Founder Tier)",
+        definition:
+          "A low-cost entry plan for solo founders who want to run their own Anthropic key. Priced at $20/month, it provides 2,500 generations, 1 seat, and 3 active campaigns — locked to BYOK mode.",
+        how: "The INDIE plan sits between FREE and STARTER in the plan hierarchy and is always locked to BYOK API mode (no central AI access). It is available via both Razorpay (INR pricing) and Stripe (USD pricing). The plan is displayed throughout the admin panel with a distinct teal color badge, and on the billing page like other paid plans. Orgs on INDIE cannot use Apify for lead discovery (cost control), but can still use it for website scraping if connected.",
+      },
+      {
+        number: "5.7",
+        name: "Monthly AI Token Budget",
+        definition:
+          "A secondary safety cap that limits how many Claude API tokens an organization can consume per calendar month in CENTRAL mode — preventing runaway spend from abnormally large jobs.",
+        how: "Each plan has a fixed monthly token budget: Starter 6M tokens (~$18 cost), Growth 20M tokens (~$60 cost), Agency unlimited. The processor checks the budget before every pipeline run via checkTokenBudget(). If the budget is exceeded, the job is rejected with a clear error. After each successful run, incrementTokenUsage() adds the job's input + output token count to the organization's monthlyTokensUsed counter. The budget auto-resets on the first run of a new calendar month by comparing tokenBudgetResetAt to the current month. Usage is visible on the user's billing page as a progress bar, and in the admin AI Usage dashboard per organization.",
+      },
     ],
   },
   {
@@ -310,17 +331,17 @@ const sections = [
       },
       {
         number: "6.3",
-        name: "BullMQ Job Queue (Async Processing)",
+        name: "BullMQ Job Queue (Async Processing + Retry)",
         definition:
-          "All email sends and lead generation pipeline runs are processed asynchronously via BullMQ, backed by Upstash Redis — decoupling request handling from heavy processing.",
-        how: "When a campaign launches, email jobs are enqueued in the email-send queue. When a lead list is created, a lead-generation-pipeline job is enqueued. A Worker process running on Railway consumes these queues and processes jobs with retry logic — exponential backoff for pipeline jobs and fixed delay for email sends. API endpoints return immediately while heavy work happens in the background.",
+          "All email sends and lead generation pipeline runs are processed asynchronously via BullMQ, backed by Upstash Redis — with automatic retries, exponential backoff, job timeouts, and checkpoint-aware resume logic.",
+        how: "When a campaign launches, email jobs are enqueued in the email-send queue. When a lead list is created, a lead-generation-pipeline job is enqueued. A Worker process on Railway consumes these queues. The lead-generation queue uses 3 attempts with exponential backoff (1 min, then 2 min) and a 20-minute hard timeout per attempt. On retry, the processor detects a checkpoint in the DB and resumes from where the previous attempt left off rather than starting over. Email send jobs use 2 attempts with a fixed 5-second delay. API endpoints return immediately while heavy processing runs in the background.",
       },
       {
         number: "6.4",
-        name: "Follow-Up Scheduler (Vercel Cron)",
+        name: "Scheduled Cron Jobs (Vercel)",
         definition:
-          "A scheduled cron job that runs daily at 09:00 UTC to detect replies and queue all follow-up emails that are now due across all active campaigns.",
-        how: "Vercel Cron triggers the process-followups endpoint once per day. This calls the scheduler processor which: first polls Gmail threads for replies across all active campaigns, then classifies any new replies with Claude Haiku, then queries the database for all leads where follow-up thresholds have elapsed, and finally enqueues the appropriate email jobs. Timezone filtering skips leads outside their local business hours window.",
+          "Three scheduled jobs handle recurring platform tasks: daily follow-up processing, monthly usage reset, and daily stuck-job cleanup — all protected by CRON_SECRET bearer authentication.",
+        how: "Vercel Cron triggers three endpoints on schedule: (1) /api/campaigns/process-followups at 09:00 UTC daily — polls Gmail for replies, classifies them with Claude Haiku, and queues due follow-up emails; (2) /api/billing/reset-usage at midnight on the 1st of each month — resets generationCount to 0 for all FREE, INDIE, and STARTER organizations; (3) /api/cron/cleanup-stuck-leads at 02:00 UTC daily — finds lead lists stuck in RESEARCHING or QUEUED for over 2 hours and marks them FAILED, and marks individual stuck leads as DISQUALIFIED so list finalization is never blocked by phantom in-progress rows.",
       },
       {
         number: "6.5",
@@ -340,8 +361,8 @@ const sections = [
         number: "6.7",
         name: "Admin Panel",
         definition:
-          "An internal admin interface for Flowfiy operators to view all organizations, manage plans, reset usage, and debug platform-level issues.",
-        how: "Admin routes under /api/admin/ are protected by a separate authentication layer using a server-side session cookie. Admin login requires a distinct ADMIN_PASSWORD environment variable. Admins can view organization details, manually adjust plans and generation limits, and reset monthly usage counts — all without needing direct database access.",
+          "A secure internal dashboard for Flowfiy operators covering four areas: organization management, system health monitoring, per-org AI usage analytics, and platform controls — all without direct database access.",
+        how: "Admin routes (/admin/*) are protected by a separate ADMIN_PASSWORD cookie-based session, completely decoupled from user auth. The panel has four main sections: (1) Organizations — lists all orgs with plan, generation count, usage %, billing gateway, and creation date; per-org detail page allows manually adjusting plan, generationLimit, generationCount, and apiMode, banning/unbanning an org (which blocks all pipeline runs and logins for that org), resetting the monthly generation count, and toggling between CENTRAL and BYOK API modes. (2) System Health — shows live counts of active lead lists, queued jobs, recent failures, and stuck-lead events from the past 24 hours; surface-level Redis/BullMQ queue depth indicators. (3) AI Usage — per-org breakdown of monthlyTokensUsed vs. budget, ranked by consumption; allows admins to manually reset an org's token counter mid-month if billing disputes arise; highlights orgs approaching or exceeding their token budget. (4) Audit Log — chronological feed of all billing events, plan changes, and admin actions with actor, timestamp, and metadata for compliance and debugging.",
       },
       {
         number: "6.8",

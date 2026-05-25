@@ -2,7 +2,7 @@ import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
-import { incrementGenerationCount, checkTokenBudget, incrementTokenUsage } from "@/lib/usage";
+import { checkTokenBudget, incrementTokenUsage } from "@/lib/usage";
 import { runLeadGenOrchestrator } from "@/ai/orchestrator";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { ApolloClient } from "@/integrations/apollo";
@@ -160,7 +160,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
         })),
       }, runMode);
 
-      await incrementGenerationCount(organizationId, existingLeads.length);
+      // Generation quota was already reserved atomically at enqueue time — no increment here.
       // Only track central token usage for non-BYOK runs
       if (runMode === "CENTRAL") {
         await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);
@@ -311,7 +311,7 @@ export async function processLeadGeneration(job: Job<LeadGenerationJobData>) {
     const finalTotalLeads     = hasCheckpoint ? checkpointLeads.length : result.totalLeads;
     const finalQualifiedLeads = result.qualifiedLeads + alreadyQualifiedCount;
 
-    await incrementGenerationCount(organizationId, result.totalLeads);
+    // Generation quota was already reserved atomically at enqueue time — no increment here.
     // Only track central token usage for non-BYOK runs
     if (runMode === "CENTRAL") {
       await incrementTokenUsage(organizationId, result.tokenUsage.inputTokens + result.tokenUsage.outputTokens);

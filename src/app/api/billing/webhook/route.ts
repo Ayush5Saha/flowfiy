@@ -59,6 +59,22 @@ export async function POST(req: NextRequest) {
         const planKey = notes?.planKey as keyof typeof PLANS | undefined;
 
         if (organizationId && planKey && PLANS[planKey]) {
+          // Idempotency guard — Razorpay can retry if it doesn't receive a
+          // fast 200. Check the audit log before writing to prevent duplicate
+          // plan upgrades and double referral rewards on replayed events.
+          const alreadyProcessed = await prisma.auditLog.findFirst({
+            where: {
+              organizationId,
+              action: "billing.upgraded",
+              resourceId: sub.id as string,
+            },
+            select: { id: true },
+          });
+          if (alreadyProcessed) {
+            console.log(`[webhook] subscription.activated already processed for sub=${sub.id as string} — skipping`);
+            break;
+          }
+
           const planConfig = PLANS[planKey];
           // INDIE is BYOK-only; STARTER+ defaults to Central API
           const apiMode = planConfig.apiMode === "BYOK" ? "BYOK" : "CENTRAL";

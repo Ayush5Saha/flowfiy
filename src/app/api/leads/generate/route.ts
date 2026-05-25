@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { checkGenerationLimit } from "@/lib/usage";
+import { reserveGenerationQuota } from "@/lib/usage";
 import { generationRateLimit } from "@/lib/rate-limit";
 import { createAuditLog } from "@/lib/audit";
 import { getLeadGenerationQueue } from "@/workers/queues";
@@ -39,8 +39,9 @@ export async function POST(req: NextRequest) {
   });
   if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Check generation limit
-  const { allowed, remaining, limit } = await checkGenerationLimit(organizationId);
+  // Atomically reserve quota — prevents race condition where concurrent requests
+  // all pass a read-only check before any increment runs.
+  const { allowed, remaining, limit } = await reserveGenerationQuota(organizationId, leadsPerRun);
   if (!allowed) {
     return NextResponse.json(
       { error: "Generation limit reached", limit, remaining: 0 },
