@@ -34,6 +34,57 @@ export function getLeadGenerationQueue() {
   });
 }
 
+// ─── Architecture 3: 4-stage pipeline queues ─────────────────────────────────
+//
+// Replaces the monolithic lead-generation-pipeline with 4 focused queues:
+//   lead-discovery        → Apollo/Apify search, creates RESEARCHING leads
+//   lead-research         → Apify website scrape + Company Analyzer (Haiku)
+//   lead-qualification    → Qualification Agent (Haiku), scores 0-100
+//   lead-personalization  → Personalization Agent (Sonnet), writes email copy
+//
+// Each queue processes one lead at a time with concurrency=10, so 10 leads
+// are researched/qualified/personalized simultaneously per worker process.
+
+export function getLeadDiscoveryQueue() {
+  return makeQueue("lead-discovery", {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 60_000 },
+    timeout: 10 * 60 * 1000, // 10 min — discovery is fast (one API call)
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 50 },
+  });
+}
+
+export function getLeadResearchQueue() {
+  return makeQueue("lead-research", {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 30_000 },
+    timeout: 5 * 60 * 1000, // 5 min — scrape + Haiku call
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 100 },
+  });
+}
+
+export function getLeadQualificationQueue() {
+  return makeQueue("lead-qualification", {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 30_000 },
+    timeout: 3 * 60 * 1000, // 3 min — single Haiku call
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 100 },
+  });
+}
+
+export function getLeadPersonalizationQueue() {
+  return makeQueue("lead-personalization", {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 30_000 },
+    timeout: 3 * 60 * 1000, // 3 min — single Sonnet call
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 100 },
+  });
+}
+
 export function getEmailSendQueue() {
   return makeQueue("email-send", {
     attempts: 2,

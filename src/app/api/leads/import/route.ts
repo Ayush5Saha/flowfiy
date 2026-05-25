@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { checkGenerationLimit } from "@/lib/usage";
+import { reserveGenerationQuota } from "@/lib/usage";
 import { createAuditLog } from "@/lib/audit";
-import { getLeadGenerationQueue } from "@/workers/queues";
+import { getLeadDiscoveryQueue } from "@/workers/queues";
 
 const leadRowSchema = z.object({
   firstName: z.string().optional(),
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
   });
   if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Check generation limit
-  const { allowed, remaining, limit } = await checkGenerationLimit(organizationId);
+  // Atomically reserve quota (same serializable-transaction guard as /generate)
+  const { allowed, remaining, limit } = await reserveGenerationQuota(organizationId, leads.length);
   if (!allowed) {
     return NextResponse.json(
       { error: "Generation limit reached", limit, remaining: 0 },
@@ -88,13 +88,13 @@ export async function POST(req: NextRequest) {
       industry: row.industry || null,
       linkedinUrl: row.linkedinUrl || null,
       source: "csv",
-      status: "NEW",
+      status: "RESEARCHING", // pipeline expects RESEARCHING — qualification skips other statuses
     })),
   });
 
-  // Enqueue pipeline in import mode (skips Apollo, uses existing leads)
-  await getLeadGenerationQueue().add(
-    "lead-generation",
+  // Enqueue to Architecture 3 pipeline in import mode (skips discovery, fans out research jobs)
+  await getLeadDiscoveryQueue().add(
+    "lead-discovery",
     {
       organizationId,
       leadListId: leadList.id,

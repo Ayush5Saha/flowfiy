@@ -20,14 +20,22 @@ export async function runICPAnalyzer(
   input: ICPAnalyzerInput,
   mode: RunMode = "CENTRAL"
 ): Promise<ICPAnalysis> {
-  const prompt = buildICPAnalyzerPrompt(input, mode);
+  const { systemPrompt, userContent } = buildICPAnalyzerPrompt(input, mode);
   const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
     model: CLAUDE_MODELS.fast,
     max_tokens: cfg.maxTokens.icpAnalyzer,
     ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
-    messages: [{ role: "user", content: prompt }],
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        // Cache static instructions + schema — same per org, saves repeated input token cost
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: userContent }],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";

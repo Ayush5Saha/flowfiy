@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 
 export type WebhookEventType =
   | "lead.qualified"
+  | "lead_list.generation_complete"
   | "reply.received"
   | "campaign.completed"
   | "meeting.booked"

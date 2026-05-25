@@ -14,7 +14,18 @@ export interface QualificationInput {
   qualificationCriteria: string;
 }
 
-export function buildQualificationPrompt(input: QualificationInput, mode: RunMode = "CENTRAL"): string {
+export interface SplitPrompt {
+  systemPrompt: string;
+  userContent: string;
+}
+
+/**
+ * Returns a split prompt for prompt caching:
+ *   systemPrompt — static instructions + ICP summary + criteria + output schema
+ *                  (same for every lead in a run → cacheable)
+ *   userContent  — lead data + company analysis (changes per lead → never cached)
+ */
+export function buildQualificationPrompt(input: QualificationInput, mode: RunMode = "CENTRAL"): SplitPrompt {
   // Compact serialization (no pretty-print) + truncation to keep input tokens fixed
   const companyAnalysisJson = JSON.stringify(input.companyAnalysis).slice(0, INPUT_LIMITS.companyAnalysisJson);
   const truncatedIcp = input.icpSummary.slice(0, INPUT_LIMITS.icpSummary);
@@ -22,17 +33,7 @@ export function buildQualificationPrompt(input: QualificationInput, mode: RunMod
   const L = FIELD_CHAR_LIMITS;
   const c = mode === "CENTRAL";
 
-  return `You are a B2B sales qualification specialist. Score this lead based on ICP fit.
-
-## Lead
-Name: ${input.lead.firstName} ${input.lead.lastName}
-Title: ${input.lead.title ?? "Unknown"}
-Company: ${input.lead.companyName}
-Industry: ${input.lead.industry ?? "Unknown"}
-Company Size: ${input.lead.companySize ?? "Unknown"}
-
-## Company Analysis
-${companyAnalysisJson}
+  const systemPrompt = `You are a B2B sales qualification specialist. Score leads based on ICP fit using the criteria below.
 
 ## ICP Summary
 ${truncatedIcp}
@@ -54,5 +55,17 @@ Return a JSON object.${c ? " Stay within the character limits shown." : " Be spe
 }
 \`\`\`
 
-Score 70+ = qualified. Return ONLY the JSON.`;
+Score 60+ = qualified. Return ONLY the JSON.`;
+
+  const userContent = `## Lead
+Name: ${input.lead.firstName} ${input.lead.lastName}
+Title: ${input.lead.title ?? "Unknown"}
+Company: ${input.lead.companyName}
+Industry: ${input.lead.industry ?? "Unknown"}
+Company Size: ${input.lead.companySize ?? "Unknown"}
+
+## Company Analysis
+${companyAnalysisJson}`;
+
+  return { systemPrompt, userContent };
 }

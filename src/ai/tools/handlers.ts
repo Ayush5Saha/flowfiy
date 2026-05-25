@@ -22,7 +22,7 @@ export interface ToolContext {
 
 // ─── Tool input shapes (mirror definitions.ts schemas) ───────────────────────
 
-interface SearchLeadsInput {
+export interface SearchLeadsInput {
   jobTitles: string[];
   industries: string[];
   companySizes?: string[];
@@ -30,7 +30,7 @@ interface SearchLeadsInput {
   limit?: number;
 }
 
-interface ScrapeWebsiteInput {
+export interface ScrapeWebsiteInput {
   url: string;
   leadId?: string;
 }
@@ -54,7 +54,7 @@ interface SaveLeadResultInput {
 // Uses Apollo if connected, falls back to Apify (leads-finder actor, provides validated emails) if only
 // Apify is connected. At least one must be present — enforced at job-queue time.
 
-async function handleSearchLeads(
+export async function handleSearchLeads(
   input: SearchLeadsInput,
   ctx: ToolContext
 ): Promise<unknown> {
@@ -225,7 +225,7 @@ async function handleSearchLeads(
 
 // ─── scrape_website ───────────────────────────────────────────────────────────
 
-async function handleScrapeWebsite(
+export async function handleScrapeWebsite(
   input: ScrapeWebsiteInput,
   ctx: ToolContext
 ): Promise<unknown> {

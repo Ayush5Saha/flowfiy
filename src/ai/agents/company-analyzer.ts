@@ -19,14 +19,23 @@ export async function runCompanyAnalyzer(
   input: CompanyAnalyzerInput,
   mode: RunMode = "CENTRAL"
 ): Promise<CompanyAnalysis> {
-  const prompt = buildCompanyAnalyzerPrompt(input, mode);
+  const { systemPrompt, userContent } = buildCompanyAnalyzerPrompt(input, mode);
   const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
-    model: CLAUDE_MODELS.smart,
+    // Haiku: structured HTML extraction — identical quality at 12× lower cost vs Sonnet
+    model: CLAUDE_MODELS.fast,
     max_tokens: cfg.maxTokens.companyAnalyzer,
     ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
-    messages: [{ role: "user", content: prompt }],
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        // Cache ICP context + instructions — same for every lead in a run (5-min TTL)
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: userContent }],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";

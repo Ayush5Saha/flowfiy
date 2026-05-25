@@ -20,14 +20,24 @@ export interface PersonalizationInput {
   calendlyLink?: string;
 }
 
-export function buildPersonalizationPrompt(input: PersonalizationInput, mode: RunMode = "CENTRAL"): string {
+export interface SplitPrompt {
+  systemPrompt: string;
+  userContent: string;
+}
+
+/**
+ * Returns a split prompt for prompt caching:
+ *   systemPrompt — static instructions + sender business profile + tone + requirements + schema
+ *                  (same for every lead in a run → cacheable)
+ *   userContent  — lead profile + outreach strategy (changes per lead → never cached)
+ */
+export function buildPersonalizationPrompt(input: PersonalizationInput, mode: RunMode = "CENTRAL"): SplitPrompt {
   const toneGuidance = {
     professional: "Formal but warm. No slang. Clear and direct.",
     conversational: "Casual and human. Short sentences. Like a peer reaching out.",
     direct: "Extremely concise. No fluff. Get to the point in 2 sentences max.",
   }[input.businessProfile.outreachTone] ?? "Professional and clear.";
 
-  const hooks = input.personalizationHooks.join(", ");
   const calendlyText = input.calendlyLink
     ? `Include a booking link: ${input.calendlyLink}`
     : "Ask for a 15-minute call.";
@@ -35,24 +45,13 @@ export function buildPersonalizationPrompt(input: PersonalizationInput, mode: Ru
   const L = FIELD_CHAR_LIMITS;
   const c = mode === "CENTRAL";
 
-  return `You are an expert cold email copywriter. Write highly personalized B2B outreach for this specific lead.
+  const systemPrompt = `You are an expert cold email copywriter. Write highly personalized B2B outreach for the lead provided.
 
 ## About the Sender
 Company: ${input.businessProfile.companyName}
 Service: ${input.businessProfile.serviceOffered}
 Positioning: ${input.businessProfile.offerPositioning}
 Tone: ${toneGuidance}
-
-## Lead Profile
-Name: ${input.lead.firstName ?? "there"}
-Title: ${input.lead.title ?? "Decision Maker"}
-Company: ${input.lead.companyName}
-Industry: ${input.lead.industry ?? ""}
-
-## Outreach Strategy
-Best Angle: ${input.bestAngle}
-Pain Point: ${input.painPointMatch}
-Personalization Hooks: ${hooks}
 
 ## Requirements
 - Subject line: Max 7 words. Curiosity or insight-driven. No generic subjects.${c ? ` Hard limit: ${L.subjectLine} chars.` : ""}
@@ -76,4 +75,19 @@ Return ONLY a JSON object:
   "followUp3": "${c ? `≤${L.followUp3} chars` : "final follow-up message"}"
 }
 \`\`\``;
+
+  const hooks = input.personalizationHooks.join(", ");
+
+  const userContent = `## Lead Profile
+Name: ${input.lead.firstName ?? "there"}
+Title: ${input.lead.title ?? "Decision Maker"}
+Company: ${input.lead.companyName}
+Industry: ${input.lead.industry ?? ""}
+
+## Outreach Strategy
+Best Angle: ${input.bestAngle}
+Pain Point: ${input.painPointMatch}
+Personalization Hooks: ${hooks}`;
+
+  return { systemPrompt, userContent };
 }

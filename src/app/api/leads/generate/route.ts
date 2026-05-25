@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { reserveGenerationQuota } from "@/lib/usage";
 import { generationRateLimit } from "@/lib/rate-limit";
 import { createAuditLog } from "@/lib/audit";
-import { getLeadGenerationQueue } from "@/workers/queues";
+import { getLeadDiscoveryQueue } from "@/workers/queues";
 
 const schema = z.object({
   organizationId: z.string().uuid(),
@@ -91,10 +91,15 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Enqueue pipeline job
-  await getLeadGenerationQueue().add(
-    "lead-generation",
-    { organizationId, leadListId: leadList.id, leadsPerRun },
+  // Enqueue to Architecture 3 pipeline (lead-discovery → research → qualification → personalization)
+  await getLeadDiscoveryQueue().add(
+    "lead-discovery",
+    {
+      organizationId,
+      leadListId: leadList.id,
+      leadsPerRun,
+      mode: hasApollo ? "apollo" : "apify",
+    },
     { jobId: leadList.id }
   );
 

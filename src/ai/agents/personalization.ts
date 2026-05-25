@@ -15,14 +15,22 @@ export async function runPersonalization(
   input: PersonalizationInput,
   mode: RunMode = "CENTRAL"
 ): Promise<PersonalizationResult> {
-  const prompt = buildPersonalizationPrompt(input, mode);
+  const { systemPrompt, userContent } = buildPersonalizationPrompt(input, mode);
   const cfg = getRunConfig(mode);
 
   const response = await client.messages.create({
     model: CLAUDE_MODELS.smart,
     max_tokens: cfg.maxTokens.personalization,
     ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
-    messages: [{ role: "user", content: prompt }],
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        // Cache sender profile + tone + requirements + schema — same for every lead in a run
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: userContent }],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";

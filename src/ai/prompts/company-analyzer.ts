@@ -9,26 +9,29 @@ export interface CompanyAnalyzerInput {
   icpSummary: string;
 }
 
-export function buildCompanyAnalyzerPrompt(input: CompanyAnalyzerInput, mode: RunMode = "CENTRAL"): string {
+export interface SplitPrompt {
+  systemPrompt: string;
+  userContent: string;
+}
+
+/**
+ * Returns a split prompt for prompt caching:
+ *   systemPrompt — static instructions + ICP context + output schema
+ *                  (same for every lead in a run → cacheable)
+ *   userContent  — company-specific data (name, website, scraped content)
+ *                  (changes per lead → never cached)
+ */
+export function buildCompanyAnalyzerPrompt(input: CompanyAnalyzerInput, mode: RunMode = "CENTRAL"): SplitPrompt {
   // Hard input truncation — keeps token cost predictable regardless of scraped content size
   const truncatedContent = input.websiteContent.slice(0, INPUT_LIMITS.websiteContent);
   const truncatedIcp = input.icpSummary.slice(0, INPUT_LIMITS.icpSummary);
   const L = FIELD_CHAR_LIMITS;
   const c = mode === "CENTRAL";
 
-  return `You are a B2B sales intelligence analyst. Analyze this company and produce a structured intelligence report.
-
-## Company
-Name: ${input.companyName}
-Website: ${input.companyWebsite}
-Industry: ${input.industry}
-Size: ${input.companySize ?? "Unknown"}
+  const systemPrompt = `You are a B2B sales intelligence analyst. Analyze the company provided and produce a structured intelligence report.
 
 ## ICP Context
 ${truncatedIcp}
-
-## Website Content (scraped)
-${truncatedContent}
 
 ## Analysis Required
 Produce a JSON object.${c ? " Strict character limits — stay within them." : " Be thorough and detailed."}
@@ -48,4 +51,15 @@ Produce a JSON object.${c ? " Strict character limits — stay within them." : "
 \`\`\`
 
 Return ONLY the JSON. No explanation.`;
+
+  const userContent = `## Company
+Name: ${input.companyName}
+Website: ${input.companyWebsite}
+Industry: ${input.industry}
+Size: ${input.companySize ?? "Unknown"}
+
+## Website Content (scraped)
+${truncatedContent}`;
+
+  return { systemPrompt, userContent };
 }

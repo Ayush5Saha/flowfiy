@@ -12,22 +12,21 @@ export interface ICPAnalyzerInput {
   outreachTone: string;
 }
 
-export function buildICPAnalyzerPrompt(input: ICPAnalyzerInput, mode: RunMode = "CENTRAL"): string {
+export interface SplitPrompt {
+  systemPrompt: string;
+  userContent: string;
+}
+
+/**
+ * Returns a split prompt for prompt caching:
+ *   systemPrompt — static instructions + output schema (cacheable, same per org)
+ *   userContent  — business profile data (dynamic per org)
+ */
+export function buildICPAnalyzerPrompt(input: ICPAnalyzerInput, mode: RunMode = "CENTRAL"): SplitPrompt {
   const L = FIELD_CHAR_LIMITS;
   const c = mode === "CENTRAL";
 
-  return `You are an expert B2B sales strategist. Analyze the following business profile and produce a structured ICP (Ideal Customer Profile) analysis that will be used to guide lead generation and qualification.
-
-## Business Profile
-Company: ${input.companyName}
-Service: ${input.serviceOffered}
-ICP Description: ${input.icpDescription}
-Target Industries: ${input.targetIndustries.join(", ")}
-Target Geographies: ${input.targetGeographies.join(", ")}
-Company Size Range: ${input.companySizeRange ?? "Not specified"}
-Pain Points Solved: ${input.painPointsSolved}
-Offer Positioning: ${input.offerPositioning}
-Outreach Tone: ${input.outreachTone}
+  const systemPrompt = `You are an expert B2B sales strategist. Analyze the business profile provided and produce a structured ICP (Ideal Customer Profile) analysis to guide lead generation and qualification.
 
 ## Task
 Produce a JSON object with the following structure. Be specific and actionable.
@@ -49,4 +48,17 @@ ${c ? "Strict character limits apply — exceed them and the output will be trun
 \`\`\`
 
 Return ONLY the JSON. No explanation.`;
+
+  const userContent = `## Business Profile
+Company: ${input.companyName}
+Service: ${input.serviceOffered}
+ICP Description: ${input.icpDescription}
+Target Industries: ${input.targetIndustries.join(", ")}
+Target Geographies: ${input.targetGeographies.join(", ")}
+Company Size Range: ${input.companySizeRange ?? "Not specified"}
+Pain Points Solved: ${input.painPointsSolved}
+Offer Positioning: ${input.offerPositioning}
+Outreach Tone: ${input.outreachTone}`;
+
+  return { systemPrompt, userContent };
 }
