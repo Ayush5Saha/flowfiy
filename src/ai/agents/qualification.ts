@@ -9,6 +9,8 @@ export interface QualificationResult {
   bestAngle: string;
   painPointMatch: string;
   personalizationHooks: string[];
+  /** 2-4 specific gaps this lead has that the platform user's service can solve */
+  serviceGaps?: string[];
 }
 
 export async function runQualification(

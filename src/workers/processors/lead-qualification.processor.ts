@@ -64,11 +64,17 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   const [research, businessProfile] = await Promise.all([
     prisma.leadResearch.findUnique({
       where: { leadId },
-      select: { companyAnalysis: true },
+      select: { companyAnalysis: true, researchMetadata: true },
     }),
     prisma.businessProfile.findUnique({
       where: { organizationId },
-      select: { icpDescription: true, icpAnalysisCache: true, targetIndustries: true },
+      select: {
+        icpDescription: true,
+        icpAnalysisCache: true,
+        targetIndustries: true,
+        serviceOffered: true,
+        painPointsSolved: true,
+      },
     }),
   ]);
 
@@ -101,6 +107,8 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     companyAnalysis,
     icpSummary: icpSummary.slice(0, INPUT_LIMITS.icpSummary),
     qualificationCriteria: qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria),
+    serviceOffered: (businessProfile?.serviceOffered ?? "").slice(0, INPUT_LIMITS.serviceOffered) || undefined,
+    painPointsSolved: (businessProfile?.painPointsSolved ?? "").slice(0, INPUT_LIMITS.painPointsSolved) || undefined,
   }, runMode);
 
   const newStatus = result.qualified ? "QUALIFIED" : "DISQUALIFIED";
@@ -125,9 +133,10 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
         painPointMatch: result.painPointMatch,
         personalizationNotes: result.personalizationHooks.join(" | "),
         researchMetadata: {
-          ...((research?.companyAnalysis as Record<string, unknown> | null)?.researchMetadata ?? {}),
+          ...((research?.researchMetadata as Record<string, unknown> | null) ?? {}),
           score: result.score,
           hooks: result.personalizationHooks,
+          serviceGaps: result.serviceGaps ?? [],
         } as never,
       },
     }).catch(() => {
@@ -139,7 +148,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
           opportunityAngle: result.bestAngle,
           painPointMatch: result.painPointMatch,
           personalizationNotes: result.personalizationHooks.join(" | "),
-          researchMetadata: { score: result.score, hooks: result.personalizationHooks } as never,
+          researchMetadata: { score: result.score, hooks: result.personalizationHooks, serviceGaps: result.serviceGaps ?? [] } as never,
         },
         create: {
           leadId,
@@ -148,7 +157,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
           opportunityAngle: result.bestAngle,
           painPointMatch: result.painPointMatch,
           personalizationNotes: result.personalizationHooks.join(" | "),
-          researchMetadata: { score: result.score, hooks: result.personalizationHooks } as never,
+          researchMetadata: { score: result.score, hooks: result.personalizationHooks, serviceGaps: result.serviceGaps ?? [] } as never,
         },
       });
     }),

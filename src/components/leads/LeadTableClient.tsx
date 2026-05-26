@@ -20,6 +20,7 @@ interface Lead {
     opportunityAngle?: string | null;
     painPointMatch?: string | null;
     companyAnalysis?: unknown;
+    researchMetadata?: unknown;
   } | null;
   outreachCopies?: Array<{
     id: string;
@@ -231,6 +232,9 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
                 <p className="text-xs text-muted-foreground truncate">
                   {lead.title} · {lead.companyName}
                 </p>
+                {(lead.status === "QUALIFIED" || lead.status === "CONTACTED") && (
+                  <ServiceGapChips metadata={lead.research?.researchMetadata} />
+                )}
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -291,6 +295,32 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
             onClose={() => setSelectedLead(null)}
           />
         </div>
+      )}
+    </div>
+  );
+}
+
+function ServiceGapChips({ metadata }: { metadata?: unknown }) {
+  const meta = (metadata ?? {}) as Record<string, unknown>;
+  const gaps = Array.isArray(meta.serviceGaps) ? (meta.serviceGaps as string[]) : [];
+  if (gaps.length === 0) return null;
+  const visible = gaps.slice(0, 3);
+  const overflow = gaps.length - visible.length;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {visible.map((gap, i) => (
+        <span
+          key={i}
+          className="bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full px-2 py-0.5 text-[10px] leading-tight"
+          title={gap}
+        >
+          {gap.length > 40 ? gap.slice(0, 38) + "…" : gap}
+        </span>
+      ))}
+      {overflow > 0 && (
+        <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full px-2 py-0.5 text-[10px] leading-tight">
+          +{overflow} more
+        </span>
       )}
     </div>
   );

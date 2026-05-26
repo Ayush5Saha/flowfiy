@@ -19,6 +19,7 @@ interface Lead {
     opportunityAngle?: string | null;
     painPointMatch?: string | null;
     companyAnalysis?: unknown;
+    researchMetadata?: unknown;
   } | null;
   outreachCopies?: Array<{
     id: string;
@@ -421,6 +422,26 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
             {lead.research?.painPointMatch && (
               <ResearchBlock label="Pain Point Match" content={lead.research.painPointMatch} />
             )}
+
+            {(() => {
+              const meta = (lead.research?.researchMetadata ?? {}) as Record<string, unknown>;
+              const serviceGaps = Array.isArray(meta.serviceGaps) ? (meta.serviceGaps as string[]) : [];
+              return serviceGaps.length > 0 ? (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Why They Need Your Service</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {serviceGaps.map((gap, i) => (
+                      <span
+                        key={i}
+                        className="bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full px-2.5 py-1 text-xs"
+                      >
+                        {gap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
 
             {Array.isArray(analysis.acquisitionGaps) && (analysis.acquisitionGaps as string[]).length > 0 && (
               <div>

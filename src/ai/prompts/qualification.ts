@@ -12,6 +12,10 @@ export interface QualificationInput {
   companyAnalysis: Record<string, unknown>;
   icpSummary: string;
   qualificationCriteria: string;
+  /** What the platform user's service does (from BusinessProfile.serviceOffered) */
+  serviceOffered?: string;
+  /** Pain points the service solves (from BusinessProfile.painPointsSolved) */
+  painPointsSolved?: string;
 }
 
 export interface SplitPrompt {
@@ -30,8 +34,15 @@ export function buildQualificationPrompt(input: QualificationInput, mode: RunMod
   const companyAnalysisJson = JSON.stringify(input.companyAnalysis).slice(0, INPUT_LIMITS.companyAnalysisJson);
   const truncatedIcp = input.icpSummary.slice(0, INPUT_LIMITS.icpSummary);
   const truncatedCriteria = input.qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria);
+  const truncatedService = (input.serviceOffered ?? "").slice(0, INPUT_LIMITS.serviceOffered);
+  const truncatedPains = (input.painPointsSolved ?? "").slice(0, INPUT_LIMITS.painPointsSolved);
   const L = FIELD_CHAR_LIMITS;
   const c = mode === "CENTRAL";
+
+  // Service context block — only added when serviceOffered is provided
+  const serviceContext = truncatedService
+    ? `\n## Our Service\n${truncatedService}${truncatedPains ? `\n\n## Problems We Solve\n${truncatedPains}` : ""}\n`
+    : "";
 
   const systemPrompt = `You are a B2B sales qualification specialist. Score leads based on ICP fit using the criteria below.
 
@@ -40,7 +51,7 @@ ${truncatedIcp}
 
 ## Qualification Criteria
 ${truncatedCriteria}
-
+${serviceContext}
 ## Task
 Return a JSON object.${c ? " Stay within the character limits shown." : " Be specific and detailed in each field."}
 
@@ -51,7 +62,8 @@ Return a JSON object.${c ? " Stay within the character limits shown." : " Be spe
   "primaryReason": "${c ? `≤${L.primaryReason} chars` : "clear explanation of fit or misfit"}",
   "bestAngle": "${c ? `≤${L.bestAngle} chars` : "best outreach angle for this lead"}",
   "painPointMatch": "${c ? `≤${L.painPointMatch} chars` : "how the service addresses their pain point"}",
-  "personalizationHooks": ["2-3 hooks${c ? `, each ≤${L.personalizationHook} chars` : " specific to this lead and company"}"]
+  "personalizationHooks": ["2-3 hooks${c ? `, each ≤${L.personalizationHook} chars` : " specific to this lead and company"}"],
+  "serviceGaps": ["2-4 specific gaps THIS company has that our service directly solves${c ? `, each ≤${L.serviceGap} chars` : ""}. Only include if serviceOffered context was provided."]
 }
 \`\`\`
 

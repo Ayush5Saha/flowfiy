@@ -338,7 +338,7 @@ function Hero() {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium mb-8"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Powered by Claude Sonnet · Fully managed · No API key needed
+          Your first 100 leads are free — no card required
         </motion.div>
 
         <motion.h1
@@ -347,10 +347,10 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="text-5xl sm:text-6xl md:text-7xl lg:text-[82px] font-black tracking-tight text-white mb-6 leading-[1.06]"
         >
-          Turn Any Market{" "}
+          Find leads, write emails,{" "}
           <span className="relative inline-block">
             <span className="relative z-10 bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              Into Pipeline
+              close deals
             </span>
             <motion.span
               className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-violet-500/0 via-violet-500 to-violet-500/0"
@@ -359,7 +359,7 @@ function Hero() {
               transition={{ duration: 1, delay: 0.9 }}
             />
           </span>
-          <br />On Autopilot.
+          <br />— automatically.
         </motion.h1>
 
         <motion.p
@@ -368,8 +368,8 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          5 specialized AI agents research your ICP, find matching leads, qualify every prospect,
-          and write hyper-personalized outreach — delivered to Gmail, at scale.
+          Tell Flowfiy who your ideal customer is. It finds them, researches their business,
+          ranks how likely they are to buy, and writes a personal email to each one — all on autopilot.
         </motion.p>
 
         <motion.div
@@ -402,15 +402,15 @@ function Hero() {
           className="mt-8"
         >
           <p className="text-xs text-zinc-600 mb-5">
-            No credit card required · 100 free lead generations · Cancel anytime
+            No credit card required · 100 free leads · Cancel anytime
           </p>
           {/* Trust strip */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {[
-              { icon: "🤖", text: "Claude Sonnet — managed" },
-              { icon: "🔍", text: "275M+ Apollo contacts" },
-              { icon: "🔒", text: "AES-256 encrypted" },
-              { icon: "📧", text: "Gmail-native delivery" },
+              { icon: "⚡", text: "First leads in under 10 min" },
+              { icon: "👥", text: "275M+ companies to target" },
+              { icon: "📧", text: "Sends from your own Gmail" },
+              { icon: "🎯", text: "Set up in 5 minutes" },
             ].map(({ icon, text }) => (
               <div key={text} className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <span className="text-sm">{icon}</span>
@@ -532,10 +532,10 @@ function StatsBar() {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
   const stats = [
-    { value: 275,  suffix: "M+", label: "Contacts in Apollo DB" },
-    { value: 5,    suffix: "x",  label: "Faster than manual research" },
-    { value: 87,   suffix: "%",  label: "Avg qualification accuracy" },
-    { value: 10,   suffix: " min", label: "Time to first qualified leads" },
+    { value: 275,  suffix: "M+", label: "Companies you can target" },
+    { value: 5,    suffix: "x",  label: "Faster than doing it manually" },
+    { value: 87,   suffix: "%",  label: "Leads correctly filtered out" },
+    { value: 10,   suffix: " min", label: "To your first qualified leads" },
   ];
 
   return (
@@ -611,11 +611,11 @@ function HowItWorks() {
   const springLine = useSpring(lineScaleY, { stiffness: 40, damping: 15 });
 
   const steps = [
-    { num: "01", icon: "🧠", title: "ICP Analyzer", desc: "Claude maps your ideal customer profile — industries, titles, company size, pain points — into a precise targeting signal." },
-    { num: "02", icon: "🔍", title: "Lead Discovery", desc: "Apollo's 275M+ contact database is searched with AI-constructed filters. Matching prospects are pulled in seconds." },
-    { num: "03", icon: "🕷️", title: "Company Research", desc: "Apify scrapes each company's website, extracts signals, and builds a live context snapshot for each lead." },
-    { num: "04", icon: "⚡", title: "AI Qualification", desc: "Every lead is scored 0–100. Only high-fit prospects move forward — no wasted outreach on dead-end contacts." },
-    { num: "05", icon: "✉️", title: "Personalized Outreach", desc: "Claude writes a subject line, email body, and two follow-ups for each qualified lead — using their actual company context." },
+    { num: "01", icon: "🧠", title: "You describe your ideal customer", desc: "Tell Flowfiy the type of company you sell to, the role you target, and what problem you solve. That's all the input you give." },
+    { num: "02", icon: "🔍", title: "We find matching companies", desc: "Flowfiy searches 275M+ contacts and pulls only the people and businesses that match what you described. No manual list-building." },
+    { num: "03", icon: "🕷️", title: "We research each company", desc: "Each company's website is visited and read automatically — so your outreach references real, specific things about their business." },
+    { num: "04", icon: "⚡", title: "We filter out the weak fits", desc: "Every lead gets a score from 0 to 100. Only the ones most likely to care about your service move forward. No wasted emails." },
+    { num: "05", icon: "✉️", title: "We write a personal email to each one", desc: "A subject line, email body, and two follow-ups — written for each lead individually, based on what we learned about their company." },
   ];
 
   return (
@@ -626,9 +626,9 @@ function HowItWorks() {
 
       <div className="max-w-6xl mx-auto relative">
         <FadeIn className="text-center mb-20">
-          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">The Pipeline</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">5 agents. One pipeline.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Each agent is specialized. Each step feeds the next. The entire pipeline runs while you sleep.</p>
+          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">How It Works</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">You describe the customer.<br />We do the rest.</h2>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Five steps run back-to-back, fully automated — from finding the right people to sending the right message.</p>
         </FadeIn>
 
         <div className="relative">
@@ -686,12 +686,12 @@ function FeatureCard({ f, index }: { f: { icon: string; title: string; desc: str
 
 function Features() {
   const features = [
-    { icon: "⚡", title: "Plug-and-Play AI — No Setup", desc: "Claude Sonnet is fully managed by Flowfiy. No Anthropic account, no API keys, no token billing headaches. Sign up and start generating leads in minutes." },
-    { icon: "🏢", title: "Multi-Tenant Workspaces", desc: "Invite your whole team. Owner, admin, and member roles with full isolation. Each workspace has its own ICP, leads, and campaigns." },
-    { icon: "📊", title: "Lead Qualification Scoring", desc: "Every lead receives a 0–100 qualification score with reasoning. Filter, sort, and focus only on the prospects that will actually convert." },
-    { icon: "✏️", title: "Editable AI Copy", desc: "Claude writes the first draft. You own the final version. Edit, regenerate, or approve outreach copy before a single email is sent." },
-    { icon: "📧", title: "Gmail-Native Delivery", desc: "Emails send from your own inbox via OAuth. No shared IP pools, no domain warm-up, no deliverability headaches. Full reply tracking." },
-    { icon: "🔒", title: "AES-256 Encrypted Credentials", desc: "Every API key and OAuth token is encrypted at rest with AES-256-GCM. Your keys never appear in logs. Your data never leaves your control." },
+    { icon: "⚡", title: "Works out of the box — zero setup", desc: "No accounts to create, no API keys to manage, no technical configuration. Sign up, describe your customer, and your first leads are ready in minutes." },
+    { icon: "🏢", title: "Built for teams too", desc: "Invite your whole team and work together. Each person sees the same leads, campaigns, and results — with roles to control who can do what." },
+    { icon: "📊", title: "Only talk to the best fits", desc: "Every lead gets a score from 0 to 100. See at a glance who's worth your time and skip everyone who isn't. Focus on real opportunities." },
+    { icon: "✏️", title: "You approve every email", desc: "AI writes the first draft. You read it, edit it, or regenerate it before anything is sent. You're always in control of what goes out." },
+    { icon: "📧", title: "Sends from your own inbox", desc: "Emails go out from your Gmail — not a shared sender pool. Replies come back to you directly. It looks like you wrote every single one." },
+    { icon: "🔒", title: "Your data stays private", desc: "Your login credentials and API connections are encrypted before being stored. We can't read them. They never appear in any logs or reports." },
   ];
 
   return (
@@ -705,9 +705,9 @@ function Features() {
 
       <div className="max-w-6xl mx-auto relative z-10">
         <FadeIn className="text-center mb-16">
-          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Built Different</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Everything you need,<br />nothing you don&apos;t.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Built for revenue teams who want precision, not volume. Quality over quantity — always.</p>
+          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">What You Get</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Everything you need<br />to fill your pipeline.</h2>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">No duct-taped stack. No 6-tool workflow. One platform does it all — from finding the lead to sending the email.</p>
         </FadeIn>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -774,8 +774,8 @@ function Pricing() {
       <div className="max-w-6xl mx-auto relative z-10">
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Pricing</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Simple, transparent pricing.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">Choose managed AI (included) or bring your own Anthropic key. You decide.</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Start free. Scale when you're ready.</h2>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">100 leads free — no card required. Upgrade when you need more volume or seats for your team.</p>
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
@@ -858,8 +858,8 @@ function Testimonials() {
     <section className="bg-[#030305] py-16 sm:py-24 md:py-28 px-4 sm:px-6 border-t border-white/5">
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-16">
-          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Testimonials</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Trusted by revenue teams.</h2>
+          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Real Results</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Teams that stopped doing it manually.</h2>
         </FadeIn>
         <div className="grid md:grid-cols-3 gap-5">
           {quotes.map((q, i) => (
@@ -926,16 +926,16 @@ function FinalCTA() {
               <Image src="/icon.svg" alt="" width={44} height={44} />
             </motion.div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Your pipeline won&apos;t<br />fill itself.
+              Ready to stop<br />chasing leads?
             </h2>
             <p className="text-zinc-400 text-lg mb-10 max-w-md mx-auto">
-              Start with 100 free generations. No credit card required. First leads in under 10 minutes.
+              Get your first 100 leads free. No credit card. No setup. First results in under 10 minutes.
             </p>
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary rounded-xl text-white font-semibold hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 text-base"
             >
-              Start generating leads free
+              Get started free
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -993,7 +993,7 @@ function Footer() {
               <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-              AI-powered outbound sales platform. Plug in, generate qualified leads, and send hyper-personalized outreach — at scale. Powered by Claude Sonnet, fully managed.
+              Flowfiy finds your ideal customers, researches their business, and writes personal emails to each one — automatically. Go from zero to a full pipeline without the manual work.
             </p>
           </div>
 

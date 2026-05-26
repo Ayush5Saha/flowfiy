@@ -62,7 +62,7 @@ export const CLAUDE_MODELS = {
 export const AGENT_MAX_TOKENS = {
   icpAnalyzer:      500,
   companyAnalyzer:  512,
-  qualification:    256,
+  qualification:    400,  // bumped from 256 — now generates serviceGaps array
   personalization:  900,  // bumped from 700 — now generates followUp3 as well
 } as const;
 
@@ -88,6 +88,10 @@ export const INPUT_LIMITS = {
   qualificationCriteria:  300,  // ~75 input tokens
   /** Serialized company analysis JSON fed to Qualification Agent */
   companyAnalysisJson:    600,  // ~150 input tokens
+  /** Service offered description from BusinessProfile */
+  serviceOffered:         200,  // ~50 input tokens
+  /** Pain points solved description from BusinessProfile */
+  painPointsSolved:       300,  // ~75 input tokens
 } as const;
 
 /**
@@ -118,6 +122,7 @@ export const FIELD_CHAR_LIMITS = {
   bestAngle:               80,
   painPointMatch:          60,
   personalizationHook:     70,
+  serviceGap:             100,  // specific gap this lead has that our service solves
 
   // Personalization
   subjectLine:             55,   // ~7 words
