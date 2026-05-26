@@ -76,19 +76,21 @@ export const metadata: Metadata = {
       "5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. India's AI outbound sales platform. Plans from ₹1,700/mo.",
     images: [
       {
-        url: "/og-image.png",
+        url: `${BASE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Flowfiy — AI-Powered B2B Sales Outreach India",
+        alt: "Flowfiy — Find leads, write emails, close deals automatically",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
+    site: "@flowfiy",
+    creator: "@flowfiy",
     title: "Flowfiy — AI-Powered B2B Sales Outreach India",
     description:
       "5 Claude AI agents for B2B outbound. Research, score, personalize, send. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
-    images: ["/og-image.png"],
+    images: [`${BASE_URL}/opengraph-image`],
   },
   alternates: {
     canonical: BASE_URL,
@@ -133,7 +135,11 @@ const organizationJsonLd = {
     "India's AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
   foundingDate: "2026",
   addressCountry: "IN",
-  sameAs: [],
+  sameAs: [
+    "https://twitter.com/flowfiy",
+    "https://linkedin.com/company/flowfiy",
+    "https://github.com/flowfiy",
+  ],
 };
 
 const softwareJsonLd = {
