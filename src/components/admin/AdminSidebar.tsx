@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Activity,
   Zap,
+  HandCoins,
 } from "lucide-react";
 
 const NAV_MAIN = [
@@ -22,6 +23,7 @@ const NAV_MAIN = [
   { label: "Organizations", href: "/admin/organizations", icon: Building2 },
   { label: "Campaigns",     href: "/admin/campaigns",     icon: Megaphone },
   { label: "Leads",         href: "/admin/leads",         icon: UserCircle2 },
+  { label: "Affiliates",    href: "/admin/affiliates",    icon: HandCoins },
 ];
 
 const NAV_SYSTEM = [
