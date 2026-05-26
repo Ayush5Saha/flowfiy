@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   motion,
   useScroll,
@@ -15,6 +16,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Check, Star, ChevronDown } from "lucide-react";
 import { MarketingNav } from "@/components/landing/MarketingNav";
+
+// ─── Affiliate Ref Capture ────────────────────────────────────────────────────
+// Reads ?ref= param, stores in localStorage, and fires a click-tracking ping
+
+function AffiliateRefCapture() {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      const code = ref.toUpperCase();
+      localStorage.setItem("flowfiy_ref", code);
+      // Fire-and-forget click tracking
+      fetch(`/api/affiliate/track?code=${encodeURIComponent(code)}`).catch(() => {});
+    }
+  }, [searchParams]);
+  return null;
+}
 
 // ─── Scroll Progress Bar ──────────────────────────────────────────────────────
 
@@ -1037,6 +1055,7 @@ function Footer() {
 export default function LandingPage() {
   return (
     <div className="bg-[#030305] min-h-screen antialiased">
+      <Suspense fallback={null}><AffiliateRefCapture /></Suspense>
       <ScrollProgressBar />
       <MarketingNav />
       <Hero />

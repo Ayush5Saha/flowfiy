@@ -42,8 +42,10 @@ model Organization {
   auditLogs         AuditLog[]
   suppressedEmails  SuppressedEmail[]
   webhookEndpoints  WebhookEndpoint[]
-  referralsMade     Referral[] @relation("referrerOrg")
-  referredBy        Referral[] @relation("referredOrg")
+  referralsMade          Referral[]            @relation("referrerOrg")
+  referredBy             Referral[]            @relation("referredOrg")
+  referredByAffiliateId  String?               @map("referred_by_affiliate_id")
+  affiliateConversions   AffiliateConversion[]
 
   @@map("organizations")
 }
@@ -413,6 +415,79 @@ model Referral {
 
   @@unique([referrerOrgId, referredOrgId])
   @@map("referrals")
+}
+
+// ─── Affiliates ───────────────────────────────────────────────────────────────
+
+model Affiliate {
+  id                    String          @id @default(uuid())
+  name                  String
+  email                 String          @unique
+  website               String?
+  socialHandle          String?         @map("social_handle")
+  audienceDescription   String?         @map("audience_description")
+  affiliateCode         String          @unique @map("affiliate_code")
+  commissionRate        Float           @default(0.30) @map("commission_rate")
+  status                AffiliateStatus @default(PENDING)
+  totalClicks           Int             @default(0) @map("total_clicks")
+  totalSignups          Int             @default(0) @map("total_signups")
+  totalEarningsInPaise  BigInt          @default(0) @map("total_earnings_in_paise")
+  totalPaidInPaise      BigInt          @default(0) @map("total_paid_in_paise")
+  razorpayContactId     String?         @map("razorpay_contact_id")
+  razorpayFundAccountId String?         @map("razorpay_fund_account_id")
+  upiId                 String?         @map("upi_id")
+  accessToken           String?         @unique @map("access_token")
+  accessTokenExpiresAt  DateTime?       @map("access_token_expires_at")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  conversions AffiliateConversion[]
+  clicks      AffiliateClick[]
+
+  @@map("affiliates")
+}
+
+enum AffiliateStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model AffiliateConversion {
+  id                      String                    @id @default(uuid())
+  affiliateId             String                    @map("affiliate_id")
+  organizationId          String                    @map("organization_id")
+  plan                    Plan
+  paymentAmountInPaise    BigInt                    @map("payment_amount_in_paise")
+  commissionAmountInPaise BigInt                    @map("commission_amount_in_paise")
+  razorpayPaymentId       String?                   @map("razorpay_payment_id")
+  status                  AffiliateConversionStatus @default(PENDING)
+  payoutId                String?                   @map("payout_id")
+  paidAt                  DateTime?                 @map("paid_at")
+  createdAt               DateTime                  @default(now()) @map("created_at")
+
+  affiliate    Affiliate    @relation(fields: [affiliateId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("affiliate_conversions")
+}
+
+enum AffiliateConversionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+model AffiliateClick {
+  id          String   @id @default(uuid())
+  affiliateId String   @map("affiliate_id")
+  ipHash      String?  @map("ip_hash")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  affiliate Affiliate @relation(fields: [affiliateId], references: [id])
+
+  @@map("affiliate_clicks")
 }
 
 // ─── Audit Logs ───────────────────────────────────────────────────────────────

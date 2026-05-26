@@ -36,36 +36,53 @@ export async function POST(req: NextRequest) {
 
   const { organization } = member;
 
-  // ── Resolve referral ──────────────────────────────────────────────────────
+  // ── Resolve referral or affiliate code ────────────────────────────────────
   let referrerOrgId: string | null = null;
   if (referralCode) {
-    const referrerOrg = await prisma.organization.findUnique({
-      where: { referralCode: referralCode.toUpperCase() },
-      select: { id: true },
+    const code = referralCode.toUpperCase();
+
+    // ── Check affiliate program first ────────────────────────────────────
+    const affiliate = await prisma.affiliate.findUnique({
+      where: { affiliateCode: code },
+      select: { id: true, status: true },
     });
-    // Validate: exists, not self
-    if (referrerOrg && referrerOrg.id !== organizationId) {
-      referrerOrgId = referrerOrg.id;
-      // Create pending referral record (reward applied on webhook after payment)
-      await prisma.referral.upsert({
-        where: {
-          referrerOrgId_referredOrgId: {
+
+    if (affiliate && affiliate.status === "ACTIVE") {
+      // Mark the org as referred by this affiliate (used on webhook to create conversion)
+      await prisma.organization.update({
+        where: { id: organizationId },
+        data: { referredByAffiliateId: affiliate.id },
+      });
+    } else {
+      // ── Fall through to user-to-user referral ──────────────────────────
+      const referrerOrg = await prisma.organization.findUnique({
+        where: { referralCode: code },
+        select: { id: true },
+      });
+      // Validate: exists, not self
+      if (referrerOrg && referrerOrg.id !== organizationId) {
+        referrerOrgId = referrerOrg.id;
+        // Create pending referral record (reward applied on webhook after payment)
+        await prisma.referral.upsert({
+          where: {
+            referrerOrgId_referredOrgId: {
+              referrerOrgId: referrerOrg.id,
+              referredOrgId: organizationId,
+            },
+          },
+          create: {
             referrerOrgId: referrerOrg.id,
             referredOrgId: organizationId,
+            referredPlan: plan as never,
+            rewardApplied: false,
           },
-        },
-        create: {
-          referrerOrgId: referrerOrg.id,
-          referredOrgId: organizationId,
-          referredPlan: plan as never,
-          rewardApplied: false,
-        },
-        update: {
-          referredPlan: plan as never,
-          rewardApplied: false,
-          rewardAppliedAt: null,
-        },
-      });
+          update: {
+            referredPlan: plan as never,
+            rewardApplied: false,
+            rewardAppliedAt: null,
+          },
+        });
+      }
     }
   }
 

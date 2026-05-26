@@ -98,6 +98,15 @@ export async function POST(req: NextRequest) {
 
           // ── Apply referral reward ─────────────────────────────────────────
           await applyRazorpayReferralReward({ referredOrgId: organizationId });
+
+          // ── Apply affiliate commission (first payment) ────────────────────
+          const firstPayment = event.payload.payment?.entity as Record<string, unknown> | undefined;
+          await applyAffiliateConversion({
+            organizationId,
+            razorpayPaymentId: firstPayment?.id as string | undefined,
+            paymentAmountInPaise: firstPayment?.amount as number | undefined ?? 0,
+            plan: planKey,
+          });
         }
         break;
       }
@@ -121,6 +130,16 @@ export async function POST(req: NextRequest) {
               org,
               paymentId: chargedPayment.id as string,
               paymentAmount: chargedPayment.amount as number,
+            });
+          }
+
+          // ── Recurring affiliate commission ────────────────────────────────
+          if (chargedPayment?.id) {
+            await applyAffiliateConversion({
+              organizationId: org.id,
+              razorpayPaymentId: chargedPayment.id as string,
+              paymentAmountInPaise: chargedPayment.amount as number,
+              plan: org.plan,
             });
           }
         }
@@ -321,5 +340,77 @@ async function redeemRazorpayCreditMonth({
     console.log(`[webhook] Referral free month redeemed for org=${org.id}, refunded payment=${paymentId}`);
   } catch (err) {
     console.error("[webhook] Failed to redeem referral credit month:", err);
+  }
+}
+
+// ─── Affiliate commission helpers ─────────────────────────────────────────────
+
+/**
+ * Create an AffiliateConversion record whenever a referred org makes a payment.
+ * Idempotent: skips if a conversion for this paymentId already exists.
+ */
+async function applyAffiliateConversion({
+  organizationId,
+  razorpayPaymentId,
+  paymentAmountInPaise,
+  plan,
+}: {
+  organizationId: string;
+  razorpayPaymentId?: string;
+  paymentAmountInPaise: number;
+  plan: string;
+}) {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { referredByAffiliateId: true, plan: true },
+    });
+
+    if (!org?.referredByAffiliateId) return;
+
+    const affiliate = await prisma.affiliate.findUnique({
+      where: { id: org.referredByAffiliateId, status: "ACTIVE" },
+      select: { id: true, commissionRate: true },
+    });
+
+    if (!affiliate) return;
+
+    // Idempotency: skip if this exact payment was already recorded
+    if (razorpayPaymentId) {
+      const existing = await prisma.affiliateConversion.findFirst({
+        where: { razorpayPaymentId },
+        select: { id: true },
+      });
+      if (existing) return;
+    }
+
+    const commissionAmountInPaise = BigInt(
+      Math.floor(paymentAmountInPaise * affiliate.commissionRate)
+    );
+
+    await prisma.$transaction([
+      prisma.affiliateConversion.create({
+        data: {
+          affiliateId: affiliate.id,
+          organizationId,
+          plan: plan as never,
+          paymentAmountInPaise: BigInt(paymentAmountInPaise),
+          commissionAmountInPaise,
+          razorpayPaymentId: razorpayPaymentId ?? null,
+          status: "PENDING",
+        },
+      }),
+      prisma.affiliate.update({
+        where: { id: affiliate.id },
+        data: {
+          totalSignups: { increment: 1 },
+          totalEarningsInPaise: { increment: commissionAmountInPaise },
+        },
+      }),
+    ]);
+
+    console.log(`[webhook] Affiliate commission created: affiliate=${affiliate.id}, commission=₹${Number(commissionAmountInPaise) / 100}`);
+  } catch (err) {
+    console.error("[webhook] Failed to apply affiliate commission:", err);
   }
 }
