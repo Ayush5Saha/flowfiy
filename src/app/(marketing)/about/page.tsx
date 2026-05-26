@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import Link from "next/link";
-import { Zap, Shield, Globe, Code2, ArrowRight } from "lucide-react";
+import { Zap, Shield, Globe, Code2, ArrowRight, Target, Search, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform India",
@@ -68,14 +68,30 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Mission stat bar */}
+      {/* Mission statement */}
+      <section className="py-20 px-4 sm:px-6 border-t border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-5 block">Our Mission</span>
+          <blockquote className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-[1.25] mb-8 border-l-2 border-violet-500 pl-8">
+            Every business — regardless of budget or team size — deserves a consistent, predictable sales pipeline.
+          </blockquote>
+          <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl pl-8">
+            For years, building a real outbound sales machine meant hiring SDRs, subscribing to five different tools, and spending weeks on setup. That was fine if you were a large enterprise. For everyone else, it was out of reach.
+          </p>
+          <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl pl-8 mt-4">
+            Flowfiy changes that. Describe who you sell to, and within minutes you have a list of researched, scored, and personally written-for prospects — ready to hear from you. No team required.
+          </p>
+        </div>
+      </section>
+
+      {/* Stats bar */}
       <section className="border-y border-white/5 py-12 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            ["100", "Free generations to start"],
+            ["100", "Free leads to start"],
             ["5", "Specialized AI agents"],
-            ["$0", "Per-lead Claude cost to you"],
-            ["AES-256", "Credential encryption"],
+            ["10 min", "To your first leads"],
+            ["0", "SDRs needed"],
           ].map(([val, label]) => (
             <div key={label}>
               <p className="text-3xl font-bold font-mono text-white mb-1">{val}</p>
@@ -100,6 +116,75 @@ export default function AboutPage() {
                 <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works — plain English */}
+      <section className="py-24 px-4 sm:px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-14">
+            <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">How It Works</span>
+            <h2 className="text-3xl font-bold text-white mb-3">Three steps. Fully automated.</h2>
+            <p className="text-zinc-400 max-w-xl">You give one input. Flowfiy handles everything that follows.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Target,
+                step: "01",
+                title: "Describe your ideal customer",
+                desc: "Tell Flowfiy what kind of company you sell to — the industry, the size, the role of the person who buys from you. That's your only input.",
+              },
+              {
+                icon: Search,
+                step: "02",
+                title: "We find, research & score them",
+                desc: "Flowfiy searches 275M+ contacts, visits each company's website, and scores every lead 0–100 based on how likely they are to need your service.",
+              },
+              {
+                icon: Mail,
+                step: "03",
+                title: "We write a personal email to each one",
+                desc: "For every lead that scores high enough, Flowfiy writes a subject line, email body, and follow-ups — using real details from that company. You review and send.",
+              },
+            ].map(({ icon: Icon, step, title, desc }) => (
+              <div key={step} className="relative bg-zinc-900/50 border border-white/6 rounded-2xl p-7 hover:border-violet-500/20 transition-colors">
+                <div className="flex items-start gap-4 mb-5">
+                  <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <span className="text-xs font-mono text-violet-400 mt-3">{step}</span>
+                </div>
+                <h3 className="font-semibold text-white mb-2 text-lg">{title}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Founder */}
+      <section className="py-24 px-4 sm:px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-12">
+            <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">The Team</span>
+            <h2 className="text-3xl font-bold text-white mb-3">Built by someone who felt the problem.</h2>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start gap-8 bg-zinc-900/50 border border-white/6 rounded-2xl p-8 max-w-2xl hover:border-violet-500/20 transition-colors">
+            {/* Avatar placeholder */}
+            <div className="shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-2xl font-black text-white select-none">
+              A
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-white">Ayush Saha</p>
+              <p className="text-sm text-violet-400 mb-3">Founder &amp; CEO</p>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Ayush built Flowfiy to solve the sales pipeline problem for businesses that can&apos;t afford an SDR team.
+                The platform automates everything from lead discovery to personalised outreach — so founders and small teams
+                can compete with companies ten times their size.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -129,17 +214,17 @@ export default function AboutPage() {
       <section className="py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12">
-            <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">The AI pipeline</span>
-            <h2 className="text-3xl font-bold text-white mb-3">5 agents. One pipeline. Zero manual work.</h2>
-            <p className="text-zinc-400 max-w-xl">Each agent is specialized for its task. They pass context forward — not just data.</p>
+            <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">Under the hood</span>
+            <h2 className="text-3xl font-bold text-white mb-3">5 AI agents. One seamless pipeline.</h2>
+            <p className="text-zinc-400 max-w-xl">Each agent is built for one specific job. They pass context to each other — so every step gets smarter as the pipeline runs.</p>
           </div>
           <ol className="space-y-4">
             {[
-              { n: "01", title: "ICP Analyzer (claude-haiku-4-5)", desc: "Takes your business profile and generates a precise Ideal Customer Profile — target industries, company sizes, titles, and pain-point signals." },
-              { n: "02", title: "Lead Discovery (claude-haiku-4-5 + Apollo API)", desc: "Constructs Apollo People Search queries from your ICP. Pulls matching contacts from 275M+ contacts. No manual filter-clicking." },
-              { n: "03", title: "Company Analyzer (claude-sonnet-4-6 + Apify)", desc: "Scrapes each prospect's company website. Extracts brand signals, tech stack clues, growth indicators, and service gaps." },
-              { n: "04", title: "Qualification Agent (claude-haiku-4-5)", desc: "Scores each lead 0–100 against your ICP. Only leads above threshold proceed. Every score includes reasoning you can read." },
-              { n: "05", title: "Personalization Agent (claude-sonnet-4-6)", desc: "Writes a subject line, email body, and two follow-ups per qualified lead — referencing their actual company context, not a merge field." },
+              { n: "01", title: "ICP Analyzer", desc: "Reads your business profile and builds a precise picture of who your ideal customer is — industries, company sizes, job titles, and the pain points they have." },
+              { n: "02", title: "Lead Discovery", desc: "Searches 275M+ contacts using the targeting profile from step one. Pulls only the people and companies that match. No manual filter-clicking." },
+              { n: "03", title: "Company Analyzer", desc: "Visits each prospect's company website and reads it. Extracts growth signals, identifies service gaps, and builds context for personalisation." },
+              { n: "04", title: "Qualification Agent", desc: "Scores every lead from 0 to 100 based on how well they fit your service. Only high-scoring leads move forward — along with a clear reason why." },
+              { n: "05", title: "Personalization Agent", desc: "Writes a subject line, email body, and two follow-ups for each qualified lead — using real details from their company, not generic merge tags." },
             ].map(({ n, title, desc }) => (
               <li key={n} className="flex gap-5 bg-zinc-900/40 border border-white/6 rounded-2xl p-6">
                 <span className="text-xs font-mono text-violet-400 mt-0.5 shrink-0">{n}</span>
@@ -156,8 +241,8 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to replace your SDR stack?</h2>
-          <p className="text-zinc-400 mb-8">Start with 100 free lead generations. No credit card required.</p>
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to see it in action?</h2>
+          <p className="text-zinc-400 mb-8">Start with 100 free leads. No credit card. First results in under 10 minutes.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
               Get started free <ArrowRight className="w-4 h-4" />
