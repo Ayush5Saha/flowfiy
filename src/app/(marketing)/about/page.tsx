@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Zap, Shield, Globe, Code2, ArrowRight, Target, Search, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -172,10 +173,13 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-white mb-3">Built by someone who felt the problem.</h2>
           </div>
           <div className="flex flex-col sm:flex-row items-start gap-8 bg-zinc-900/50 border border-white/6 rounded-2xl p-8 max-w-2xl hover:border-violet-500/20 transition-colors">
-            {/* Avatar placeholder */}
-            <div className="shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-2xl font-black text-white select-none">
-              A
-            </div>
+            <Image
+              src="/Ayushpro.jpeg"
+              alt="Ayush Saha"
+              width={80}
+              height={80}
+              className="shrink-0 w-20 h-20 rounded-2xl object-cover object-top"
+            />
             <div>
               <p className="text-lg font-semibold text-white">Ayush Saha</p>
               <p className="text-sm text-violet-400 mb-3">Founder &amp; CEO</p>
