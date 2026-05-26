@@ -10,11 +10,11 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Flowfiy — AI-Powered B2B Sales Outreach Platform India",
+    default: "Flowfiy — Your AI Sales Team",
     template: "%s | Flowfiy",
   },
   description:
-    "Flowfiy is India's AI outbound sales platform — 5 Claude AI agents research leads, score prospects 0–100, and send hyper-personalized cold emails. No SDR needed. Starts free. Plans from ₹1,700/mo.",
+    "Your AI sales team. Flowfiy's 5 Claude AI agents find leads, research their business, score them 0–100, and send hyper-personalized cold emails — all on autopilot. No SDR needed. Starts free. Plans from ₹1,700/mo.",
   keywords: [
     // Primary
     "AI outbound sales platform",

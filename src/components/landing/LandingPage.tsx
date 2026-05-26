@@ -386,8 +386,8 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Tell Flowfiy who your ideal customer is. It finds them, researches their business,
-          ranks how likely they are to buy, and writes a personal email to each one — all on autopilot.
+          Your AI sales team. Tell Flowfiy who your ideal customer is — it finds them, researches their business,
+          scores how likely they are to buy, and writes a personal email to each one. All on autopilot.
         </motion.p>
 
         <motion.div

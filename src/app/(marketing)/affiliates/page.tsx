@@ -75,7 +75,7 @@ export default function AffiliatesPage() {
             for every customer you send us
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Share your unique link. When someone subscribes to Flowfiy, you earn {COMMISSION_RATE}% of their payment — every single month, not just the first one.
+            Flowfiy is <span className="text-white font-medium">your AI sales team</span> — and now you can earn by sharing it. When someone subscribes through your link, you get {COMMISSION_RATE}% of their payment every single month, not just the first one.
           </p>
           <a href="#apply" className="inline-flex items-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
             Apply to join <ArrowRight className="w-4 h-4" />
