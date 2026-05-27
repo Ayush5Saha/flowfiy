@@ -29,6 +29,7 @@ type Props = {
     website: string | null;
     socialHandle: string | null;
     audienceDescription: string | null;
+    upiId: string | null;
     razorpayFundAccountId: string | null;
     createdAt: string;
   };
@@ -237,7 +238,7 @@ export default function AdminAffiliateRow({ affiliate: a }: Props) {
                 {loading === "ACTIVE" ? "Reactivating…" : "Reactivate"}
               </button>
             )}
-            {a.status === "ACTIVE" && unpaid >= 5 && (
+            {a.status === "ACTIVE" && unpaid >= 5 && a.razorpayFundAccountId && (
               <button
                 onClick={triggerPayout}
                 disabled={loading !== null}
@@ -245,6 +246,9 @@ export default function AdminAffiliateRow({ affiliate: a }: Props) {
               >
                 {loading === "payout" ? "Paying…" : `Pay ₹${unpaid.toLocaleString("en-IN")}`}
               </button>
+            )}
+            {a.status === "ACTIVE" && unpaid >= 5 && !a.razorpayFundAccountId && (
+              <span className="text-xs text-amber-400 italic">UPI needed</span>
             )}
           </div>
         </td>
@@ -363,7 +367,14 @@ export default function AdminAffiliateRow({ affiliate: a }: Props) {
                 {/* Meta */}
                 <div className="text-xs text-zinc-500 space-y-1">
                   <p>Applied: {new Date(a.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-                  <p>UPI linked: {a.razorpayFundAccountId ? <span className="text-emerald-400">Yes</span> : <span className="text-red-400">No</span>}</p>
+                  <p>UPI ID: {a.upiId
+                    ? <span className="text-emerald-400 font-mono">{a.upiId}</span>
+                    : <span className="text-red-400">Not added</span>}
+                  </p>
+                  <p>Razorpay FA: {a.razorpayFundAccountId
+                    ? <span className="text-emerald-400">Linked</span>
+                    : <span className="text-yellow-400">Not linked</span>}
+                  </p>
                   <p>Affiliate link: <code className="text-violet-400">flowfiy.com?ref={a.affiliateCode}</code></p>
                 </div>
               </div>

@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
             razorpayPaymentId: firstPayment?.id as string | undefined,
             paymentAmountInPaise: firstPayment?.amount as number | undefined ?? 0,
             plan: planKey,
+            isNewSignup: true,
           });
         }
         break;
@@ -140,6 +141,7 @@ export async function POST(req: NextRequest) {
               razorpayPaymentId: chargedPayment.id as string,
               paymentAmountInPaise: chargedPayment.amount as number,
               plan: org.plan,
+              isNewSignup: false,
             });
           }
         }
@@ -354,11 +356,13 @@ async function applyAffiliateConversion({
   razorpayPaymentId,
   paymentAmountInPaise,
   plan,
+  isNewSignup,
 }: {
   organizationId: string;
   razorpayPaymentId?: string;
   paymentAmountInPaise: number;
   plan: string;
+  isNewSignup: boolean;
 }) {
   try {
     const org = await prisma.organization.findUnique({
@@ -397,13 +401,14 @@ async function applyAffiliateConversion({
           paymentAmountInPaise: BigInt(paymentAmountInPaise),
           commissionAmountInPaise,
           razorpayPaymentId: razorpayPaymentId ?? null,
-          status: "PENDING",
+          status: "APPROVED",
         },
       }),
       prisma.affiliate.update({
         where: { id: affiliate.id },
         data: {
-          totalSignups: { increment: 1 },
+          // Only count new customers — not recurring renewals
+          ...(isNewSignup ? { totalSignups: { increment: 1 } } : {}),
           totalEarningsInPaise: { increment: commissionAmountInPaise },
         },
       }),

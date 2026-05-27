@@ -21,14 +21,14 @@ export async function POST(
     where: { id },
     include: {
       conversions: {
-        where: { status: "APPROVED" },
+        where: { status: { in: ["PENDING", "APPROVED"] } },
       },
     },
   });
 
   if (!affiliate) return NextResponse.json({ error: "Affiliate not found" }, { status: 404 });
   if (!affiliate.razorpayFundAccountId) {
-    return NextResponse.json({ error: "Affiliate has not added a UPI ID yet." }, { status: 400 });
+    return NextResponse.json({ error: "Affiliate has not added a UPI ID yet. Ask them to add it in their dashboard." }, { status: 400 });
   }
 
   const totalApproved = affiliate.conversions.reduce(
@@ -57,10 +57,10 @@ export async function POST(
     accountNumber,
   });
 
-  // Mark all approved conversions as PAID
+  // Mark all pending/approved conversions as PAID
   await prisma.$transaction([
     prisma.affiliateConversion.updateMany({
-      where: { affiliateId: id, status: "APPROVED" },
+      where: { affiliateId: id, status: { in: ["PENDING", "APPROVED"] } },
       data: { status: "PAID", payoutId: payout.id, paidAt: new Date() },
     }),
     prisma.affiliate.update({

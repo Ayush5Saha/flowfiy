@@ -10,7 +10,7 @@ export default async function AdminAffiliatesPage() {
     orderBy: { createdAt: "desc" },
     include: {
       conversions: {
-        where: { status: "APPROVED" },
+        where: { status: { in: ["PENDING", "APPROVED"] } },
         select: { commissionAmountInPaise: true },
       },
     },
@@ -47,7 +47,7 @@ export default async function AdminAffiliatesPage() {
                   <th className="text-right px-5 py-3 font-medium">Signups</th>
                   <th className="text-right px-5 py-3 font-medium">Earned</th>
                   <th className="text-right px-5 py-3 font-medium">Paid</th>
-                  <th className="text-right px-5 py-3 font-medium">Unpaid (APPR)</th>
+                  <th className="text-right px-5 py-3 font-medium">Unpaid</th>
                   <th className="px-5 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -75,6 +75,7 @@ export default async function AdminAffiliatesPage() {
                         website: a.website,
                         socialHandle: a.socialHandle,
                         audienceDescription: a.audienceDescription,
+                        upiId: a.upiId,
                         razorpayFundAccountId: a.razorpayFundAccountId,
                         createdAt: a.createdAt.toISOString(),
                       }}
