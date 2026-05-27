@@ -19,6 +19,7 @@ const navLinks = [
       { label: "AI Lead Generation", href: "/use-cases/ai-lead-generation", desc: "Use case deep dive" },
       { label: "Cold Email Automation", href: "/use-cases/cold-email-automation", desc: "Automate outreach" },
       { label: "About", href: "/about", desc: "Our story & mission" },
+      { label: "Founder", href: "/founder", desc: "Meet the person behind Flowfiy" },
     ],
   },
   {
