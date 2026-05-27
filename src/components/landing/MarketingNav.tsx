@@ -1,11 +1,15 @@
-﻿"use client";
+"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import {
+  Menu, X, ChevronDown,
+  LayoutDashboard, User, CreditCard, Settings, LogOut,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -31,21 +35,105 @@ const navLinks = [
   },
 ];
 
-export function MarketingNav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const { scrollY } = useScroll();
-  const pathname = usePathname();
+const profileMenuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: User,            label: "Profile",   href: "/profile" },
+  { icon: CreditCard,      label: "Billing",   href: "/billing" },
+  { icon: Settings,        label: "Settings",  href: "/settings" },
+];
 
+function getInitials(name: string, email: string) {
+  if (name?.trim()) {
+    const parts = name.trim().split(" ");
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : name.slice(0, 2).toUpperCase();
+  }
+  return email.slice(0, 2).toUpperCase();
+}
+
+export function MarketingNav() {
+  const [scrolled, setScrolled]       = useState(false);
+  const [mobileOpen, setMobileOpen]   = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [authUser, setAuthUser]       = useState<{ email: string; fullName: string } | null>(null);
+
+  const { scrollY } = useScroll();
+  const pathname    = usePathname();
+  const router      = useRouter();
+  const profileRef  = useRef<HTMLDivElement>(null);
+
+  // ── Scroll detection ────────────────────────────────────
   useEffect(() => {
     return scrollY.on("change", (v) => setScrolled(v > 20));
   }, [scrollY]);
 
+  // ── Close nav on route change ────────────────────────────
   useEffect(() => {
     setMobileOpen(false);
     setOpenDropdown(null);
+    setProfileOpen(false);
   }, [pathname]);
+
+  // ── Supabase auth state ─────────────────────────────────
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setAuthUser({
+          email: user.email ?? "",
+          fullName:
+            (user.user_metadata?.full_name as string | undefined) ??
+            (user.user_metadata?.name as string | undefined) ??
+            "",
+        });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.user) {
+        setAuthUser({
+          email: session.user.email ?? "",
+          fullName:
+            (session.user.user_metadata?.full_name as string | undefined) ??
+            (session.user.user_metadata?.name as string | undefined) ??
+            "",
+        });
+      } else {
+        setAuthUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Click-outside closes profile dropdown ───────────────
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    if (profileOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [profileOpen]);
+
+  // ── Sign out ─────────────────────────────────────────────
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setAuthUser(null);
+    setProfileOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
+  const initials     = authUser ? getInitials(authUser.fullName, authUser.email) : "";
+  const displayName  = authUser
+    ? (authUser.fullName || authUser.email.split("@")[0])
+    : "";
 
   return (
     <motion.header
@@ -57,6 +145,7 @@ export function MarketingNav() {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+
         {/* Logo */}
         <Link href="/" className="flex items-center shrink-0">
           <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} priority />
@@ -111,17 +200,87 @@ export function MarketingNav() {
           )}
         </nav>
 
-        {/* CTA */}
+        {/* CTA / Profile */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-1.5">
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all hover:shadow-lg hover:shadow-primary/25"
-          >
-            Get started free
-          </Link>
+          {authUser ? (
+            /* ── Logged-in: profile avatar dropdown ── */
+            <div ref={profileRef} className="relative">
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/8 transition-all group"
+                aria-label="Profile menu"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 ring-2 ring-violet-500/30 group-hover:ring-violet-500/60 transition-all">
+                  {initials}
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-56 rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden"
+                  >
+                    {/* User info header */}
+                    <div className="px-4 py-3 border-b border-white/8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                          <p className="text-xs text-zinc-500 truncate">{authUser.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="py-1">
+                      {profileMenuItems.map(({ icon: Icon, label, href }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <Icon className="w-4 h-4 text-zinc-500 shrink-0" />
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Sign out */}
+                    <div className="border-t border-white/8 py-1">
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:text-red-400 hover:bg-red-500/8 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        Sign out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            /* ── Logged-out: original CTA buttons ── */
+            <>
+              <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-1.5">
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="text-sm font-medium px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all hover:shadow-lg hover:shadow-primary/25"
+              >
+                Get started free
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -157,9 +316,37 @@ export function MarketingNav() {
                 )
               )}
             </div>
+
+            {/* Mobile bottom CTA */}
             <div className="pt-4 flex flex-col gap-2 border-t border-white/10 mt-3">
-              <Link href="/login" className="text-sm text-center py-2.5 border border-white/10 rounded-lg text-zinc-300">Sign in</Link>
-              <Link href="/signup" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">Get started free</Link>
+              {authUser ? (
+                <>
+                  {/* User identity strip */}
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                      <p className="text-xs text-zinc-500 truncate">{authUser.email}</p>
+                    </div>
+                  </div>
+                  <Link href="/dashboard" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">
+                    Go to Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-sm text-center py-2.5 border border-white/10 rounded-lg text-zinc-300 hover:text-red-400 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm text-center py-2.5 border border-white/10 rounded-lg text-zinc-300">Sign in</Link>
+                  <Link href="/signup" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">Get started free</Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}
