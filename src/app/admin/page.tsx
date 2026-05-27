@@ -177,40 +177,44 @@ export default async function AdminOverviewPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-12 px-5 py-2 border-b border-zinc-800/50 bg-zinc-950/40">
-          <span className="col-span-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Organization</span>
-          <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Plan</span>
-          <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Members</span>
-          <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Campaigns</span>
-          <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Created</span>
-        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[560px]">
+            <div className="grid grid-cols-12 px-5 py-2 border-b border-zinc-800/50 bg-zinc-950/40">
+              <span className="col-span-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Organization</span>
+              <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Plan</span>
+              <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Members</span>
+              <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Campaigns</span>
+              <span className="col-span-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider text-right">Created</span>
+            </div>
 
-        <div>
-          {recentOrgs.map((org) => (
-            <Link
-              key={org.id}
-              href={`/admin/organizations/${org.id}`}
-              className="grid grid-cols-12 px-5 py-3.5 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-800/30 transition-colors items-center group"
-            >
-              <div className="col-span-4">
-                <p className="text-sm font-medium text-white group-hover:text-amber-300 transition-colors truncate">{org.name}</p>
-                <p className="text-xs text-zinc-600 mt-0.5 truncate">{org.slug}</p>
-              </div>
-              <div className="col-span-2">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${planColors[org.plan] ?? "bg-zinc-700/60 text-zinc-300"}`}>
-                  {org.plan}
-                </span>
-              </div>
-              <p className="col-span-2 text-sm text-zinc-400 text-right font-mono">{org._count.members}</p>
-              <p className="col-span-2 text-sm text-zinc-400 text-right font-mono">{org._count.campaigns}</p>
-              <p className="col-span-2 text-xs text-zinc-600 text-right">
-                {new Date(org.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </p>
-            </Link>
-          ))}
-          {recentOrgs.length === 0 && (
-            <p className="px-5 py-10 text-center text-sm text-zinc-600">No organizations yet</p>
-          )}
+            <div>
+              {recentOrgs.map((org) => (
+                <Link
+                  key={org.id}
+                  href={`/admin/organizations/${org.id}`}
+                  className="grid grid-cols-12 px-5 py-3.5 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-800/30 transition-colors items-center group"
+                >
+                  <div className="col-span-4">
+                    <p className="text-sm font-medium text-white group-hover:text-amber-300 transition-colors truncate">{org.name}</p>
+                    <p className="text-xs text-zinc-600 mt-0.5 truncate">{org.slug}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${planColors[org.plan] ?? "bg-zinc-700/60 text-zinc-300"}`}>
+                      {org.plan}
+                    </span>
+                  </div>
+                  <p className="col-span-2 text-sm text-zinc-400 text-right font-mono">{org._count.members}</p>
+                  <p className="col-span-2 text-sm text-zinc-400 text-right font-mono">{org._count.campaigns}</p>
+                  <p className="col-span-2 text-xs text-zinc-600 text-right">
+                    {new Date(org.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                </Link>
+              ))}
+              {recentOrgs.length === 0 && (
+                <p className="px-5 py-10 text-center text-sm text-zinc-600">No organizations yet</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

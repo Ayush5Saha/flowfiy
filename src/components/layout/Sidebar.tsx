@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +16,8 @@ import {
   BarChart2,
   Gift,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -120,8 +124,16 @@ export function Sidebar({
   activeCampaignReplies = 0,
   missingIntegrations = 0,
 }: SidebarProps) {
-  const router = useRouter();
-  const plan = planMeta[organization.plan] ?? planMeta.FREE;
+  const router   = useRouter();
+  const pathname = usePathname();
+  const plan     = planMeta[organization.plan] ?? planMeta.FREE;
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   const usagePct =
     organization.generationLimit === -1
@@ -141,108 +153,172 @@ export function Sidebar({
     router.refresh();
   }
 
-  const initials = getInitials(userFullName, userEmail);
+  const initials    = getInitials(userFullName, userEmail);
   const displayName = userFullName || userEmail.split("@")[0];
 
+  // ── Shared nav content (used in both desktop aside and mobile drawer) ──────
+  function NavContent({ onClose }: { onClose?: () => void }) {
+    return (
+      <>
+        {/* ── Org switcher ─────────────────────────────── */}
+        <div className="px-3 pt-3 pb-2 border-b border-sidebar-border">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer group">
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary/80 to-violet-600/80 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {organization.name.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold truncate leading-tight">{organization.name}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${plan.dot}`} />
+                <p className={`text-[10px] font-medium ${plan.color}`}>{plan.label}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+
+        {/* ── Main Navigation ───────────────────────────── */}
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          {mainNav.map(({ href, icon, label }) => (
+            <NavItem
+              key={href}
+              href={href}
+              icon={icon}
+              label={label}
+              badge={
+                href === "/campaigns"
+                  ? activeCampaignReplies
+                  : href === "/integrations"
+                  ? missingIntegrations
+                  : undefined
+              }
+              badgeVariant={href === "/integrations" ? "red" : "green"}
+            />
+          ))}
+
+          {/* ── Usage bar (compact) ───────────────────── */}
+          {organization.generationLimit !== -1 && (
+            <div className="mx-1 mt-4 mb-1 px-2.5 py-2.5 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-muted-foreground font-medium">Generations</span>
+                <span className={`text-[10px] font-mono font-semibold ${usageHigh ? "text-destructive" : "text-muted-foreground"}`}>
+                  {organization.generationCount.toLocaleString()} / {organization.generationLimit.toLocaleString()}
+                </span>
+              </div>
+              <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${usageHigh ? "bg-destructive" : "bg-primary"}`}
+                  style={{ width: `${usagePct}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── Account section ───────────────────────── */}
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
+              Account
+            </p>
+          </div>
+          {accountNav.map(({ href, icon, label }) => (
+            <NavItem key={href} href={href} icon={icon} label={label} />
+          ))}
+        </nav>
+
+        {/* ── Bottom: Sign out + User strip ────────────── */}
+        <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all duration-150 group"
+          >
+            <LogOut className="w-4 h-4 shrink-0 group-hover:text-destructive" />
+            Sign out
+          </button>
+
+          <Link
+            href="/profile"
+            className="flex items-center gap-2.5 px-3 py-2.5 mt-1 rounded-lg hover:bg-sidebar-accent transition-all duration-150 group border border-transparent hover:border-sidebar-border"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold truncate leading-tight">{displayName}</p>
+              <p className="text-[10px] text-muted-foreground truncate leading-tight">{userEmail}</p>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   return (
-    <aside className="hidden md:flex w-60 border-r border-sidebar-border bg-sidebar flex-col h-full shrink-0 select-none">
-
-      {/* ── Logo ─────────────────────────────────────── */}
-      <div className="px-4 py-4 border-b border-sidebar-border flex items-center gap-2.5">
-        <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
-          <Image src="/logo.svg" alt="Flowfiy" width={100} height={28} priority />
+    <>
+      {/* ── Mobile top bar ──────────────────────────────────── */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 bg-sidebar border-b border-sidebar-border">
+        <Link href="/dashboard" className="flex items-center">
+          <Image src="/logo.svg" alt="Flowfiy" width={90} height={26} priority />
         </Link>
-      </div>
-
-      {/* ── Org switcher ─────────────────────────────── */}
-      <div className="px-3 pt-3 pb-2 border-b border-sidebar-border">
-        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer group">
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary/80 to-violet-600/80 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {organization.name.slice(0, 1).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold truncate leading-tight">{organization.name}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${plan.dot}`} />
-              <p className={`text-[10px] font-medium ${plan.color}`}>{plan.label}</p>
-            </div>
-          </div>
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-      </div>
-
-      {/* ── Main Navigation ───────────────────────────── */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        {mainNav.map(({ href, icon, label }) => (
-          <NavItem
-            key={href}
-            href={href}
-            icon={icon}
-            label={label}
-            badge={
-              href === "/campaigns"
-                ? activeCampaignReplies
-                : href === "/integrations"
-                ? missingIntegrations
-                : undefined
-            }
-            badgeVariant={href === "/integrations" ? "red" : "green"}
-          />
-        ))}
-
-        {/* ── Usage bar (compact) ───────────────────── */}
-        {organization.generationLimit !== -1 && (
-          <div className="mx-1 mt-4 mb-1 px-2.5 py-2.5 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] text-muted-foreground font-medium">Generations</span>
-              <span className={`text-[10px] font-mono font-semibold ${usageHigh ? "text-destructive" : "text-muted-foreground"}`}>
-                {organization.generationCount.toLocaleString()} / {organization.generationLimit.toLocaleString()}
-              </span>
-            </div>
-            <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${usageHigh ? "bg-destructive" : "bg-primary"}`}
-                style={{ width: `${usagePct}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* ── Account section ───────────────────────── */}
-        <div className="pt-3 pb-1 px-3">
-          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
-            Account
-          </p>
-        </div>
-        {accountNav.map(({ href, icon, label }) => (
-          <NavItem key={href} href={href} icon={icon} label={label} />
-        ))}
-      </nav>
-
-      {/* ── Bottom: Sign out + User strip ────────────── */}
-      <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
         <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all duration-150 group"
+          onClick={() => setDrawerOpen(true)}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+          aria-label="Open navigation"
         >
-          <LogOut className="w-4 h-4 shrink-0 group-hover:text-destructive" />
-          Sign out
+          <Menu className="w-5 h-5" />
         </button>
+      </header>
 
-        <Link
-          href="/profile"
-          className="flex items-center gap-2.5 px-3 py-2.5 mt-1 rounded-lg hover:bg-sidebar-accent transition-all duration-150 group border border-transparent hover:border-sidebar-border"
-        >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold truncate leading-tight">{displayName}</p>
-            <p className="text-[10px] text-muted-foreground truncate leading-tight">{userEmail}</p>
-          </div>
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-        </Link>
-      </div>
-    </aside>
+      {/* ── Desktop sidebar ─────────────────────────────────── */}
+      <aside className="hidden md:flex w-60 border-r border-sidebar-border bg-sidebar flex-col h-full shrink-0 select-none">
+        {/* ── Logo ─────────────────────────────────────── */}
+        <div className="px-4 py-4 border-b border-sidebar-border flex items-center gap-2.5">
+          <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+            <Image src="/logo.svg" alt="Flowfiy" width={100} height={28} priority />
+          </Link>
+        </div>
+        <NavContent />
+      </aside>
+
+      {/* ── Mobile drawer ────────────────────────────────────── */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setDrawerOpen(false)}
+            />
+            {/* Drawer panel */}
+            <motion.div
+              className="md:hidden fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col bg-sidebar border-r border-sidebar-border select-none"
+              initial={{ x: -288 }}
+              animate={{ x: 0 }}
+              exit={{ x: -288 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            >
+              {/* Header with logo + close */}
+              <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-between shrink-0">
+                <Link href="/dashboard" className="flex items-center">
+                  <Image src="/logo.svg" alt="Flowfiy" width={100} height={28} priority />
+                </Link>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+                  aria-label="Close navigation"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <NavContent onClose={() => setDrawerOpen(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -20,7 +20,7 @@ export default async function AdminLayout({
       {isAuthenticated ? (
         <div className="flex h-screen overflow-hidden">
           <AdminSidebar />
-          <main className="flex-1 overflow-y-auto bg-[#09090b]">
+          <main className="flex-1 overflow-y-auto bg-[#09090b] pt-14 md:pt-0">
             {/* Amber top bar — visual indicator this is admin */}
             <div className="h-0.5 bg-gradient-to-r from-amber-600/80 via-amber-400/60 to-amber-600/80" />
             <div className="p-6 lg:p-8">{children}</div>
