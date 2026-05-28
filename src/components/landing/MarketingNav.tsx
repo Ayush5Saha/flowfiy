@@ -127,7 +127,6 @@ export function MarketingNav() {
     setAuthUser(null);
     setProfileOpen(false);
     router.push("/");
-    router.refresh();
   }
 
   const initials     = authUser ? getInitials(authUser.fullName, authUser.email) : "";

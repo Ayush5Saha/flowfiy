@@ -56,7 +56,6 @@ export function GenerateLeadsButton({ organizationId, variant = "default" }: Gen
     setName("");
     setDescription("");
     router.push(`/leads/${data.leadList.id}`);
-    router.refresh();
   }
 
   const btnClass = variant === "primary"

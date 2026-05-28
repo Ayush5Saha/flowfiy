@@ -75,7 +75,6 @@ export function LeadListActions({ listId, listName, isReady, hasQualifiedLeads, 
       if (res.ok) {
         toast("Lead list archived", "success");
         router.push("/leads");
-        router.refresh();
       } else {
         toast("Failed to delete lead list", "error");
       }
