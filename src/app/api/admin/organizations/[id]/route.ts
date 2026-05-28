@@ -36,11 +36,11 @@ export async function PATCH(
   }
 
   try {
-    const org = await prisma.organization.update({
+    await prisma.organization.update({
       where: { id },
       data: allowed,
     });
-    return NextResponse.json({ ok: true, org });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
     const msg = err instanceof Error ? err.message : String(err);
