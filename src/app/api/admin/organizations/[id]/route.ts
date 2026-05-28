@@ -43,7 +43,8 @@ export async function PATCH(
     return NextResponse.json({ ok: true, org });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: "Update failed", detail: msg }, { status: 500 });
   }
 }
 
