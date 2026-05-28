@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/admin-guard";
 import { createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import AdminUserActions from "@/components/admin/AdminUserActions";
 
 const planColors: Record<string, string> = {
@@ -60,6 +61,7 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Joined</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Last Sign In</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Actions</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Manage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
@@ -125,6 +127,14 @@ export default async function AdminUsersPage() {
                         userName={user.user_metadata?.full_name ?? user.email ?? user.id}
                         isBanned={isBanned}
                       />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap"
+                      >
+                        Manage →
+                      </Link>
                     </td>
                   </tr>
                 );

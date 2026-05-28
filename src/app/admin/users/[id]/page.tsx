@@ -1,0 +1,297 @@
+import { requireAdmin } from "@/lib/admin-guard";
+import { createServiceClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import AdminOrgPlanEditor from "@/components/admin/AdminOrgPlanEditor";
+import AdminOrgLimitEditor from "@/components/admin/AdminOrgLimitEditor";
+import AdminApiModeToggle from "@/components/admin/AdminApiModeToggle";
+import AdminGenerationResetButton from "@/components/admin/AdminGenerationResetButton";
+import AdminTokenResetButton from "@/components/admin/AdminTokenResetButton";
+import AdminUserDetailActions from "@/components/admin/AdminUserDetailActions";
+
+const planColors: Record<string, string> = {
+  FREE:    "bg-zinc-700 text-zinc-300",
+  INDIE:   "bg-teal-500/20 text-teal-300",
+  STARTER: "bg-blue-500/20 text-blue-300",
+  GROWTH:  "bg-violet-500/20 text-violet-300",
+  AGENCY:  "bg-amber-500/20 text-amber-300",
+};
+
+const PLAN_BUDGETS: Record<string, number> = {
+  FREE:    500_000,
+  INDIE:   2_000_000,
+  STARTER: 6_000_000,
+  GROWTH:  20_000_000,
+  AGENCY:  -1,
+};
+
+function formatTokens(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
+function getInitials(name: string) {
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+}
+
+export default async function AdminUserDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  await requireAdmin();
+  const { id } = await params;
+
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase.auth.admin.getUserById(id);
+  if (error || !data?.user) notFound();
+  const user = data.user;
+
+  const memberships = await prisma.organizationMember.findMany({
+    where: { userId: id },
+    include: {
+      organization: {
+        include: {
+          integrations: { select: { type: true, status: true } },
+          _count: { select: { campaigns: true, leadLists: true } },
+        },
+      },
+    },
+  });
+
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    user.email?.split("@")[0] ?? "Unknown";
+  const provider = user.app_metadata?.provider ?? "email";
+  const isBanned = !!user.banned_until;
+  const isVerified = !!user.email_confirmed_at;
+
+  return (
+    <div className="max-w-4xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 mb-6 text-sm">
+        <Link href="/admin/users" className="text-zinc-500 hover:text-zinc-300 transition-colors">
+          Users
+        </Link>
+        <span className="text-zinc-700">/</span>
+        <span className="text-white">{displayName}</span>
+      </div>
+
+      {/* User profile card */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div className="w-12 h-12 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-violet-300">{getInitials(displayName)}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-white">{displayName}</h1>
+                {isBanned && (
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/15 text-red-400 font-medium">
+                    Banned
+                  </span>
+                )}
+                {isVerified ? (
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400">
+                    Verified
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400">
+                    Unverified
+                  </span>
+                )}
+              </div>
+              <p className="text-zinc-400 text-sm mt-0.5">{user.email}</p>
+              <p className="text-zinc-600 text-xs font-mono mt-0.5">{user.id}</p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <AdminUserDetailActions
+            userId={user.id}
+            userName={displayName}
+            isBanned={isBanned}
+          />
+        </div>
+
+        {/* Meta info row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-zinc-800">
+          <div>
+            <p className="text-xs text-zinc-500 mb-1">Auth Provider</p>
+            <span className="px-2 py-0.5 rounded-full text-xs bg-zinc-800 text-zinc-300 capitalize">
+              {provider}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500 mb-1">Organizations</p>
+            <p className="text-sm text-white">{memberships.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500 mb-1">Joined</p>
+            <p className="text-sm text-white">
+              {user.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500 mb-1">Last Sign In</p>
+            <p className="text-sm text-white">
+              {user.last_sign_in_at
+                ? new Date(user.last_sign_in_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                : "Never"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Organizations */}
+      <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">
+        Organizations & Controls
+      </h2>
+
+      {memberships.length === 0 ? (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
+          <p className="text-zinc-500 text-sm">This user doesn&apos;t belong to any organization yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {memberships.map(({ role, organization: org }) => {
+            const tokensUsed = Number(org.monthlyTokensUsed);
+            const tokenBudget = PLAN_BUDGETS[org.plan] ?? 500_000;
+            const tokenUnlimited = tokenBudget === -1;
+            const tokenPct = tokenUnlimited ? 0 : Math.min(Math.round((tokensUsed / tokenBudget) * 100), 100);
+            const tokenAtLimit = !tokenUnlimited && tokensUsed >= tokenBudget;
+            const connectedIntegrations = org.integrations
+              .filter((i) => i.status === "CONNECTED")
+              .map((i) => i.type);
+
+            return (
+              <div key={org.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                {/* Org header */}
+                <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-white">{org.name}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${planColors[org.plan] ?? "bg-zinc-700 text-zinc-300"}`}>
+                          {org.plan}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-zinc-800 text-zinc-400">
+                          {role}
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-500 mt-0.5">{org.slug}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/admin/organizations/${org.id}`}
+                    className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                  >
+                    Full org view →
+                  </Link>
+                </div>
+
+                {/* Controls grid */}
+                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                  {/* Plan */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Plan</p>
+                    <AdminOrgPlanEditor orgId={org.id} currentPlan={org.plan} />
+                    <p className="text-[11px] text-zinc-600">Change without requiring payment</p>
+                  </div>
+
+                  {/* API Mode */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">API Mode</p>
+                    <AdminApiModeToggle orgId={org.id} currentMode={org.apiMode} />
+                    <p className="text-[11px] text-zinc-600">CENTRAL = uses Flowfiy key · BYOK = user&apos;s own key</p>
+                  </div>
+
+                  {/* Generation Usage */}
+                  <div className="space-y-2 sm:col-span-2 pt-4 border-t border-zinc-800">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Generation Limit & Usage</p>
+                      <AdminGenerationResetButton orgId={org.id} />
+                    </div>
+                    <AdminOrgLimitEditor
+                      orgId={org.id}
+                      generationCount={org.generationCount}
+                      generationLimit={org.generationLimit}
+                    />
+                    <p className="text-[11px] text-zinc-600">Click &quot;Edit&quot; to change limit · &quot;Reset Count&quot; to clear usage to 0</p>
+                  </div>
+
+                  {/* Token Budget */}
+                  <div className="space-y-2 sm:col-span-2 pt-4 border-t border-zinc-800">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Monthly Token Budget</p>
+                      <AdminTokenResetButton orgId={org.id} />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <p className={`text-sm font-mono ${tokenAtLimit ? "text-red-400" : "text-white"}`}>
+                          {formatTokens(tokensUsed)} used
+                          {!tokenUnlimited && ` / ${formatTokens(tokenBudget)} budget`}
+                          {tokenUnlimited && " / ∞ Unlimited"}
+                        </p>
+                        {!tokenUnlimited && (
+                          <div className="w-full h-1.5 bg-zinc-700 rounded-full mt-2 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${tokenPct > 90 ? "bg-red-500" : tokenPct > 70 ? "bg-amber-500" : "bg-blue-500"}`}
+                              style={{ width: `${tokenPct}%` }}
+                            />
+                          </div>
+                        )}
+                        {tokenAtLimit && (
+                          <p className="text-xs text-red-400 mt-1">⚠ Budget reached — new AI jobs blocked</p>
+                        )}
+                      </div>
+                      <p className={`text-2xl font-bold font-mono ${tokenAtLimit ? "text-red-400" : "text-zinc-500"}`}>
+                        {tokenUnlimited ? "∞" : `${tokenPct}%`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Stats & Integrations */}
+                  <div className="pt-4 border-t border-zinc-800">
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-2">Activity</p>
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <p className="text-white font-medium">{org._count.campaigns}</p>
+                        <p className="text-xs text-zinc-500">Campaigns</p>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{org._count.leadLists}</p>
+                        <p className="text-xs text-zinc-500">Lead Lists</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800">
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-2">Integrations</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {connectedIntegrations.length === 0 ? (
+                        <span className="text-xs text-zinc-600">None connected</span>
+                      ) : (
+                        connectedIntegrations.map((t) => (
+                          <span key={t} className="px-2 py-0.5 rounded text-[11px] bg-emerald-500/10 text-emerald-400">
+                            {t}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
