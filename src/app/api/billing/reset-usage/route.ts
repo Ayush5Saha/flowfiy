@@ -16,9 +16,10 @@ export async function GET(req: NextRequest) {
   }
 
   // Reset generation counts for all orgs on metered plans.
-  // AGENCY plan is unlimited (generationLimit = -1) — no reset needed.
+  // AGENCY is unlimited (-1) — no reset needed.
+  // INDIE is included: it has a 2500/mo limit like STARTER.
   const result = await prisma.organization.updateMany({
-    where: { plan: { in: ["FREE", "STARTER", "GROWTH"] } },
+    where: { plan: { in: ["FREE", "INDIE", "STARTER", "GROWTH"] } },
     data: { generationCount: 0 },
   });
 

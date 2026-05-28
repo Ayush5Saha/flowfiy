@@ -4,6 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
 
+/**
+ * Converts BigInt fields (monthlyTokensUsed) to Number so JSON.stringify
+ * doesn't throw "Do not know how to serialize a BigInt".
+ */
+function safeOrg(org: Record<string, unknown>) {
+  return {
+    ...org,
+    monthlyTokensUsed: typeof org.monthlyTokensUsed === "bigint"
+      ? Number(org.monthlyTokensUsed)
+      : org.monthlyTokensUsed,
+  };
+}
+
 const createOrgSchema = z.object({
   name: z.string().min(2).max(100),
 });
@@ -62,7 +75,7 @@ export async function POST(req: NextRequest) {
     resourceId: org.id,
   });
 
-  return NextResponse.json({ organization: org }, { status: 201 });
+  return NextResponse.json({ organization: safeOrg(org as unknown as Record<string, unknown>) }, { status: 201 });
 }
 
 const updateOrgSchema = z.object({
@@ -102,7 +115,7 @@ export async function PATCH(req: NextRequest) {
     resourceId: org.id,
   });
 
-  return NextResponse.json({ organization: org });
+  return NextResponse.json({ organization: safeOrg(org as unknown as Record<string, unknown>) });
 }
 
 export async function GET() {
@@ -115,5 +128,10 @@ export async function GET() {
     include: { organization: true },
   });
 
-  return NextResponse.json({ organizations: memberships.map((m) => ({ ...m.organization, role: m.role })) });
+  return NextResponse.json({
+    organizations: memberships.map((m) => ({
+      ...safeOrg(m.organization as unknown as Record<string, unknown>),
+      role: m.role,
+    })),
+  });
 }
