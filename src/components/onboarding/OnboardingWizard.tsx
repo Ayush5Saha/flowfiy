@@ -101,15 +101,17 @@ export function OnboardingWizard({ userId }: { userId: string }) {
       }),
     });
 
-    setLoading(false);
     if (!res.ok) {
       const data = await res.json() as { error?: string };
       setError(typeof data.error === "string" ? data.error : "Failed to save profile");
+      setLoading(false);
       return;
     }
 
+    // Keep spinner on while navigating — router.refresh() removed because it
+    // re-runs the onboarding server component which redirects to /dashboard,
+    // conflicting with router.push() and causing the page to get stuck.
     router.push("/dashboard");
-    router.refresh();
   }
 
   return (
