@@ -5,12 +5,13 @@ let _connection: Redis | null = null;
 
 function getConnection(): Redis {
   if (!_connection) {
-    const url = process.env.UPSTASH_REDIS_URL;
-    if (!url) throw new Error("UPSTASH_REDIS_URL is not set");
+    // Prefer Railway-native Redis (REDIS_URL) over Upstash — no command limits
+    const url = process.env.REDIS_URL || process.env.UPSTASH_REDIS_URL;
+    if (!url) throw new Error("REDIS_URL or UPSTASH_REDIS_URL is not set");
     _connection = new Redis(url, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      // Enable TLS when URL uses rediss:// scheme (production Upstash)
+      // TLS required for rediss:// (Upstash) — Railway internal uses plain redis://
       tls: url.startsWith("rediss://") ? {} : undefined,
     });
   }
