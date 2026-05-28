@@ -183,11 +183,15 @@ model Lead {
   companyWebsite    String?    @map("company_website")
   companySize       String?    @map("company_size")
   industry          String?
+  city              String?
   linkedinUrl       String?    @map("linkedin_url")
+  whatsApp          String?    @map("whats_app")
   source            String?
   rawData           Json?      @map("raw_data")
   status            LeadStatus @default(NEW)
   qualificationScore Int?      @map("qualification_score")
+  waStatus          String?    @map("wa_status")   // WhatsApp outreach status: sent | replied | bounced
+  notes             String?                          // Internal notes on this lead
   timezone          String?    // IANA timezone e.g. "Asia/Kolkata", "America/New_York"
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")

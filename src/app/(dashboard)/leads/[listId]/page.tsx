@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail, TrendingUp } from "lucide-react";
 import { LeadTableClient } from "@/components/leads/LeadTableClient";
+import { LeadDataTable } from "@/components/leads/LeadDataTable";
 import { LeadListActions } from "@/components/leads/LeadListActions";
 import { RetryListButton } from "@/components/leads/RetryListButton";
 import { LiveLogsPanel } from "@/components/leads/LiveLogsPanel";
@@ -29,6 +30,11 @@ export default async function LeadListPage({ params }: PageProps) {
         include: {
           research: true,
           outreachCopies: { orderBy: { createdAt: "desc" }, take: 1 },
+          campaignLeads: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { campaign: { select: { name: true } } },
+          },
         },
         orderBy: [{ qualificationScore: "desc" }, { createdAt: "asc" }],
       },
@@ -170,9 +176,9 @@ export default async function LeadListPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Lead table */}
-      <LeadTableClient
-        leads={leadList.leads as Parameters<typeof LeadTableClient>[0]["leads"]}
+      {/* Lead table — full data view */}
+      <LeadDataTable
+        leads={leadList.leads as Parameters<typeof LeadDataTable>[0]["leads"]}
         isProcessing={isProcessing}
         organizationId={membership.organization.id}
         listId={listId}
