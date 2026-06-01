@@ -20,6 +20,7 @@ const mockOrg = {
   members: [],
   referralCode: null,
   referralCreditMonths: 0,
+  referredByAffiliateId: null,
   monthlyTokensUsed: BigInt(0),
   tokenBudgetResetAt: null,
   apiMode: "CENTRAL" as const,

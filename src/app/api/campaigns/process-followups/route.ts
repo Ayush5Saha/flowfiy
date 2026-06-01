@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processFollowUpSchedule } from "@/workers/processors/followup-scheduler.processor";
 
-// POST /api/campaigns/process-followups
+// GET/POST /api/campaigns/process-followups
 //
 // Triggered by Vercel Cron daily at 09:00 UTC (configured in vercel.json).
 // Also callable manually from the dashboard by an authenticated user.
 //
 // Auth: Vercel Cron calls include the "x-vercel-cron: 1" header automatically.
 // Manual calls require a valid Supabase session.
-export async function POST(req: NextRequest) {
+async function handleProcessFollowups(req: NextRequest) {
   const isVercelCron = req.headers.get("x-vercel-cron") === "1";
 
   if (!isVercelCron) {
@@ -30,4 +30,12 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(req: NextRequest) {
+  return handleProcessFollowups(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleProcessFollowups(req);
 }

@@ -2,9 +2,11 @@ import Stripe from "stripe";
 
 // ─── Singleton ────────────────────────────────────────────────────────────────
 
-let _stripe: Stripe | null = null;
+type StripeClient = InstanceType<typeof Stripe>;
 
-export function getStripe(): Stripe {
+let _stripe: StripeClient | null = null;
+
+export function getStripe(): StripeClient {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("STRIPE_SECRET_KEY is not set.");
   }

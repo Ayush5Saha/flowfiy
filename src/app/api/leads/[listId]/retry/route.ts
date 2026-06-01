@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { getLeadGenerationQueue } from "@/workers/queues";
+import { getLeadDiscoveryQueue } from "@/workers/queues";
 
 const schema = z.object({ organizationId: z.string().uuid() });
 
@@ -38,17 +38,41 @@ export async function POST(
     return NextResponse.json({ error: "Only failed lead lists can be retried" }, { status: 400 });
   }
 
-  // Reset the list to QUEUED
+  const integrations = await prisma.integration.findMany({
+    where: {
+      organizationId,
+      type: { in: ["APOLLO", "APIFY"] },
+      status: "CONNECTED",
+    },
+    select: { type: true },
+  });
+  const connected = new Set(integrations.map((i) => i.type));
+  const mode = connected.has("APOLLO") ? "apollo" : connected.has("APIFY") ? "apify" : null;
+  const existingLeadCount = await prisma.lead.count({ where: { leadListId: listId, organizationId } });
+
+  if (!mode && existingLeadCount === 0) {
+    return NextResponse.json(
+      { error: "No lead source connected. Connect Apollo or Apify before retrying discovery." },
+      { status: 422 }
+    );
+  }
+
+  // Reset the list and any existing leads to the current 4-stage pipeline.
   await prisma.leadList.update({
     where: { id: listId },
     data: { status: "QUEUED", jobStatus: "queued", jobError: null },
   });
+  if (existingLeadCount > 0) {
+    await prisma.lead.updateMany({
+      where: { leadListId: listId, organizationId },
+      data: { status: "RESEARCHING" },
+    });
+  }
 
-  // Re-enqueue (use existing leads count or default 25)
-  const leadsPerRun = Math.max(leadList.totalLeads || 25, 5);
-  await getLeadGenerationQueue().add(
-    "lead-generation",
-    { organizationId, leadListId: listId, leadsPerRun },
+  const leadsPerRun = Math.max(existingLeadCount || leadList.totalLeads || 25, 5);
+  await getLeadDiscoveryQueue().add(
+    "lead-discovery",
+    { organizationId, leadListId: listId, leadsPerRun, mode: existingLeadCount > 0 ? "import" : mode },
     { jobId: `${listId}-retry-${Date.now()}` }
   );
 

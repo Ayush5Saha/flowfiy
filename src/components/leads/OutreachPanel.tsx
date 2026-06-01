@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { X, Copy, Check, ExternalLink, Loader2, RefreshCw, Send, Bot, User, Megaphone, FlaskConical } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
 
@@ -373,7 +374,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
               {/* Add to campaign quick-action */}
               {isQualified && (
                 <div className="pt-2 border-t border-border">
-                  <a
+                  <Link
                     href="/campaigns/new"
                     className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
                   >
@@ -381,7 +382,7 @@ export function OutreachPanel({ lead, organizationId, onClose }: OutreachPanelPr
                       <Megaphone className="w-3 h-3 text-primary" />
                     </div>
                     Create a campaign with this lead list →
-                  </a>
+                  </Link>
                 </div>
               )}
             </>

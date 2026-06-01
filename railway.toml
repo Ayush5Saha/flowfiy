@@ -3,6 +3,6 @@ builder = "NIXPACKS"
 buildCommand = "npm install && npx prisma generate"
 
 [deploy]
-startCommand = "npx tsx --tsconfig tsconfig.worker.json src/workers/index.ts"
+startCommand = "npx tsx src/workers/index.ts"
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 5

@@ -508,7 +508,7 @@ export function LeadDataTable({ leads, isProcessing, organizationId, listId }: L
                         );
 
                       default:
-                        return <td key={col.key} className={cellClass}>—</td>;
+                        return <td key={(col as { key: string }).key} className={cellClass}>—</td>;
                     }
                   })}
                 </tr>

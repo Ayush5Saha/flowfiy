@@ -792,7 +792,7 @@ function Pricing() {
       <div className="max-w-6xl mx-auto relative z-10">
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Pricing</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Start free. Scale when you're ready.</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Start free. Scale when you&apos;re ready.</h2>
           <p className="text-zinc-400 text-lg max-w-xl mx-auto">100 leads free — no card required. Upgrade when you need more volume or seats for your team.</p>
         </FadeIn>
 

@@ -200,7 +200,7 @@ export default function AboutPage() {
             <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">Built on</span>
             <h2 className="text-3xl font-bold text-white mb-3">The tech that powers the pipeline</h2>
             <p className="text-zinc-400 max-w-xl">
-              No magic black boxes. Here's exactly what runs Flowfiy — and why each piece was chosen.
+              No magic black boxes. Here&apos;s exactly what runs Flowfiy — and why each piece was chosen.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
