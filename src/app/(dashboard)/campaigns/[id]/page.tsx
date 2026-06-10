@@ -25,22 +25,8 @@ export default async function CampaignDetailPage({
     where: { id },
     include: {
       campaignLeads: {
-        include: {
-          lead: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              title: true,
-              companyName: true,
-              status: true,
-            },
-          },
-          outreachCopy: {
-            select: { subjectLine: true, body: true, followUp1: true, followUp2: true },
-          },
-        },
+        // NOTE: Prisma forbids `include` and `select` together at the same
+        // level — use `select` only (it already pulls the lead + outreachCopy).
         select: {
           id: true,
           status: true,
