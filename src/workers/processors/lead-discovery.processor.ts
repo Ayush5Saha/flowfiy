@@ -12,6 +12,7 @@ import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
+import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
 import { checkTokenBudget } from "@/lib/usage";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { handleSearchLeads } from "@/ai/tools/handlers";
@@ -98,7 +99,7 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       throw new Error("Monthly AI token budget exceeded. Resets at the start of next month.");
     }
 
-    const { mode: runMode } = await getClaudeClientForOrg(organizationId);
+    const { client, mode: runMode } = await getClaudeClientForOrg(organizationId);
 
     const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
     const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey as string) : null;
@@ -111,6 +112,49 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
 
     const leadSource = apolloClient ? "Apollo" : apifyClient ? "Apify" : "none";
     await log(`Lead source: ${leadSource} · AI mode: ${runMode}`, "info");
+
+    // ── ICP analysis: build a detailed, structured ICP and derive search ──────
+    // filters from it. Cached on the business profile so research + qualification
+    // reuse the same analysis. Regenerated only when missing (the ICP rarely
+    // changes); falls back to the raw profile if the LLM call fails.
+    let icpCache = businessProfile.icpAnalysisCache as Record<string, unknown> | null;
+    const cachedTitles = (icpCache?.apolloSearchFilters as { jobTitles?: string[] } | undefined)?.jobTitles;
+    if (!cachedTitles || cachedTitles.length === 0) {
+      await log("Analyzing your ICP in detail to target the right people...", "info");
+      try {
+        const icp = await runICPAnalyzer(
+          client,
+          {
+            companyName:       businessProfile.companyName,
+            serviceOffered:    businessProfile.serviceOffered,
+            icpDescription:    businessProfile.icpDescription,
+            targetIndustries:  businessProfile.targetIndustries,
+            targetGeographies: businessProfile.targetGeographies,
+            companySizeRange:  businessProfile.companySizeRange ?? undefined,
+            painPointsSolved:  businessProfile.painPointsSolved,
+            offerPositioning:  businessProfile.offerPositioning,
+            outreachTone:      businessProfile.outreachTone,
+          },
+          runMode
+        );
+        icpCache = icp as unknown as Record<string, unknown>;
+        await prisma.businessProfile.update({
+          where: { organizationId },
+          data: { icpAnalysisCache: icp as never },
+        });
+        await log(
+          `ICP ready — buyer personas: ${icp.buyerPersonas.slice(0, 3).join(", ")} · titles: ${icp.apolloSearchFilters.jobTitles.slice(0, 4).join(", ")}`,
+          "success"
+        );
+      } catch (err) {
+        await log(
+          `ICP analysis failed (${err instanceof Error ? err.message : String(err)}). Falling back to your raw profile.`,
+          "error"
+        );
+      }
+    } else {
+      await log("Using your saved ICP analysis.", "info");
+    }
 
     // ── Import mode: leads already in DB ─────────────────────────────────────
     if (mode === "import") {
@@ -202,12 +246,14 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       log,
     };
 
-    // Build search params from ICP analysis cache (set by ICP analyzer) or raw profile
-    const icpCache = businessProfile.icpAnalysisCache as Record<string, unknown> | null;
+    // Build search params from the ICP analysis (generated above) or raw profile
+    const filters = icpCache?.apolloSearchFilters as
+      | { jobTitles?: string[]; industries?: string[]; companySizes?: string[] }
+      | undefined;
     const searchParams = {
-      jobTitles: (icpCache?.apolloSearchFilters as Record<string, string[]> | undefined)?.jobTitles ?? [],
-      industries: businessProfile.targetIndustries,
-      companySizes: (icpCache?.apolloSearchFilters as Record<string, string[]> | undefined)?.companySizes ?? [],
+      jobTitles: filters?.jobTitles ?? [],
+      industries: filters?.industries?.length ? filters.industries : businessProfile.targetIndustries,
+      companySizes: filters?.companySizes ?? [],
       geographies: businessProfile.targetGeographies,
       limit: leadsPerRun,
     };

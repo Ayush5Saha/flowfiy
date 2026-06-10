@@ -64,6 +64,71 @@ interface SearchLeadsResult {
   note?: string;
 }
 
+// ─── Cross-run dedup ──────────────────────────────────────────────────────────
+//
+// Ensures a new lead-gen run never re-saves a lead the org already has (from any
+// previous list). Strong keys (email, LinkedIn URL) take priority; a weak
+// name+company key is used only when no strong key exists, to avoid false positives.
+
+interface DedupableLead {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  linkedinUrl?: string | null;
+  organization?: { name?: string | null } | null;
+}
+
+function normalizeLinkedIn(url: string): string {
+  return url.toLowerCase().trim().replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "");
+}
+
+function nameCompanyKey(first?: string | null, last?: string | null, company?: string | null): string {
+  const f = (first ?? "").toLowerCase().trim();
+  if (!f) return "";
+  return `${f}|${(last ?? "").toLowerCase().trim()}|${(company ?? "").toLowerCase().trim()}`;
+}
+
+async function filterOutExistingLeads<T extends DedupableLead>(
+  organizationId: string,
+  leads: T[]
+): Promise<{ fresh: T[]; duplicates: number }> {
+  if (leads.length === 0) return { fresh: [], duplicates: 0 };
+
+  const existing = await prisma.lead.findMany({
+    where: { organizationId },
+    select: { email: true, linkedinUrl: true, firstName: true, lastName: true, companyName: true },
+  });
+
+  const emailSet = new Set<string>();
+  const liSet = new Set<string>();
+  const nameSet = new Set<string>();
+  for (const e of existing) {
+    if (e.email) emailSet.add(e.email.toLowerCase().trim());
+    if (e.linkedinUrl) liSet.add(normalizeLinkedIn(e.linkedinUrl));
+    const nk = nameCompanyKey(e.firstName, e.lastName, e.companyName);
+    if (nk) nameSet.add(nk);
+  }
+
+  const fresh: T[] = [];
+  for (const l of leads) {
+    const email = (l.email ?? "").toLowerCase().trim();
+    const li = l.linkedinUrl ? normalizeLinkedIn(l.linkedinUrl) : "";
+    const nk = nameCompanyKey(l.firstName, l.lastName, l.organization?.name);
+
+    if (email && emailSet.has(email)) continue;
+    if (li && liSet.has(li)) continue;
+    if (!email && !li && nk && nameSet.has(nk)) continue;
+
+    // Record this lead's keys so duplicates within the same batch are also dropped.
+    if (email) emailSet.add(email);
+    if (li) liSet.add(li);
+    if (nk) nameSet.add(nk);
+    fresh.push(l);
+  }
+
+  return { fresh, duplicates: leads.length - fresh.length };
+}
+
 export async function handleSearchLeads(
   input: SearchLeadsInput,
   ctx: ToolContext
@@ -125,10 +190,19 @@ async function searchViaApollo(
     return { leads: [], total: 0, source: "apollo", message: "No leads found with these filters." };
   }
 
-  await ctx.log?.(`Found ${rawLeads.length} leads from Apollo. Saving to database...`, "success");
+  const { fresh, duplicates } = await filterOutExistingLeads(ctx.organizationId, rawLeads);
+  if (duplicates > 0) {
+    await ctx.log?.(`Skipped ${duplicates} lead(s) already in your workspace from previous runs.`, "info");
+  }
+  if (fresh.length === 0) {
+    await ctx.log?.("All Apollo matches were already in your workspace. Broaden the ICP for fresh leads.", "info");
+    return { leads: [], total: 0, source: "apollo", message: "All matches were duplicates of existing leads." };
+  }
+
+  await ctx.log?.(`Found ${fresh.length} new leads from Apollo. Saving to database...`, "success");
 
   const savedLeads = await Promise.all(
-    rawLeads.map((raw) =>
+    fresh.map((raw) =>
       prisma.lead.create({
         data: {
           leadListId: ctx.leadListId,
@@ -168,7 +242,7 @@ async function searchViaApollo(
       companyWebsite: lead.companyWebsite ?? null,
       companySize: lead.companySize ?? "Unknown",
       industry: lead.industry ?? "Unknown",
-      linkedinUrl: rawLeads[i]?.linkedinUrl ?? null,
+      linkedinUrl: fresh[i]?.linkedinUrl ?? null,
     })),
     total: savedLeads.length,
     source: "apollo",
@@ -208,14 +282,23 @@ async function searchViaApify(
     return { leads: [], total: 0, source: "apify", message: "No leads found with these filters. Consider broadening the search criteria." };
   }
 
-  const withEmails = rawLeads.filter((l) => l.email).length;
+  const { fresh, duplicates } = await filterOutExistingLeads(ctx.organizationId, rawLeads);
+  if (duplicates > 0) {
+    await ctx.log?.(`Skipped ${duplicates} lead(s) already in your workspace from previous runs.`, "info");
+  }
+  if (fresh.length === 0) {
+    await ctx.log?.("All Apify matches were already in your workspace. Broaden the ICP for fresh leads.", "info");
+    return { leads: [], total: 0, source: "apify", message: "All matches were duplicates of existing leads." };
+  }
+
+  const withEmails = fresh.filter((l) => l.email).length;
   await ctx.log?.(
-    `Found ${rawLeads.length} leads via Apify (${withEmails} with emails). Saving to database...`,
+    `Found ${fresh.length} new leads via Apify (${withEmails} with emails). Saving to database...`,
     "success"
   );
 
   const savedLeads = await Promise.all(
-    rawLeads.map((raw) =>
+    fresh.map((raw) =>
       prisma.lead.create({
         data: {
           leadListId: ctx.leadListId,
@@ -259,7 +342,7 @@ async function searchViaApify(
       companyWebsite: lead.companyWebsite ?? null,
       companySize: lead.companySize ?? "Unknown",
       industry: lead.industry ?? "Unknown",
-      linkedinUrl: rawLeads[i]?.linkedinUrl ?? null,
+      linkedinUrl: fresh[i]?.linkedinUrl ?? null,
     })),
     total: savedLeads.length,
     source: "apify",
