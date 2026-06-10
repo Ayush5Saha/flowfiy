@@ -79,6 +79,23 @@ interface OpenAIMessage {
   }>;
 }
 
+/**
+ * How long to wait before retrying a 429, derived from OpenRouter's rate-limit
+ * headers (free models cap ~20 req/min). Clamped to [1s, 15s] with jitter so
+ * concurrent worker jobs don't all retry in lockstep.
+ */
+function rateLimitWaitMs(headers: Headers): number {
+  let waitMs = 5000;
+  const reset = Number(headers.get("x-ratelimit-reset")); // epoch ms
+  if (Number.isFinite(reset) && reset > 0) {
+    const delta = reset - Date.now();
+    if (delta > 0) waitMs = delta;
+  }
+  const retryAfter = Number(headers.get("retry-after")); // seconds
+  if (Number.isFinite(retryAfter) && retryAfter > 0) waitMs = retryAfter * 1000;
+  return Math.min(Math.max(waitMs, 1000), 15000) + Math.floor(Math.random() * 1000);
+}
+
 function flattenSystem(system?: LLMSystem): string {
   if (!system) return "";
   if (typeof system === "string") return system;
@@ -171,23 +188,39 @@ export class OpenRouterLLMClient implements LLMClient {
       const tools = toOpenAITools(params.tools);
       if (tools) body.tools = tools;
 
-      const res = await fetch(OPENROUTER_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://flowfiy.com",
-          "X-Title": "Flowfiy",
-        },
-        body: JSON.stringify(body),
-        // Fail fast if a (often slow/rate-limited free) model hangs, so the
-        // worker job errors and retries instead of blocking for minutes.
-        signal: AbortSignal.timeout(90_000),
-      });
+      // Retry transient rate limits (free OpenRouter models cap ~20 req/min)
+      // before giving up — smooths bursts from the worker's parallel stages.
+      let res: Response | null = null;
+      const MAX_TRIES = 3;
+      for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+        res = await fetch(OPENROUTER_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://flowfiy.com",
+            "X-Title": "Flowfiy",
+          },
+          body: JSON.stringify(body),
+          // Fail fast if a (often slow/rate-limited free) model hangs, so the
+          // worker job errors and retries instead of blocking for minutes.
+          signal: AbortSignal.timeout(90_000),
+        });
+        if (res.status === 429 && attempt < MAX_TRIES) {
+          const waitMs = rateLimitWaitMs(res.headers);
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+        break;
+      }
+      if (!res) throw new Error("OpenRouter request failed to send");
 
       if (!res.ok) {
         const errText = await res.text().catch(() => "");
-        throw new Error(`OpenRouter API error ${res.status}: ${errText.slice(0, 300)}`);
+        const hint = res.status === 429
+          ? " — free models are rate-limited; add OpenRouter credits or switch to a paid/managed model."
+          : "";
+        throw new Error(`OpenRouter API error ${res.status}: ${errText.slice(0, 200)}${hint}`);
       }
 
       const data = (await res.json()) as OpenRouterResponse;
