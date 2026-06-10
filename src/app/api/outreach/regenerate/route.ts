@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getClaudeClient } from "@/ai/client";
+import { AnthropicLLMClient } from "@/ai/llm";
 import { runPersonalization } from "@/ai/agents/personalization";
 import { decryptCredentials } from "@/lib/encryption"; // still needed for Calendly
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     ? decryptCredentials(calendlyIntegration.encryptedCredentials).schedulingLink
     : undefined;
 
-  const claude = getClaudeClient();
+  const claude = new AnthropicLLMClient(getClaudeClient());
   const outreach = await runPersonalization(claude, {
     lead: {
       firstName: lead.firstName ?? undefined,
