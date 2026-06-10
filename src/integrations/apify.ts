@@ -314,6 +314,7 @@ export class ApifyClient {
     const mappedSizes      = companySizes ? mapCompanySizes(companySizes) : [];
 
     // ── Primary: code_crafter/leads-finder ────────────────────────────────
+    let leadsFinderError: string | null = null;
     try {
       const leads = await this._searchWithLeadsFinder({
         jobTitles,
@@ -324,11 +325,25 @@ export class ApifyClient {
       });
       if (leads.length > 0) return leads;
     } catch (err) {
-      console.warn("[apify] leads-finder failed, trying Google scraper fallback:", err);
+      leadsFinderError = err instanceof Error ? err.message : String(err);
+      console.warn("[apify] leads-finder failed, trying Google scraper fallback:", leadsFinderError);
     }
 
     // ── Fallback: Google SERP scraper (no emails but still useful) ────────
-    return this._searchWithGoogleScraper({ jobTitles, industries, geographies, limit });
+    try {
+      const serpLeads = await this._searchWithGoogleScraper({ jobTitles, industries, geographies, limit });
+      if (serpLeads.length > 0) return serpLeads;
+    } catch (serpErr) {
+      // The leads-finder error (e.g. free-plan API block) is more actionable
+      // than a SERP-scraper failure — surface it when both paths fail.
+      if (leadsFinderError) throw new Error(leadsFinderError);
+      throw serpErr;
+    }
+
+    // Both paths returned nothing usable. Surface the primary actor's error
+    // (if any) so the user sees the real reason rather than a silent empty.
+    if (leadsFinderError) throw new Error(leadsFinderError);
+    return [];
   }
 
   // ─── Private: leads-finder actor ─────────────────────────────────────────
@@ -368,8 +383,20 @@ export class ApifyClient {
       throw new Error(`leads-finder actor failed (${runRes.status}): ${body.slice(0, 200)}`);
     }
 
-    const items = await runRes.json() as LeadsFinderResult[];
-    if (!Array.isArray(items) || items.length === 0) return [];
+    const rawItems = await runRes.json() as Array<Record<string, unknown>>;
+    if (!Array.isArray(rawItems) || rawItems.length === 0) return [];
+
+    // The actor can "succeed" but emit a single error row instead of leads
+    // (e.g. free Apify plans are blocked from API runs — UI only). Detect that
+    // and surface it instead of silently returning zero leads.
+    const hasAnyLead = rawItems.some((it) => it && typeof it === "object" && "first_name" in it);
+    if (!hasAnyLead) {
+      const errRow = rawItems.find((it) => it && typeof it === "object" && "error" in it);
+      const reason = errRow ? String(errRow.error) : "no leads returned";
+      throw new Error(`Apify leads-finder returned no leads: ${reason.slice(0, 200)}`);
+    }
+
+    const items = rawItems as unknown as LeadsFinderResult[];
 
     const seenLinkedIn = new Set<string>();
     const leads: ApifyLead[] = [];
@@ -420,8 +447,16 @@ export class ApifyClient {
     const industrySample = industries.slice(0, 2).join(" OR ");
     const geoSample      = geographies.slice(0, 2).join(" OR ");
 
-    const queries = titleSample.map(
-      (t) => `"${t}" (${industrySample}) (${geoSample}) site:linkedin.com/in`
+    const queries = titleSample.map((t) =>
+      [
+        `"${t}"`,
+        industrySample ? `(${industrySample})` : "",
+        geoSample ? `(${geoSample})` : "",
+        "site:linkedin.com/in",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
     );
 
     const actorId  = "apify~google-search-scraper";
@@ -435,11 +470,10 @@ export class ApifyClient {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            queries:         queries.join("\n"),
-            resultsPerPage:  10,
+            queries:          queries.join("\n"),
             maxPagesPerQuery: 1,
-            languageCode:    "en",
-            countryCode:     "us",
+            languageCode:     "en",
+            countryCode:      "us",
           }),
           signal: AbortSignal.timeout(90_000),
         }
