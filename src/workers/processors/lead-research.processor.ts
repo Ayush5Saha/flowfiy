@@ -126,14 +126,39 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
   // ── Run Company Analyzer (Haiku) ──────────────────────────────────────────
   await log(`🔍 Analyzing ${lead.companyName ?? "company"} (${lead.companyWebsite ?? "no website"})`, "tool");
 
-  const analysis = await runCompanyAnalyzer(client, {
-    companyName: lead.companyName ?? "Unknown",
-    companyWebsite: lead.companyWebsite ?? "",
-    industry: lead.industry ?? "Unknown",
-    companySize: lead.companySize ?? undefined,
-    websiteContent,
-    icpSummary: icpSummary.slice(0, INPUT_LIMITS.icpSummary),
-  }, runMode);
+  let analysis: Awaited<ReturnType<typeof runCompanyAnalyzer>>;
+  try {
+    analysis = await runCompanyAnalyzer(client, {
+      companyName: lead.companyName ?? "Unknown",
+      companyWebsite: lead.companyWebsite ?? "",
+      industry: lead.industry ?? "Unknown",
+      companySize: lead.companySize ?? undefined,
+      websiteContent,
+      icpSummary: icpSummary.slice(0, INPUT_LIMITS.icpSummary),
+    }, runMode);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const maxAttempts = job.opts.attempts ?? 3;
+    if ((job.attemptsMade ?? 0) < maxAttempts - 1) {
+      // Transient — let BullMQ retry this lead.
+      await log(`⚠️ Company analysis failed for ${lead.companyName ?? "company"} (will retry): ${msg}`, "error");
+      throw err;
+    }
+    // Final attempt — degrade gracefully so the lead doesn't stay stuck in
+    // RESEARCHING forever. Qualification can still score on basic lead data.
+    await log(`❌ Company analysis failed for ${lead.companyName ?? "company"} after ${maxAttempts} attempts: ${msg}. Continuing with basic data.`, "error");
+    analysis = {
+      brandMaturity: "established",
+      marketingQuality: "moderate",
+      acquisitionGaps: [],
+      growthBottlenecks: [],
+      techStack: [],
+      recentSignals: [],
+      fitAssessment: "Automated company analysis unavailable (AI error).",
+      bestOutreachAngle: "",
+      confidence: 0,
+    };
+  }
 
   // ── Save LeadResearch ─────────────────────────────────────────────────────
   await prisma.leadResearch.create({

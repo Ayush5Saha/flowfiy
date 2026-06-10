@@ -123,29 +123,57 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
 
   await log(`✍️  Writing personalized email for ${lead.companyName ?? "lead"}`, "tool");
 
-  const result = await runPersonalization(
-    client,
-    {
-      lead: {
-        firstName: lead.firstName ?? undefined,
-        lastName: lead.lastName ?? undefined,
-        title: lead.title ?? undefined,
-        companyName: lead.companyName ?? undefined,
-        industry: lead.industry ?? undefined,
+  let result: Awaited<ReturnType<typeof runPersonalization>>;
+  try {
+    result = await runPersonalization(
+      client,
+      {
+        lead: {
+          firstName: lead.firstName ?? undefined,
+          lastName: lead.lastName ?? undefined,
+          title: lead.title ?? undefined,
+          companyName: lead.companyName ?? undefined,
+          industry: lead.industry ?? undefined,
+        },
+        businessProfile: {
+          companyName: businessProfile.companyName,
+          serviceOffered: businessProfile.serviceOffered,
+          offerPositioning: businessProfile.offerPositioning,
+          outreachTone: businessProfile.outreachTone,
+        },
+        bestAngle,
+        painPointMatch,
+        personalizationHooks,
+        calendlyLink,
       },
-      businessProfile: {
-        companyName: businessProfile.companyName,
-        serviceOffered: businessProfile.serviceOffered,
-        offerPositioning: businessProfile.offerPositioning,
-        outreachTone: businessProfile.outreachTone,
-      },
-      bestAngle,
-      painPointMatch,
-      personalizationHooks,
-      calendlyLink,
-    },
-    runMode
-  );
+      runMode
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const maxAttempts = job.opts.attempts ?? 3;
+    if ((job.attemptsMade ?? 0) < maxAttempts - 1) {
+      // Transient — let BullMQ retry this lead.
+      await log(`⚠️ Email writing failed for ${lead.companyName ?? "lead"} (will retry): ${msg}`, "error");
+      throw err;
+    }
+    // Final attempt — save a basic draft so the qualified lead isn't stuck
+    // without copy (which would hang list finalization). isApproved stays false.
+    await log(`❌ Email writing failed for ${lead.companyName ?? "lead"} after ${maxAttempts} attempts: ${msg}. Saving a basic draft to review.`, "error");
+    const firstName = lead.firstName ?? "there";
+    result = {
+      subjectLine: `Quick idea for ${lead.companyName ?? "your team"}`,
+      emailBody:
+        `Hi ${firstName},\n\n` +
+        `I work with ${businessProfile.companyName} (${businessProfile.serviceOffered}). ` +
+        `${bestAngle || "I had an idea that could help your team."}\n\n` +
+        `Worth a quick chat?${calendlyLink ? ` You can grab a time here: ${calendlyLink}` : ""}\n\n` +
+        `Best,\n${businessProfile.companyName}\n\n` +
+        `[Auto-generated draft — AI personalization was unavailable. Please review/edit before sending.]`,
+      followUp1: `Hi ${firstName}, just following up on my note above — open to a quick chat?`,
+      followUp2: `Hi ${firstName}, circling back one more time in case this got buried.`,
+      followUp3: `Hi ${firstName}, I'll close the loop here — feel free to reach out anytime.`,
+    };
+  }
 
   // ── Save OutreachCopy ─────────────────────────────────────────────────────
   await prisma.outreachCopy.create({

@@ -95,21 +95,44 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
 
   const scoreLabel = (score: number) => score >= 80 ? "🟢" : score >= 60 ? "🟡" : "🔴";
 
-  const result = await runQualification(client, {
-    lead: {
-      firstName: lead.firstName ?? undefined,
-      lastName: lead.lastName ?? undefined,
-      title: lead.title ?? undefined,
-      companyName: lead.companyName ?? undefined,
-      companySize: lead.companySize ?? undefined,
-      industry: lead.industry ?? undefined,
-    },
-    companyAnalysis,
-    icpSummary: icpSummary.slice(0, INPUT_LIMITS.icpSummary),
-    qualificationCriteria: qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria),
-    serviceOffered: (businessProfile?.serviceOffered ?? "").slice(0, INPUT_LIMITS.serviceOffered) || undefined,
-    painPointsSolved: (businessProfile?.painPointsSolved ?? "").slice(0, INPUT_LIMITS.painPointsSolved) || undefined,
-  }, runMode);
+  let result: Awaited<ReturnType<typeof runQualification>>;
+  try {
+    result = await runQualification(client, {
+      lead: {
+        firstName: lead.firstName ?? undefined,
+        lastName: lead.lastName ?? undefined,
+        title: lead.title ?? undefined,
+        companyName: lead.companyName ?? undefined,
+        companySize: lead.companySize ?? undefined,
+        industry: lead.industry ?? undefined,
+      },
+      companyAnalysis,
+      icpSummary: icpSummary.slice(0, INPUT_LIMITS.icpSummary),
+      qualificationCriteria: qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria),
+      serviceOffered: (businessProfile?.serviceOffered ?? "").slice(0, INPUT_LIMITS.serviceOffered) || undefined,
+      painPointsSolved: (businessProfile?.painPointsSolved ?? "").slice(0, INPUT_LIMITS.painPointsSolved) || undefined,
+    }, runMode);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const maxAttempts = job.opts.attempts ?? 3;
+    if ((job.attemptsMade ?? 0) < maxAttempts - 1) {
+      // Transient — let BullMQ retry this lead.
+      await log(`⚠️ Qualification failed for ${lead.companyName ?? "lead"} (will retry): ${msg}`, "error");
+      throw err;
+    }
+    // Final attempt — degrade to a terminal state so the list can finalize
+    // instead of hanging in RESEARCHING. Don't auto-qualify unvetted leads.
+    await log(`❌ Qualification failed for ${lead.companyName ?? "lead"} after ${maxAttempts} attempts: ${msg}. Marking disqualified.`, "error");
+    result = {
+      score: 0,
+      qualified: false,
+      primaryReason: "AI scoring unavailable (LLM error)",
+      bestAngle: "",
+      painPointMatch: "",
+      personalizationHooks: [],
+      serviceGaps: [],
+    };
+  }
 
   const newStatus = result.qualified ? "QUALIFIED" : "DISQUALIFIED";
 

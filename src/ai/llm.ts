@@ -180,6 +180,9 @@ export class OpenRouterLLMClient implements LLMClient {
           "X-Title": "Flowfiy",
         },
         body: JSON.stringify(body),
+        // Fail fast if a (often slow/rate-limited free) model hangs, so the
+        // worker job errors and retries instead of blocking for minutes.
+        signal: AbortSignal.timeout(90_000),
       });
 
       if (!res.ok) {
