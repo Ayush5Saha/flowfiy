@@ -329,7 +329,17 @@ export class ApifyClient {
       console.warn("[apify] leads-finder failed, trying Google scraper fallback:", leadsFinderError);
     }
 
-    // ── Fallback: Google SERP scraper (no emails but still useful) ────────
+    // ── Fallback 1: nexgendata/b2b-leads-finder ───────────────────────────
+    // Works via API on FREE Apify plans (unlike code_crafter/leads-finder).
+    // Structured free-text filters; emails are pattern-derived, not validated.
+    try {
+      const nexgenLeads = await this._searchWithNexgen({ jobTitles, industries, geographies, limit });
+      if (nexgenLeads.length > 0) return nexgenLeads;
+    } catch (err) {
+      console.warn("[apify] nexgen b2b-leads-finder failed:", err instanceof Error ? err.message : String(err));
+    }
+
+    // ── Fallback 2: Google SERP scraper (no emails but still useful) ──────
     try {
       const serpLeads = await this._searchWithGoogleScraper({ jobTitles, industries, geographies, limit });
       if (serpLeads.length > 0) return serpLeads;
@@ -430,6 +440,83 @@ export class ApifyClient {
       });
     }
 
+    return leads;
+  }
+
+  // ─── Private: nexgendata/b2b-leads-finder (free-plan friendly) ────────────
+  //
+  // Takes single free-text filters (jobTitle/industry/location) and runs via
+  // API on free Apify plans. Returns LinkedIn-sourced contacts; primaryEmail is
+  // a pattern-derived best guess (not SMTP-validated), so treat emails as
+  // unverified. Charged per result on the user's own Apify credits.
+
+  private async _searchWithNexgen(params: {
+    jobTitles: string[];
+    industries: string[];
+    geographies: string[];
+    limit: number;
+  }): Promise<ApifyLead[]> {
+    const { jobTitles, industries, geographies, limit } = params;
+
+    const input: Record<string, unknown> = {
+      jobTitle:   jobTitles[0] ?? "",
+      industry:   industries[0] ?? "",
+      location:   geographies[0] ?? "",
+      maxResults: Math.min(Math.max(limit, 1), 500),
+    };
+
+    const runRes = await fetch(
+      `${this.baseUrl}/acts/nexgendata~b2b-leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(120_000),
+      }
+    );
+
+    if (!runRes.ok) {
+      const body = await runRes.text().catch(() => "");
+      throw new Error(`nexgen b2b-leads-finder failed (${runRes.status}): ${body.slice(0, 200)}`);
+    }
+
+    const items = await runRes.json() as Array<{
+      firstName?: string;
+      lastName?: string;
+      fullName?: string;
+      jobTitle?: string;
+      company?: string;
+      companyDomain?: string;
+      linkedinUrl?: string;
+      primaryEmail?: string;
+    }>;
+    if (!Array.isArray(items) || items.length === 0) return [];
+
+    const seen = new Set<string>();
+    const leads: ApifyLead[] = [];
+    for (const it of items) {
+      if (leads.length >= limit) break;
+      const first = (it.firstName ?? it.fullName?.split(" ")[0] ?? "").trim();
+      if (!first) continue;
+      if (it.linkedinUrl) {
+        if (seen.has(it.linkedinUrl)) continue;
+        seen.add(it.linkedinUrl);
+      }
+      const last = (it.lastName ?? it.fullName?.split(" ").slice(1).join(" ") ?? "").trim();
+      leads.push({
+        firstName: first,
+        lastName:  last,
+        title:     it.jobTitle ?? null,
+        email:     it.primaryEmail ?? null,
+        linkedinUrl: it.linkedinUrl ?? null,
+        organization: {
+          name:          it.company ?? null,
+          websiteUrl:    it.companyDomain ? `https://${it.companyDomain}` : null,
+          employeeCount: null,
+          industry:      null,
+        },
+      });
+    }
     return leads;
   }
 
