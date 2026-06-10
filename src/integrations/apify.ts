@@ -248,13 +248,24 @@ export class ApifyClient {
     this.apiKey = apiKey;
   }
 
+  /**
+   * Apify rejects pay-per-result actor runs whose max cost cap is below $0.50
+   * ("max-total-charge-usd-below-minimum"). Return an explicit per-run cap that
+   * clears that minimum and scales modestly with the requested item count. This
+   * is an upper bound — actual charges are by usage (typically far lower) and
+   * billed to the user's own Apify credits.
+   */
+  private maxCharge(items: number): number {
+    return Math.max(0.5, Math.round(items * 0.05 * 100) / 100);
+  }
+
   // ─── Scrape a company website for research context ────────────────────────
 
   async scrapeWebsite(url: string): Promise<string> {
     const actorId = "apify~website-content-crawler";
 
     const runRes = await fetch(
-      `${this.baseUrl}/acts/${actorId}/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=5`,
+      `${this.baseUrl}/acts/${actorId}/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=5&maxTotalChargeUsd=${this.maxCharge(5)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -343,7 +354,7 @@ export class ApifyClient {
     if (sizes.length > 0)      input.size               = sizes;
 
     const runRes = await fetch(
-      `${this.baseUrl}/acts/code_crafter~leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${limit}`,
+      `${this.baseUrl}/acts/code_crafter~leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${limit}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -419,7 +430,7 @@ export class ApifyClient {
     let runRes: Response;
     try {
       runRes = await fetch(
-        `${this.baseUrl}/acts/${actorId}/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${maxItems}`,
+        `${this.baseUrl}/acts/${actorId}/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${maxItems}&maxTotalChargeUsd=${this.maxCharge(maxItems)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
