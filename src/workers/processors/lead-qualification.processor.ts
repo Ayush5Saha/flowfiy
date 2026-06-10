@@ -50,8 +50,14 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     },
   });
 
-  if (!lead || lead.organizationId !== organizationId) {
-    throw new Error(`Lead ${leadId} not found or access denied.`);
+  if (!lead) {
+    // Lead was likely deleted (disqualified in a prior attempt). Nothing to do
+    // except advance list finalization.
+    await checkFinalization(leadListId, organizationId, log);
+    return;
+  }
+  if (lead.organizationId !== organizationId) {
+    throw new Error(`Lead ${leadId} access denied.`);
   }
 
   if (lead.status !== "RESEARCHING") {
@@ -134,21 +140,32 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     };
   }
 
-  const newStatus = result.qualified ? "QUALIFIED" : "DISQUALIFIED";
+  // ── Disqualified → delete entirely (deliver only qualified leads) ─────────
+  // Per product decision: the list should contain only qualified leads. The
+  // lead (and its cascade-linked research) is removed so it never appears in
+  // the deliverable list. Token usage for the work done is still counted.
+  if (!result.qualified) {
+    await log(
+      `🔴 ${lead.companyName ?? "Lead"} — score ${result.score}/100 → not a fit (${result.primaryReason || "below threshold"}). Removed.`,
+      "info"
+    );
+    if (runMode === "CENTRAL") await incrementTokenUsage(organizationId, 450).catch(() => null);
+    await prisma.lead.delete({ where: { id: leadId } }).catch(() => null); // cascade removes LeadResearch
+    await checkFinalization(leadListId, organizationId, log);
+    return;
+  }
 
+  // ── Qualified → persist + enrich research, then personalize ───────────────
   await log(
-    `${scoreLabel(result.score)} ${lead.companyName ?? "Lead"} — score ${result.score}/100 → ${newStatus}`,
-    result.qualified ? "success" : "info"
+    `${scoreLabel(result.score)} ${lead.companyName ?? "Lead"} — score ${result.score}/100 → QUALIFIED`,
+    "success"
   );
 
-  // ── Persist qualification result ──────────────────────────────────────────
   await Promise.all([
-    // Update Lead status
     prisma.lead.update({
       where: { id: leadId },
-      data: { status: newStatus, qualificationScore: result.score },
+      data: { status: "QUALIFIED", qualificationScore: result.score },
     }),
-    // Enrich LeadResearch with qualification signals
     prisma.leadResearch.update({
       where: { leadId },
       data: {
@@ -164,7 +181,6 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       },
     }).catch(() => {
       // LeadResearch may not exist if research stage was skipped (no website)
-      // Create it with qualification data only
       return prisma.leadResearch.upsert({
         where: { leadId },
         update: {
@@ -186,31 +202,22 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     }),
   ]);
 
-  // ── Token tracking (CENTRAL mode only) ───────────────────────────────────
   if (runMode === "CENTRAL") {
-    // Approximate: qualification prompt ~300 input tokens, response ~150 output tokens
-    // Exact tracking happens at Anthropic billing level; this is for our budget gate
     await incrementTokenUsage(organizationId, 450).catch(() => null);
   }
 
-  // ── Fan out personalization for qualified leads ───────────────────────────
-  if (result.qualified) {
-    await fireWebhookEvent(organizationId, "lead.qualified", {
-      leadId,
-      score: result.score,
-      bestAngle: result.bestAngle,
-      painPointMatch: result.painPointMatch,
-    }).catch(() => null); // non-blocking
+  await fireWebhookEvent(organizationId, "lead.qualified", {
+    leadId,
+    score: result.score,
+    bestAngle: result.bestAngle,
+    painPointMatch: result.painPointMatch,
+  }).catch(() => null); // non-blocking
 
-    await getLeadPersonalizationQueue().add(
-      "lead-personalization",
-      { organizationId, leadListId, leadId },
-      { jobId: `personalize-${leadId}` }
-    );
-  } else {
-    // Disqualified leads count as done — check if pipeline is complete
-    await checkFinalization(leadListId, organizationId, log);
-  }
+  await getLeadPersonalizationQueue().add(
+    "lead-personalization",
+    { organizationId, leadListId, leadId },
+    { jobId: `personalize-${leadId}` }
+  );
 }
 
 // ─── Finalization check ───────────────────────────────────────────────────────

@@ -65,6 +65,15 @@ export const OPENROUTER_MODELS = [
 export const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 /**
+ * Qualified-only delivery: not every discovered candidate qualifies, so to hit
+ * the requested number of QUALIFIED leads we over-fetch this multiple of
+ * candidates, research + score them all, keep the qualified, and delete the
+ * rest. Capped by MAX_DISCOVERY_CANDIDATES to bound Apify/AI spend per run.
+ */
+export const QUALIFIED_OVERFETCH_MULTIPLIER = 3;
+export const MAX_DISCOVERY_CANDIDATES = 75;
+
+/**
  * Hard output ceiling per agent (in tokens).
  * Each value is sized to the MAXIMUM plausible JSON output for that schema,
  * not a generous round number. Shrinking this is the primary lever for

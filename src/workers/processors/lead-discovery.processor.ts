@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
 import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
+import { QUALIFIED_OVERFETCH_MULTIPLIER, MAX_DISCOVERY_CANDIDATES } from "@/ai/config";
 import { checkTokenBudget } from "@/lib/usage";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { handleSearchLeads } from "@/ai/tools/handlers";
@@ -246,6 +247,17 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       log,
     };
 
+    // Over-fetch candidates so we can deliver ~leadsPerRun QUALIFIED leads after
+    // research + scoring (disqualified candidates are deleted downstream).
+    const candidateTarget = Math.min(
+      leadsPerRun * QUALIFIED_OVERFETCH_MULTIPLIER,
+      MAX_DISCOVERY_CANDIDATES
+    );
+    await log(
+      `Targeting ${leadsPerRun} qualified leads — discovering up to ${candidateTarget} candidates to research & score...`,
+      "info"
+    );
+
     // Build search params from the ICP analysis (generated above) or raw profile
     const filters = icpCache?.apolloSearchFilters as
       | { jobTitles?: string[]; industries?: string[]; companySizes?: string[] }
@@ -255,7 +267,7 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       industries: filters?.industries?.length ? filters.industries : businessProfile.targetIndustries,
       companySizes: filters?.companySizes ?? [],
       geographies: businessProfile.targetGeographies,
-      limit: leadsPerRun,
+      limit: candidateTarget,
     };
 
     await handleSearchLeads(searchParams, ctx);
