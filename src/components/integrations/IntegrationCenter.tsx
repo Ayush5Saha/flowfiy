@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap, BookOpen } from "lucide-react";
+import { OPENROUTER_MODELS, DEFAULT_OPENROUTER_MODEL } from "@/ai/config";
 
 interface IntegrationStatus {
   status: string;
@@ -13,6 +14,8 @@ interface IntegrationCenterProps {
   statusMap: Record<string, IntegrationStatus>;
   plan: string;
   apiMode: string;
+  llmProvider: string;
+  openRouterModel: string | null;
 }
 
 interface IntegrationConfig {
@@ -143,7 +146,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
 const BYOK_ONLY_PLANS = ["FREE", "INDIE"];
 const CHOICE_PLANS = ["STARTER", "GROWTH", "AGENCY"];
 
-export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: initialApiMode }: IntegrationCenterProps) {
+export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: initialApiMode, llmProvider, openRouterModel }: IntegrationCenterProps) {
   const [currentApiMode, setCurrentApiMode] = useState(initialApiMode);
   const [modeLoading, setModeLoading] = useState(false);
   const [modeError, setModeError] = useState("");
@@ -178,11 +181,12 @@ export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: in
     <div className="space-y-4">
       {/* AI Engine section */}
       {isByokOnly ? (
-        // FREE / INDIE: BYOK required card
-        <IntegrationCard
-          config={CLAUDE_INTEGRATION}
-          status={statusMap["CLAUDE"]}
+        // FREE / INDIE: BYOK required — pick provider (Anthropic or OpenRouter)
+        <ByokProviderPicker
           organizationId={organizationId}
+          statusMap={statusMap}
+          initialProvider={llmProvider}
+          initialModel={openRouterModel}
         />
       ) : hasChoice ? (
         // STARTER / GROWTH / AGENCY: toggle between Managed and BYOK
@@ -232,12 +236,13 @@ export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: in
               <span className="text-xs text-muted-foreground">Use your own Anthropic API key</span>
             </button>
           </div>
-          {/* Show CLAUDE card if BYOK mode is active */}
+          {/* Show provider picker if BYOK mode is active */}
           {currentApiMode === "BYOK" && (
-            <IntegrationCard
-              config={CLAUDE_INTEGRATION}
-              status={statusMap["CLAUDE"]}
+            <ByokProviderPicker
               organizationId={organizationId}
+              statusMap={statusMap}
+              initialProvider={llmProvider}
+              initialModel={openRouterModel}
             />
           )}
         </div>
@@ -272,6 +277,323 @@ export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: in
             organizationId={organizationId}
           />
         ))}
+      </div>
+    </div>
+  );
+}
+
+const OPENROUTER_HOWTO: NonNullable<IntegrationConfig["howToGet"]> = {
+  title: "How to get your OpenRouter API Key",
+  steps: [
+    "Go to openrouter.ai and sign in (or create a free account)",
+    "Open Keys (openrouter.ai/keys)",
+    'Click "Create Key", name it, and copy the key',
+    "Paste it below and pick a model — many models are free",
+  ],
+  note: "OpenRouter gives access to many models, including free ones — no Anthropic key needed. You're billed by OpenRouter (free models cost nothing).",
+};
+
+/**
+ * BYOK provider picker: choose Anthropic (Claude) or OpenRouter, then configure
+ * the chosen provider. Switching providers persists immediately via
+ * /api/org/llm-provider so the pipeline uses it on the next run.
+ */
+function ByokProviderPicker({
+  organizationId,
+  statusMap,
+  initialProvider,
+  initialModel,
+}: {
+  organizationId: string;
+  statusMap: Record<string, IntegrationStatus>;
+  initialProvider: string;
+  initialModel: string | null;
+}) {
+  const [provider, setProvider] = useState<"ANTHROPIC" | "OPENROUTER">(
+    initialProvider === "OPENROUTER" ? "OPENROUTER" : "ANTHROPIC"
+  );
+  const [switching, setSwitching] = useState(false);
+  const [error, setError] = useState("");
+
+  async function switchProvider(next: "ANTHROPIC" | "OPENROUTER") {
+    if (next === provider) return;
+    setSwitching(true);
+    setError("");
+    try {
+      const res = await fetch("/api/org/llm-provider", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: next }),
+      });
+      if (res.ok) {
+        setProvider(next);
+      } else {
+        const data = await res.json() as { error?: string };
+        setError(data.error ?? "Failed to switch provider");
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setSwitching(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="text-xs font-medium mb-1.5">LLM Provider</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => switchProvider("ANTHROPIC")}
+            disabled={switching}
+            className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
+              provider === "ANTHROPIC"
+                ? "border-primary/40 bg-primary/10"
+                : "border-border bg-secondary/30 hover:border-border/60"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">🔑 Anthropic</span>
+              {provider === "ANTHROPIC" && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">Active</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">Your own Claude API key</span>
+          </button>
+          <button
+            onClick={() => switchProvider("OPENROUTER")}
+            disabled={switching}
+            className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
+              provider === "OPENROUTER"
+                ? "border-primary/40 bg-primary/10"
+                : "border-border bg-secondary/30 hover:border-border/60"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">🌐 OpenRouter</span>
+              {provider === "OPENROUTER" && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">Active</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">Free & open models, your key</span>
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2 border border-destructive/20">
+          {error}
+        </div>
+      )}
+
+      {provider === "ANTHROPIC" ? (
+        <IntegrationCard
+          config={CLAUDE_INTEGRATION}
+          status={statusMap["CLAUDE"]}
+          organizationId={organizationId}
+        />
+      ) : (
+        <OpenRouterCard
+          organizationId={organizationId}
+          status={statusMap["OPENROUTER"]}
+          initialModel={initialModel}
+        />
+      )}
+    </div>
+  );
+}
+
+const CUSTOM_MODEL = "__custom__";
+
+/**
+ * OpenRouter integration card — API key (validated + saved like other keys)
+ * plus a model selector (curated free models + custom slug). Saving persists
+ * the key via /api/integrations and the model via /api/org/llm-provider.
+ */
+function OpenRouterCard({
+  organizationId,
+  status,
+  initialModel,
+}: {
+  organizationId: string;
+  status?: IntegrationStatus;
+  initialModel: string | null;
+}) {
+  const isConnected = status?.status === "CONNECTED";
+  const knownSlugs = OPENROUTER_MODELS.map((m) => m.slug) as string[];
+  const startModel = initialModel || DEFAULT_OPENROUTER_MODEL;
+  const startIsCustom = !knownSlugs.includes(startModel);
+
+  const [apiKey, setApiKey] = useState("");
+  const [modelChoice, setModelChoice] = useState(startIsCustom ? CUSTOM_MODEL : startModel);
+  const [customModel, setCustomModel] = useState(startIsCustom ? startModel : "");
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const effectiveModel = modelChoice === CUSTOM_MODEL ? customModel.trim() : modelChoice;
+
+  async function handleSave() {
+    setError("");
+    setSuccess("");
+    if (!effectiveModel) {
+      setError("Please choose or enter a model.");
+      return;
+    }
+    setWorking(true);
+    try {
+      // If a key was entered, validate + save it. If already connected and the
+      // field is left blank, keep the existing key and only update the model.
+      if (apiKey.trim()) {
+        const validateRes = await fetch("/api/integrations/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "OPENROUTER", credentials: { apiKey: apiKey.trim() } }),
+        });
+        const validateData = await validateRes.json() as { valid: boolean; message: string };
+        if (!validateData.valid) {
+          setError(validateData.message);
+          setWorking(false);
+          return;
+        }
+        const saveRes = await fetch("/api/integrations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ organizationId, type: "OPENROUTER", credentials: { apiKey: apiKey.trim() } }),
+        });
+        if (!saveRes.ok) {
+          setError("Failed to save OpenRouter key");
+          setWorking(false);
+          return;
+        }
+      } else if (!isConnected) {
+        setError("Enter your OpenRouter API key.");
+        setWorking(false);
+        return;
+      }
+
+      // Persist provider + model selection.
+      const provRes = await fetch("/api/org/llm-provider", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "OPENROUTER", model: effectiveModel }),
+      });
+      if (!provRes.ok) {
+        setError("Failed to save model selection");
+        setWorking(false);
+        return;
+      }
+
+      setSuccess("OpenRouter connected");
+      window.location.reload();
+    } catch {
+      setError("Network error");
+      setWorking(false);
+    }
+  }
+
+  async function handleDisconnect() {
+    await fetch(`/api/integrations?organizationId=${organizationId}&type=OPENROUTER`, { method: "DELETE" });
+    window.location.reload();
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🌐</span>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-sm">OpenRouter</p>
+              {isConnected && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Run the pipeline on free & open models with your own OpenRouter key
+            </p>
+          </div>
+        </div>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${
+          isConnected ? "bg-green-500/10 text-green-400" : "bg-secondary text-muted-foreground"
+        }`}>
+          {isConnected ? "Connected" : "Not connected"}
+        </span>
+      </div>
+
+      <div className="px-4 pb-4 border-t border-border pt-4">
+        <HowToGetBox howToGet={OPENROUTER_HOWTO} docsUrl="https://openrouter.ai/keys" />
+
+        {error && (
+          <div className="mb-3 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-3 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs">
+            {success}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium mb-1.5">API Key</label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={isConnected ? "•••••••• (leave blank to keep current key)" : "sk-or-v1-..."}
+              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5">Model</label>
+            <select
+              value={modelChoice}
+              onChange={(e) => setModelChoice(e.target.value)}
+              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {OPENROUTER_MODELS.map((m) => (
+                <option key={m.slug} value={m.slug}>{m.label}</option>
+              ))}
+              <option value={CUSTOM_MODEL}>Custom model slug…</option>
+            </select>
+          </div>
+
+          {modelChoice === CUSTOM_MODEL && (
+            <div>
+              <label className="block text-xs font-medium mb-1.5">Custom model slug</label>
+              <input
+                type="text"
+                value={customModel}
+                onChange={(e) => setCustomModel(e.target.value)}
+                placeholder="e.g. mistralai/mistral-large"
+                className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+              />
+              <p className="text-[11px] text-muted-foreground/70 mt-1">
+                Any model slug from openrouter.ai/models.
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleSave}
+              disabled={working}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {working && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {working ? "Saving..." : "Save & Connect"}
+            </button>
+            {isConnected && (
+              <button
+                onClick={handleDisconnect}
+                className="px-4 py-2 border border-destructive/30 text-destructive rounded-lg text-sm hover:bg-destructive/10 transition-colors"
+              >
+                Disconnect
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

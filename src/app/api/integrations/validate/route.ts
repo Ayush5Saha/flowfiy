@@ -6,7 +6,7 @@ import { ApifyClient } from "@/integrations/apify";
 import Anthropic from "@anthropic-ai/sdk";
 
 const schema = z.object({
-  type: z.enum(["CLAUDE", "APOLLO", "APIFY", "CALENDLY"]),
+  type: z.enum(["CLAUDE", "APOLLO", "APIFY", "CALENDLY", "OPENROUTER"]),
   credentials: z.record(z.string()),
 });
 
@@ -53,6 +53,16 @@ export async function POST(req: NextRequest) {
         return valid
           ? NextResponse.json({ valid: true, message: "Apify API key is valid" })
           : NextResponse.json({ valid: false, message: "Invalid Apify API key" }, { status: 422 });
+      }
+
+      case "OPENROUTER": {
+        // OpenRouter key-health check — GET /key returns the key's metadata.
+        const res = await fetch("https://openrouter.ai/api/v1/key", {
+          headers: { Authorization: `Bearer ${credentials.apiKey}` },
+        });
+        return res.ok
+          ? NextResponse.json({ valid: true, message: "OpenRouter API key is valid" })
+          : NextResponse.json({ valid: false, message: "Invalid OpenRouter API key" }, { status: 422 });
       }
 
       case "CALENDLY": {

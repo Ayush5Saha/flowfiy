@@ -1,11 +1,15 @@
-import Anthropic from "@anthropic-ai/sdk";
-import type {
-  MessageParam,
-  ToolResultBlockParam,
-} from "@anthropic-ai/sdk/resources/messages";
 import { LEAD_GEN_TOOLS } from "./tools/definitions";
 import { executeLeadGenTool, type ToolContext } from "./tools/handlers";
 import type { RunMode } from "@/ai/config";
+import type { LLMClient, LLMMessage } from "@/ai/llm";
+
+// Local shape for tool_result blocks sent back to the model (Anthropic format).
+interface ToolResultBlock {
+  type: "tool_result";
+  tool_use_id: string;
+  content: string;
+  is_error?: boolean;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +130,7 @@ ${skipDiscovery ? "- DO NOT call search_leads — leads are pre-loaded, use the 
 // ─── Agentic loop ─────────────────────────────────────────────────────────────
 
 export async function runLeadGenOrchestrator(
-  claude: Anthropic,
+  claude: LLMClient,
   ctx: ToolContext,
   input: OrchestratorInput,
   runMode: RunMode = "CENTRAL"
@@ -148,7 +152,7 @@ export async function runLeadGenOrchestrator(
 
   void activeLeads; // used via skipDiscovery / initialUserMessage above
 
-  const messages: MessageParam[] = [
+  const messages: LLMMessage[] = [
     {
       role: "user",
       content: initialUserMessage,
@@ -192,7 +196,7 @@ export async function runLeadGenOrchestrator(
 
       // Execute tools in parallel where safe (search_leads is first so sequential is fine;
       // save_lead_result calls are naturally parallel per lead)
-      const toolResults: ToolResultBlockParam[] = await Promise.all(
+      const toolResults: ToolResultBlock[] = await Promise.all(
         toolUseBlocks.map(async (block) => {
           if (block.type !== "tool_use") {
             // Should not happen, but TypeScript needs the guard

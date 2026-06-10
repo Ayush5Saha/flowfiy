@@ -33,6 +33,11 @@ model Organization {
   tokenBudgetResetAt DateTime? @map("token_budget_reset_at")
   apiMode  ApiMode  @default(CENTRAL) @map("api_mode")
 
+  // BYOK LLM provider selection. ANTHROPIC uses the org's Claude key; OPENROUTER
+  // uses the org's OpenRouter key + chosen model. Ignored in CENTRAL mode.
+  llmProvider     LlmProvider @default(ANTHROPIC) @map("llm_provider")
+  openRouterModel String?     @map("openrouter_model")
+
   members           OrganizationMember[]
   businessProfile   BusinessProfile?
   integrations      Integration[]
@@ -61,6 +66,11 @@ enum Plan {
 enum ApiMode {
   CENTRAL
   BYOK
+}
+
+enum LlmProvider {
+  ANTHROPIC
+  OPENROUTER
 }
 
 model OrganizationMember {
@@ -129,6 +139,7 @@ enum IntegrationType {
   APIFY
   GMAIL
   CALENDLY
+  OPENROUTER
 }
 
 enum IntegrationStatus {
@@ -358,6 +369,32 @@ model PromptTemplate {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("prompt_templates")
+}
+
+model BlogPost {
+  id              String         @id @default(uuid())
+  slug            String         @unique
+  title           String
+  excerpt         String
+  category        String
+  content         String
+  status          BlogPostStatus @default(DRAFT)
+  authorName      String         @default("Flowfiy") @map("author_name")
+  readTime        String         @default("5 min read") @map("read_time")
+  isFeatured      Boolean        @default(false) @map("is_featured")
+  seoTitle        String?        @map("seo_title")
+  metaDescription String?        @map("meta_description")
+  publishedAt     DateTime?      @map("published_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
+}
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
 }
 
 // ─── Email Suppression ────────────────────────────────────────────────────────

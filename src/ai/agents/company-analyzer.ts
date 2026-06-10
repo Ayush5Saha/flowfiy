@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type { LLMClient } from "@/ai/llm";
 import { buildCompanyAnalyzerPrompt, type CompanyAnalyzerInput } from "@/ai/prompts/company-analyzer";
 import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
@@ -15,7 +15,7 @@ export interface CompanyAnalysis {
 }
 
 export async function runCompanyAnalyzer(
-  client: Anthropic,
+  client: LLMClient,
   input: CompanyAnalyzerInput,
   mode: RunMode = "CENTRAL"
 ): Promise<CompanyAnalysis> {

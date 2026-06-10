@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type { LLMClient } from "@/ai/llm";
 import { buildQualificationPrompt, type QualificationInput } from "@/ai/prompts/qualification";
 import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
@@ -14,7 +14,7 @@ export interface QualificationResult {
 }
 
 export async function runQualification(
-  client: Anthropic,
+  client: LLMClient,
   input: QualificationInput,
   mode: RunMode = "CENTRAL"
 ): Promise<QualificationResult> {

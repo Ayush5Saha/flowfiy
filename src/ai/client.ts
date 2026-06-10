@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import type { RunMode } from "@/ai/config";
+import { DEFAULT_OPENROUTER_MODEL } from "@/ai/config";
+import { AnthropicLLMClient, OpenRouterLLMClient, type LLMClient } from "@/ai/llm";
 
 export type { RunMode };
 
@@ -17,22 +19,28 @@ function getCentralClient(): Anthropic {
   return _centralClient;
 }
 
-/** Used by non-org callers (reply classifier in follow-up scheduler) */
+/**
+ * Used by non-org callers — always central Claude. Returns the raw Anthropic
+ * instance because some callers (leads/chat) need streaming, which the
+ * provider-agnostic LLMClient interface intentionally does not model. Callers
+ * that drive an agent should wrap this in `new AnthropicLLMClient(...)`.
+ */
 export function getClaudeClient(): Anthropic {
   return getCentralClient();
 }
 
 /**
- * Returns the correct Claude client + run mode for an organization.
- * - CENTRAL mode: uses Flowfiy's env key with full optimizations
- * - BYOK mode: uses the org's stored key with natural Claude defaults
+ * Returns the correct LLM client + run mode for an organization.
+ * - CENTRAL mode: Flowfiy's env Claude key with full optimizations
+ * - BYOK + ANTHROPIC: the org's stored Claude key
+ * - BYOK + OPENROUTER: the org's stored OpenRouter key + chosen model
  */
 export async function getClaudeClientForOrg(
   organizationId: string
-): Promise<{ client: Anthropic; mode: RunMode }> {
+): Promise<{ client: LLMClient; mode: RunMode }> {
   const org = await prisma.organization.findUniqueOrThrow({
     where: { id: organizationId },
-    select: { apiMode: true, plan: true },
+    select: { apiMode: true, plan: true, llmProvider: true, openRouterModel: true },
   });
 
   // FREE and INDIE plans are BYOK-only regardless of stored apiMode
@@ -40,6 +48,27 @@ export async function getClaudeClientForOrg(
   const effectiveMode: RunMode = (byokOnly || org.apiMode === "BYOK") ? "BYOK" : "CENTRAL";
 
   if (effectiveMode === "BYOK") {
+    // ── OpenRouter provider ──────────────────────────────────────────────────
+    if (org.llmProvider === "OPENROUTER") {
+      const integration = await prisma.integration.findUnique({
+        where: { organizationId_type: { organizationId, type: "OPENROUTER" } },
+        select: { status: true, encryptedCredentials: true },
+      });
+
+      if (!integration || integration.status !== "CONNECTED") {
+        throw new Error(
+          "OpenRouter API key not connected. Please add your OpenRouter API key in Settings → Integrations."
+        );
+      }
+
+      const { apiKey } = decryptCredentials(integration.encryptedCredentials) as { apiKey: string };
+      if (!apiKey) throw new Error("Stored OpenRouter API key is invalid.");
+
+      const model = org.openRouterModel || DEFAULT_OPENROUTER_MODEL;
+      return { client: new OpenRouterLLMClient({ apiKey, model }), mode: "BYOK" };
+    }
+
+    // ── Anthropic provider (default) ─────────────────────────────────────────
     const integration = await prisma.integration.findUnique({
       where: { organizationId_type: { organizationId, type: "CLAUDE" } },
       select: { status: true, encryptedCredentials: true },
@@ -54,8 +83,8 @@ export async function getClaudeClientForOrg(
     const { apiKey } = decryptCredentials(integration.encryptedCredentials) as { apiKey: string };
     if (!apiKey) throw new Error("Stored Claude API key is invalid.");
 
-    return { client: new Anthropic({ apiKey }), mode: "BYOK" };
+    return { client: new AnthropicLLMClient(new Anthropic({ apiKey })), mode: "BYOK" };
   }
 
-  return { client: getCentralClient(), mode: "CENTRAL" };
+  return { client: new AnthropicLLMClient(getCentralClient()), mode: "CENTRAL" };
 }

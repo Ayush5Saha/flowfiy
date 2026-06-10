@@ -34,6 +34,8 @@ export default async function IntegrationsPage() {
         statusMap={statusMap as Record<string, { status: string; lastValidatedAt: Date | null }>}
         plan={membership.organization.plan}
         apiMode={membership.organization.apiMode}
+        llmProvider={membership.organization.llmProvider}
+        openRouterModel={membership.organization.openRouterModel}
       />
     </div>
   );

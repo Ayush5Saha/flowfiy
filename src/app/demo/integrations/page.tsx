@@ -8,6 +8,7 @@ const mockOrg = {
   referralCode: null, referralCreditMonths: 0,
   referredByAffiliateId: null,
   monthlyTokensUsed: BigInt(0), tokenBudgetResetAt: null, apiMode: "CENTRAL" as const,
+  llmProvider: "ANTHROPIC" as const, openRouterModel: null,
 };
 
 const integrations = [

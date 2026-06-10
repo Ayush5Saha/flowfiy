@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type { LLMClient } from "@/ai/llm";
 import { buildICPAnalyzerPrompt, type ICPAnalyzerInput } from "@/ai/prompts/icp-analyzer";
 import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
@@ -16,7 +16,7 @@ export interface ICPAnalysis {
 }
 
 export async function runICPAnalyzer(
-  client: Anthropic,
+  client: LLMClient,
   input: ICPAnalyzerInput,
   mode: RunMode = "CENTRAL"
 ): Promise<ICPAnalysis> {

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type { LLMClient } from "@/ai/llm";
 import { buildPersonalizationPrompt, type PersonalizationInput } from "@/ai/prompts/personalization";
 import { CLAUDE_MODELS, getRunConfig, type RunMode } from "@/ai/config";
 
@@ -11,7 +11,7 @@ export interface PersonalizationResult {
 }
 
 export async function runPersonalization(
-  client: Anthropic,
+  client: LLMClient,
   input: PersonalizationInput,
   mode: RunMode = "CENTRAL"
 ): Promise<PersonalizationResult> {

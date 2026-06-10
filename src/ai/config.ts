@@ -48,6 +48,23 @@ export const CLAUDE_MODELS = {
 } as const;
 
 /**
+ * Curated OpenRouter models offered in the BYOK provider picker.
+ * All free, general-purpose instruct models that follow JSON instructions well
+ * (verified live against https://openrouter.ai/api/v1/models). Users can also
+ * paste any custom OpenRouter slug. One model is used for every agent role
+ * (OpenRouter has no fast/smart split here).
+ */
+export const OPENROUTER_MODELS = [
+  { slug: "meta-llama/llama-3.3-70b-instruct:free", label: "Llama 3.3 70B — free (recommended)" },
+  { slug: "qwen/qwen3-next-80b-a3b-instruct:free",  label: "Qwen3 Next 80B — free" },
+  { slug: "openai/gpt-oss-120b:free",               label: "GPT-OSS 120B — free" },
+  { slug: "google/gemma-4-31b-it:free",             label: "Gemma 4 31B — free" },
+  { slug: "nousresearch/hermes-3-llama-3.1-405b:free", label: "Hermes 3 405B — free" },
+] as const;
+
+export const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+
+/**
  * Hard output ceiling per agent (in tokens).
  * Each value is sized to the MAXIMUM plausible JSON output for that schema,
  * not a generous round number. Shrinking this is the primary lever for

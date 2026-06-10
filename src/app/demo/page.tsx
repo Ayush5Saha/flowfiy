@@ -24,6 +24,8 @@ const mockOrg = {
   monthlyTokensUsed: BigInt(0),
   tokenBudgetResetAt: null,
   apiMode: "CENTRAL" as const,
+  llmProvider: "ANTHROPIC" as const,
+  openRouterModel: null,
 };
 
 export default function DemoPage() {
