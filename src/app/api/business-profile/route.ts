@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { createAuditLog } from "@/lib/audit";
 
 const profileSchema = z.object({
@@ -39,10 +40,12 @@ export async function POST(req: NextRequest) {
   const member = await getOrgMembership(user.id, organizationId);
   if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // Clear the cached ICP analysis whenever the profile changes so the next
+  // lead-gen run regenerates it from the updated ICP.
   const profile = await prisma.businessProfile.upsert({
     where: { organizationId },
     create: { organizationId, ...data },
-    update: { ...data },
+    update: { ...data, icpAnalysisCache: Prisma.DbNull },
   });
 
   await createAuditLog({
