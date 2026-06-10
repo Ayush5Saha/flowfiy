@@ -32,7 +32,6 @@ export class ApolloClient {
 
   async searchPeople(params: ApolloSearchParams): Promise<ApolloContact[]> {
     const body: Record<string, unknown> = {
-      api_key: this.apiKey,
       per_page: params.perPage ?? 25,
       person_titles: params.jobTitles,
       // Apollo v1 mixed_people/search uses q_organization_keyword_tags for free-text
@@ -49,7 +48,13 @@ export class ApolloClient {
 
     const res = await fetch(`${this.baseUrl}/mixed_people/search`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        // Apollo requires the API key in the X-Api-Key header. Passing it via
+        // query/body params has not been supported since September 2024.
+        "X-Api-Key": this.apiKey,
+      },
       body: JSON.stringify(body),
     });
 
@@ -82,8 +87,20 @@ export class ApolloClient {
 
   async validateKey(): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/users/me?api_key=${this.apiKey}`);
-      return res.ok;
+      // Apollo's dedicated key health-check endpoint. The key must be sent in
+      // the X-Api-Key header — query/body api_key was dropped in Sept 2024.
+      const res = await fetch("https://api.apollo.io/v1/auth/health", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "X-Api-Key": this.apiKey,
+        },
+      });
+      if (!res.ok) return false;
+      // Health endpoint returns { is_logged_in: true, ... } on a valid key.
+      const data = (await res.json().catch(() => null)) as { is_logged_in?: boolean } | null;
+      return data?.is_logged_in !== false;
     } catch {
       return false;
     }
