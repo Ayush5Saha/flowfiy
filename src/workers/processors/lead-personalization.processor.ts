@@ -17,7 +17,7 @@ import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runPersonalization } from "@/ai/agents/personalization";
-import { fireWebhookEvent } from "@/lib/webhooks";
+import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
 import { appendLog } from "@/lib/job-logs";
 
 export interface LeadPersonalizationJobData {
@@ -40,7 +40,7 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
 
   if (existingCopy) {
     // Already personalized — just check if pipeline is complete
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
@@ -76,7 +76,7 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
 
   // Safety: only personalize qualified leads
   if (lead.status !== "QUALIFIED") {
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
@@ -202,69 +202,6 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
   }
 
   // ── Finalization check ────────────────────────────────────────────────────
-  await checkFinalization(leadListId, organizationId, log);
+  await finalizeOrTopUp(leadListId, organizationId, log);
 }
 
-// ─── Finalization check ───────────────────────────────────────────────────────
-//
-// The single trigger point for marking a LeadList as READY.
-// Called after every personalized lead (and on idempotent skips).
-// Checks that:
-//   - No leads still in RESEARCHING state (qualification not yet run)
-//   - No qualified leads without outreach copy (personalization not yet run)
-// If both conditions are met → update LeadList to READY + fire completion webhook.
-
-async function checkFinalization(
-  leadListId: string,
-  organizationId: string,
-  log: (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>
-) {
-  const [researchingCount, pendingPersonalizationCount] = await Promise.all([
-    prisma.lead.count({ where: { leadListId, status: "RESEARCHING" } }),
-    prisma.lead.count({
-      where: {
-        leadListId,
-        status: "QUALIFIED",
-        outreachCopies: { none: {} }, // qualified but email not yet written
-      },
-    }),
-  ]);
-
-  if (researchingCount > 0 || pendingPersonalizationCount > 0) return;
-
-  // All leads processed — check if we're the first worker to get here
-  const list = await prisma.leadList.findUnique({
-    where: { id: leadListId },
-    select: { status: true },
-  });
-
-  // Guard: don't overwrite if already READY (another worker beat us to it)
-  if (list?.status === "READY") return;
-
-  const [totalLeads, qualifiedLeads] = await Promise.all([
-    prisma.lead.count({ where: { leadListId } }),
-    prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } }),
-  ]);
-
-  await prisma.leadList.update({
-    where: { id: leadListId },
-    data: {
-      status: "READY",
-      jobStatus: "complete",
-      totalLeads,
-      qualifiedLeads,
-    },
-  });
-
-  await log(
-    `🎉 Pipeline complete! ${totalLeads} leads processed, ${qualifiedLeads} qualified with personalised outreach ready.`,
-    "success"
-  );
-
-  // Fire completion webhook
-  await fireWebhookEvent(organizationId, "lead_list.generation_complete", {
-    leadListId,
-    totalLeads,
-    qualifiedLeads,
-  }).catch(() => null);
-}

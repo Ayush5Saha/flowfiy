@@ -20,6 +20,7 @@ import { runQualification } from "@/ai/agents/qualification";
 import { fireWebhookEvent } from "@/lib/webhooks";
 import { appendLog } from "@/lib/job-logs";
 import { getLeadPersonalizationQueue } from "@/workers/queues";
+import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
 import { INPUT_LIMITS } from "@/ai/config";
 
 export interface LeadQualificationJobData {
@@ -55,7 +56,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   if (!lead) {
     // Lead was likely deleted (disqualified in a prior attempt). Nothing to do
     // except advance list finalization.
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
   if (lead.organizationId !== organizationId) {
@@ -64,7 +65,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
 
   if (lead.status !== "RESEARCHING") {
     // Already processed — check finalization and exit
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
@@ -78,7 +79,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       "info"
     );
     await prisma.lead.delete({ where: { id: leadId } }).catch(() => null);
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
@@ -167,7 +168,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     );
     if (runMode === "CENTRAL") await incrementTokenUsage(organizationId, 450).catch(() => null);
     await prisma.lead.delete({ where: { id: leadId } }).catch(() => null); // cascade removes LeadResearch
-    await checkFinalization(leadListId, organizationId, log);
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
@@ -234,66 +235,4 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     { organizationId, leadListId, leadId },
     { jobId: `personalize-${leadId}` }
   );
-}
-
-// ─── Finalization check ───────────────────────────────────────────────────────
-//
-// Called after a DISQUALIFIED lead is saved. If all leads are done
-// (none RESEARCHING, none awaiting personalization), mark the list READY.
-
-async function checkFinalization(
-  leadListId: string,
-  organizationId: string,
-  log: (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>
-) {
-  const [researchingCount, pendingPersonalizationCount] = await Promise.all([
-    prisma.lead.count({ where: { leadListId, status: "RESEARCHING" } }),
-    prisma.lead.count({
-      where: {
-        leadListId,
-        status: "QUALIFIED",
-        outreachCopies: { none: {} }, // qualified but email not yet generated
-      },
-    }),
-  ]);
-
-  if (researchingCount > 0 || pendingPersonalizationCount > 0) return;
-
-  // All leads processed — finalize
-  const [totalLeads, qualifiedLeads] = await Promise.all([
-    prisma.lead.count({ where: { leadListId } }),
-    prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } }),
-  ]);
-
-  const list = await prisma.leadList.findUnique({
-    where: { id: leadListId },
-    select: { status: true },
-  });
-
-  // Guard: don't overwrite if already READY (another worker beat us to it)
-  if (list?.status === "READY") return;
-
-  await prisma.leadList.update({
-    where: { id: leadListId },
-    data: {
-      status: "READY",
-      jobStatus: "complete",
-      totalLeads,
-      qualifiedLeads,
-    },
-  });
-
-  await log(
-    `Pipeline complete! ${totalLeads} leads processed, ${qualifiedLeads} qualified with personalised outreach ready.`,
-    "success"
-  );
-
-  // Fire completion webhook
-  await fireWebhookEvent(organizationId, "lead_list.generation_complete", {
-    leadListId,
-    totalLeads,
-    qualifiedLeads,
-  }).catch(() => null);
-
-  void organizationId;
 }

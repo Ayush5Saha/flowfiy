@@ -88,6 +88,8 @@ export async function POST(req: NextRequest) {
       description: listDescription,
       status: "QUEUED",
       jobStatus: "queued",
+      // The pipeline runs discovery rounds until this many leads QUALIFY.
+      targetQualified: leadsPerRun,
     },
   });
 

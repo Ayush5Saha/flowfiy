@@ -74,6 +74,14 @@ export const QUALIFIED_OVERFETCH_MULTIPLIER = 6;
 export const MAX_DISCOVERY_CANDIDATES = 120;
 
 /**
+ * Top-up loop: if a discovery round ends with fewer QUALIFIED leads than the
+ * user asked for, the pipeline runs another round (fetching progressively
+ * more) until it hits the target, runs out of fresh candidates, or reaches
+ * this many rounds — a hard ceiling to bound cost/time.
+ */
+export const MAX_DISCOVERY_ROUNDS = 5;
+
+/**
  * Hard output ceiling per agent (in tokens).
  * Each value is sized to the MAXIMUM plausible JSON output for that schema,
  * not a generous round number. Shrinking this is the primary lever for

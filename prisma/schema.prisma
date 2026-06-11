@@ -158,6 +158,10 @@ model LeadList {
   status          LeadListStatus @default(DRAFT)
   totalLeads      Int            @default(0) @map("total_leads")
   qualifiedLeads  Int            @default(0) @map("qualified_leads")
+  // Number of QUALIFIED leads the user asked for; the pipeline keeps running
+  // discovery rounds until it reaches this many (or exhausts candidates / cap).
+  targetQualified Int?           @map("target_qualified")
+  discoveryRound  Int            @default(1) @map("discovery_round")
   jobId           String?        @map("job_id")
   jobStatus       String?        @map("job_status")
   jobError        String?        @map("job_error")

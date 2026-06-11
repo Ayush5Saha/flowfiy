@@ -14,6 +14,7 @@ import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
 import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
 import { QUALIFIED_OVERFETCH_MULTIPLIER, MAX_DISCOVERY_CANDIDATES } from "@/ai/config";
+import { markListReady } from "@/lib/pipeline-finalization";
 import { checkTokenBudget } from "@/lib/usage";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { handleSearchLeads } from "@/ai/tools/handlers";
@@ -26,6 +27,8 @@ export interface LeadDiscoveryJobData {
   organizationId: string;
   leadListId: string;
   leadsPerRun: number;
+  /** Top-up round number (1 = initial). Later rounds fetch progressively more. */
+  round?: number;
   mode?: "apollo" | "apify" | "import";
   /** Import mode: leads already inserted into DB, skip discovery */
   preloadedLeads?: Array<{
@@ -52,6 +55,7 @@ async function getIntegrationCredentials(organizationId: string, type: string) {
 
 export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
   const { organizationId, leadListId, leadsPerRun, mode = "apollo" } = job.data;
+  const round = job.data.round ?? 1;
   const attemptNumber = (job.attemptsMade ?? 0) + 1;
   const isRetry = attemptNumber > 1;
 
@@ -189,16 +193,17 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       return;
     }
 
-    // ── Checkpoint detection ──────────────────────────────────────────────────
-    // On retry, check what the previous attempt already saved:
-    //   A) No leads → discovery crashed → run fresh
-    //   B) Some leads RESEARCHING → research queue got cut → re-fan-out
-    //   C) All leads done → discovery was fine, downstream failed → skip here
-
-    const checkpointLeads = await prisma.lead.findMany({
-      where: { leadListId, organizationId },
-      select: { id: true, status: true },
-    });
+    // ── Checkpoint detection (RETRY of the SAME round only) ───────────────────
+    // On a retry of this job: A) no leads → run fresh; B) some RESEARCHING →
+    // re-fan-out; C) all done → skip. On a FRESH top-up round (not a retry) we
+    // must NOT treat prior rounds' leads as "already discovered" — skip the
+    // checkpoint entirely and go discover new leads.
+    const checkpointLeads = isRetry
+      ? await prisma.lead.findMany({
+          where: { leadListId, organizationId },
+          select: { id: true, status: true },
+        })
+      : [];
 
     if (checkpointLeads.length > 0) {
       const pendingResearch = checkpointLeads.filter((l) => l.status === "RESEARCHING");
@@ -248,13 +253,17 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     };
 
     // Over-fetch candidates so we can deliver ~leadsPerRun QUALIFIED leads after
-    // research + scoring (disqualified candidates are deleted downstream).
+    // research + scoring (disqualified candidates are deleted downstream). On
+    // top-up rounds we fetch progressively more so the dedup yields NEW leads
+    // beyond what earlier rounds already saved.
     const candidateTarget = Math.min(
-      leadsPerRun * QUALIFIED_OVERFETCH_MULTIPLIER,
+      leadsPerRun * QUALIFIED_OVERFETCH_MULTIPLIER * round,
       MAX_DISCOVERY_CANDIDATES
     );
     await log(
-      `Targeting ${leadsPerRun} qualified leads — discovering up to ${candidateTarget} candidates to research & score...`,
+      round > 1
+        ? `Round ${round}: searching for more leads (up to ${candidateTarget} candidates)...`
+        : `Targeting ${leadsPerRun} qualified leads — discovering up to ${candidateTarget} candidates to research & score...`,
       "info"
     );
 
@@ -279,8 +288,19 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     });
 
     if (discoveredLeads.length === 0) {
-      await log("No leads were found. Check Apollo filters or broaden the ICP.", "error");
-      await updateListStatus("READY", { jobStatus: "complete", totalLeads: 0 });
+      // No NEW leads this round → candidate pool is exhausted. Finalize with
+      // whatever qualified so far (0 on the very first round). leadsPerRun
+      // equals the qualified target (top-up rounds are enqueued with it).
+      const qualifiedSoFar = await prisma.lead.count({
+        where: { leadListId, status: "QUALIFIED" },
+      });
+      await log(
+        round > 1
+          ? `No more new leads available (round ${round}). Finalizing with ${qualifiedSoFar} qualified.`
+          : "No leads were found. Broaden the ICP, industries, or location.",
+        round > 1 ? "info" : "error"
+      );
+      await markListReady(leadListId, organizationId, qualifiedSoFar, leadsPerRun, log);
       return;
     }
 
