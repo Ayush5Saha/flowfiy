@@ -142,6 +142,36 @@ export function isInSendWindow(
 }
 
 /**
+ * Milliseconds from `now` until the send window (08:00) next opens in the given
+ * timezone. Returns 0 if already inside the window. Used to DEFER an email to
+ * the next valid window instead of failing it.
+ */
+export function msUntilSendWindow(timezone: string, now: Date = new Date()): number {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      hourCycle: "h23",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).formatToParts(now);
+    const hour = parseInt(parts.find((p) => p.type === "hour")!.value, 10);
+    const minute = parseInt(parts.find((p) => p.type === "minute")!.value, 10);
+    const minutesNow = hour * 60 + minute;
+    const startMinutes = SEND_WINDOW_START_HOUR * 60;
+    const endMinutes = SEND_WINDOW_END_HOUR * 60;
+
+    if (minutesNow >= startMinutes && minutesNow < endMinutes) return 0;
+    const deltaMinutes =
+      minutesNow < startMinutes
+        ? startMinutes - minutesNow
+        : 24 * 60 - minutesNow + startMinutes; // after window → 08:00 next day
+    return deltaMinutes * 60 * 1000;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Validates that a string is a real IANA timezone identifier.
  * Uses Intl.DateTimeFormat — works in Node.js without any external library.
  */

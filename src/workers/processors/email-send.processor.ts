@@ -4,7 +4,8 @@ import { decryptCredentials } from "@/lib/encryption";
 import { sendGmail } from "@/integrations/gmail";
 import { buildUnsubscribeUrl, buildTrackingPixelUrl } from "@/lib/unsubscribe";
 import { fireWebhookEvent } from "@/lib/webhooks";
-import { resolveTimezone, isInSendWindow, getLocalTimeString } from "@/lib/timezones";
+import { resolveTimezone, isInSendWindow, getLocalTimeString, msUntilSendWindow } from "@/lib/timezones";
+import { enqueueEmailJob } from "@/workers/queues";
 import type { EmailJobData } from "@/workers/queues";
 
 export type { EmailJobData };
@@ -40,16 +41,24 @@ export async function processEmailSend(job: Job<EmailJobData>) {
     return;
   }
 
-  // ── Feature 9: Timezone-aware send window check ──────────────────────────
-  // Resolve lead timezone from stored value, or fall back to country code
-  const leadTimezone = resolveTimezone(lead.timezone, null);
-  if (!isInSendWindow(leadTimezone)) {
-    const localTime = getLocalTimeString(leadTimezone);
-    console.log(
-      `[email] Skipping ${campaignLeadId} — outside send window (${localTime} in ${leadTimezone}). Will retry.`
-    );
-    // Throw so BullMQ retries — the next retry will land in a valid window
-    throw new Error(`Outside send window for ${leadTimezone} (local: ${localTime})`);
+  // ── Timezone-aware send window check ─────────────────────────────────────
+  // Only gate by the 08:00–18:00 window when we actually KNOW the lead's
+  // timezone. Most leads have no timezone, and gating those by an arbitrary
+  // UTC window silently blocked all sends. When the timezone is known and we're
+  // outside the window, DEFER the email to the next window (re-enqueue with a
+  // delay) instead of throwing — the queue only allows 2 quick retries, which
+  // can't span the hours until the window reopens, so a throw would drop it.
+  if (lead.timezone) {
+    const leadTimezone = resolveTimezone(lead.timezone, null);
+    if (!isInSendWindow(leadTimezone)) {
+      const delayMs = msUntilSendWindow(leadTimezone);
+      const localTime = getLocalTimeString(leadTimezone);
+      console.log(
+        `[email] Deferring ${campaignLeadId} — outside send window (${localTime} in ${leadTimezone}); retry in ~${Math.round(delayMs / 60000)} min`
+      );
+      await enqueueEmailJob({ campaignLeadId, organizationId, step }, delayMs);
+      return;
+    }
   }
 
   // ── Check suppression list — never email a lead who opted out ────────────
