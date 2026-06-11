@@ -239,6 +239,33 @@ function mapCompanySizes(sizes: string[]): string[] {
   return Array.from(result);
 }
 
+// ─── Google Maps location expansion ──────────────────────────────────────────
+//
+// Google Maps searches around a single geocoded point, so a whole-country
+// location like "India" returns almost nothing. Expand known countries into
+// their major business cities and search "<business type> in <city>" so the
+// scraper actually finds listings (with emails) across the market.
+
+const COUNTRY_CITIES: Record<string, string[]> = {
+  india: ["Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Pune", "Chennai", "Kolkata", "Ahmedabad"],
+  "united states": ["New York", "Los Angeles", "Chicago", "Houston", "Austin", "San Francisco", "Miami", "Atlanta"],
+  usa: ["New York", "Los Angeles", "Chicago", "Houston", "Austin", "San Francisco", "Miami", "Atlanta"],
+  "united kingdom": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol"],
+  uk: ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol"],
+  canada: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
+  australia: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
+  "united arab emirates": ["Dubai", "Abu Dhabi", "Sharjah"],
+  uae: ["Dubai", "Abu Dhabi", "Sharjah"],
+  germany: ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne"],
+  singapore: ["Singapore"],
+};
+
+function expandLocationToCities(location: string): string[] {
+  const key = location.toLowerCase().trim();
+  if (COUNTRY_CITIES[key]) return COUNTRY_CITIES[key];
+  return location.trim() ? [location.trim()] : [""];
+}
+
 // ─── ApifyClient ──────────────────────────────────────────────────────────────
 
 export class ApifyClient {
@@ -468,16 +495,29 @@ export class ApifyClient {
     limit: number;
   }): Promise<ApifyLead[]> {
     const { searchTerms, location, limit } = params;
-    if (searchTerms.length === 0) return [];
+    const terms = searchTerms.map((t) => t.trim()).filter((t) => t && t.toLowerCase() !== "other");
+    if (terms.length === 0) return [];
+
+    // Build "<business type> in <city>" queries across the market's major cities
+    // so Google Maps returns real listings (a bare country query returns ~none).
+    const cities = expandLocationToCities(location);
+    const queries: string[] = [];
+    for (const term of terms.slice(0, 4)) {
+      for (const city of cities) {
+        queries.push(city ? `${term} in ${city}` : term);
+      }
+    }
+    const searchStringsArray = queries.slice(0, 16);
+    // Spread the candidate budget across the queries (>=4 places each).
+    const perSearch = Math.max(4, Math.ceil(limit / searchStringsArray.length));
 
     const input: Record<string, unknown> = {
-      searchStringsArray: searchTerms.slice(0, 5),
-      maxCrawledPlacesPerSearch: Math.min(limit, 100),
+      searchStringsArray,
+      maxCrawledPlacesPerSearch: Math.min(perSearch, 50),
       scrapeContacts: true,     // crawl each place's website for emails/socials
       skipClosedPlaces: true,
       language: "en",
     };
-    if (location) input.locationQuery = location;
 
     const runRes = await fetch(
       `${this.baseUrl}/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
