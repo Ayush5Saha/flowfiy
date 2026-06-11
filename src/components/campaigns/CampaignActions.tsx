@@ -21,10 +21,27 @@ export function CampaignActions({ campaignId, status, pendingCount }: CampaignAc
   async function handleLaunch() {
     setLoading("launch");
     try {
-      const res = await fetch(`/api/campaigns/${campaignId}/launch`, { method: "POST" });
-      const json = await res.json();
+      let res = await fetch(`/api/campaigns/${campaignId}/launch`, { method: "POST" });
+      let json = await res.json();
+
+      // Approval gate: AI-written emails start unapproved so you can review them
+      // before they send. If any are unreviewed, offer to approve all & launch.
+      if (res.status === 422 && json.error === "approval_required") {
+        const proceed = window.confirm(
+          `${json.message ?? "Some emails haven't been reviewed yet."}\n\n` +
+            "Click OK to approve all and launch now, or Cancel to review them first."
+        );
+        if (!proceed) {
+          setLoading(null);
+          return;
+        }
+        await fetch(`/api/campaigns/${campaignId}/approve-all`, { method: "POST" });
+        res = await fetch(`/api/campaigns/${campaignId}/launch`, { method: "POST" });
+        json = await res.json();
+      }
+
       if (!res.ok) {
-        toast(json.error ?? "Failed to launch", "error");
+        toast(json.message ?? json.error ?? "Failed to launch", "error");
       } else {
         toast(json.message ?? `Queued ${json.queued} emails`, "success");
         router.refresh();
