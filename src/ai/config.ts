@@ -150,10 +150,10 @@ export const FIELD_CHAR_LIMITS = {
   personalizationHook:     70,
   serviceGap:             100,  // specific gap this lead has that our service solves
 
-  // Personalization
+  // Personalization (full emails: greeting + short paras + CTA + sign-off)
   subjectLine:             55,   // ~7 words
-  emailBody:              400,  // 4-5 sentences
-  followUp1:              200,  // 3 sentences
-  followUp2:              130,  // 2 sentences
-  followUp3:              120,  // 2 sentences — final "closing the loop" touch
+  emailBody:              700,  // greeting + 3 short paras + sign-off
+  followUp1:              340,  // greeting + 2-3 sentences + sign-off
+  followUp2:              260,  // greeting + 1-2 sentences + sign-off
+  followUp3:              240,  // greeting + graceful close + sign-off
 } as const;
