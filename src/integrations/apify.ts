@@ -5,6 +5,7 @@ export interface ApifyLead {
   lastName: string;
   title: string | null;
   email: string | null;
+  phone?: string | null;
   linkedinUrl: string | null;
   organization?: {
     name: string | null;
@@ -498,6 +499,8 @@ export class ApifyClient {
       website?: string;
       domain?: string;
       emails?: string[];
+      phone?: string;
+      phoneUnformatted?: string;
       city?: string;
       categoryName?: string;
       linkedIns?: string[];
@@ -523,6 +526,7 @@ export class ApifyClient {
         lastName: "",
         title: null,
         email,
+        phone: p.phoneUnformatted ?? p.phone ?? null,
         linkedinUrl: p.linkedIns?.[0] ?? null,
         organization: {
           name: p.title ?? null,

@@ -129,6 +129,59 @@ async function filterOutExistingLeads<T extends DedupableLead>(
   return { fresh, duplicates: leads.length - fresh.length };
 }
 
+// ─── Contact-quality filter ───────────────────────────────────────────────────
+//
+// Keeps only leads with a properly-formatted email AND a website that actually
+// loads (live HEAD/GET check). Runs at discovery so we never research/score
+// dead-site or junk-email leads — the core "best quality" gate.
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** True if the URL responds with a non-error status within the timeout. */
+async function isWebsiteLive(url: string): Promise<boolean> {
+  const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  for (const method of ["HEAD", "GET"] as const) {
+    try {
+      const res = await fetch(target, {
+        method,
+        redirect: "follow",
+        signal: AbortSignal.timeout(8000),
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; FlowfiyBot/1.0)" },
+      });
+      // Some sites reject HEAD (405) but serve GET — only treat <400 as live.
+      if (res.status < 400) return true;
+      if (method === "HEAD" && (res.status === 405 || res.status === 403)) continue;
+      return false;
+    } catch {
+      if (method === "HEAD") continue; // retry once with GET
+      return false;
+    }
+  }
+  return false;
+}
+
+interface QualityCheckable {
+  email?: string | null;
+  organization?: { websiteUrl?: string | null } | null;
+}
+
+/** Filter to leads with a valid email and a live website (checked in parallel). */
+async function filterByContactQuality<T extends QualityCheckable>(
+  leads: T[]
+): Promise<{ kept: T[]; dropped: number }> {
+  const flags = await Promise.all(
+    leads.map(async (l) => {
+      const email = (l.email ?? "").trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return false;
+      const website = l.organization?.websiteUrl;
+      if (!website) return false;
+      return isWebsiteLive(website);
+    })
+  );
+  const kept = leads.filter((_, i) => flags[i]);
+  return { kept, dropped: leads.length - kept.length };
+}
+
 export async function handleSearchLeads(
   input: SearchLeadsInput,
   ctx: ToolContext
@@ -199,10 +252,20 @@ async function searchViaApollo(
     return { leads: [], total: 0, source: "apollo", message: "All matches were duplicates of existing leads." };
   }
 
-  await ctx.log?.(`Found ${fresh.length} new leads from Apollo. Saving to database...`, "success");
+  await ctx.log?.(`Validating contact details (valid email + working website) for ${fresh.length} leads...`, "info");
+  const { kept: quality, dropped: lowQuality } = await filterByContactQuality(fresh);
+  if (lowQuality > 0) {
+    await ctx.log?.(`Dropped ${lowQuality} lead(s) with an invalid email or a website that doesn't load.`, "info");
+  }
+  if (quality.length === 0) {
+    await ctx.log?.("No Apollo leads passed the contact-quality checks (valid email + working website).", "info");
+    return { leads: [], total: 0, source: "apollo", message: "No leads passed the contact-quality checks." };
+  }
+
+  await ctx.log?.(`Found ${quality.length} verified leads from Apollo. Saving to database...`, "success");
 
   const savedLeads = await Promise.all(
-    fresh.map((raw) =>
+    quality.map((raw) =>
       prisma.lead.create({
         data: {
           leadListId: ctx.leadListId,
@@ -242,7 +305,7 @@ async function searchViaApollo(
       companyWebsite: lead.companyWebsite ?? null,
       companySize: lead.companySize ?? "Unknown",
       industry: lead.industry ?? "Unknown",
-      linkedinUrl: fresh[i]?.linkedinUrl ?? null,
+      linkedinUrl: quality[i]?.linkedinUrl ?? null,
     })),
     total: savedLeads.length,
     source: "apollo",
@@ -291,14 +354,20 @@ async function searchViaApify(
     return { leads: [], total: 0, source: "apify", message: "All matches were duplicates of existing leads." };
   }
 
-  const withEmails = fresh.filter((l) => l.email).length;
-  await ctx.log?.(
-    `Found ${fresh.length} new leads via Apify (${withEmails} with emails). Saving to database...`,
-    "success"
-  );
+  await ctx.log?.(`Validating contact details (valid email + working website) for ${fresh.length} leads...`, "info");
+  const { kept: quality, dropped: lowQuality } = await filterByContactQuality(fresh);
+  if (lowQuality > 0) {
+    await ctx.log?.(`Dropped ${lowQuality} lead(s) with an invalid email or a website that doesn't load.`, "info");
+  }
+  if (quality.length === 0) {
+    await ctx.log?.("No leads passed the contact-quality checks (valid email + working website). Try broadening the ICP or location.", "info");
+    return { leads: [], total: 0, source: "apify", message: "No leads passed the contact-quality checks." };
+  }
+
+  await ctx.log?.(`Found ${quality.length} verified leads via Apify. Saving to database...`, "success");
 
   const savedLeads = await Promise.all(
-    fresh.map((raw) =>
+    quality.map((raw) =>
       prisma.lead.create({
         data: {
           leadListId: ctx.leadListId,
@@ -312,6 +381,7 @@ async function searchViaApify(
           companySize: raw.organization?.employeeCount?.toString() ?? null,
           industry: raw.organization?.industry ?? null,
           linkedinUrl: raw.linkedinUrl ?? null,
+          whatsApp: raw.phone ?? null,
           source: "apify",
           rawData: raw as never,
           status: "RESEARCHING",
@@ -327,26 +397,22 @@ async function searchViaApify(
     data: { totalLeads: savedLeads.length, jobStatus: "analyzing_companies" },
   });
 
-  const emailNote = withEmails > 0
-    ? `${withEmails}/${savedLeads.length} leads have validated emails.`
-    : "No emails found — outreach via LinkedIn URL or company website.";
-
   return {
     leads: savedLeads.map((lead, i) => ({
       leadId: lead.id,
       firstName: lead.firstName,
       lastName: lead.lastName,
       title: lead.title ?? "Unknown",
-      email: lead.email ?? "not available — use LinkedIn URL or scrape company website",
+      email: lead.email ?? "not available",
       companyName: lead.companyName ?? "Unknown",
       companyWebsite: lead.companyWebsite ?? null,
       companySize: lead.companySize ?? "Unknown",
       industry: lead.industry ?? "Unknown",
-      linkedinUrl: fresh[i]?.linkedinUrl ?? null,
+      linkedinUrl: quality[i]?.linkedinUrl ?? null,
     })),
     total: savedLeads.length,
     source: "apify",
-    note: emailNote,
+    note: `${savedLeads.length} leads with a valid email and a working website.`,
   };
 }
 

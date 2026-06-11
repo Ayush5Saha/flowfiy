@@ -70,8 +70,8 @@ export const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
  * candidates, research + score them all, keep the qualified, and delete the
  * rest. Capped by MAX_DISCOVERY_CANDIDATES to bound Apify/AI spend per run.
  */
-export const QUALIFIED_OVERFETCH_MULTIPLIER = 3;
-export const MAX_DISCOVERY_CANDIDATES = 75;
+export const QUALIFIED_OVERFETCH_MULTIPLIER = 6;
+export const MAX_DISCOVERY_CANDIDATES = 120;
 
 /**
  * Hard output ceiling per agent (in tokens).
