@@ -43,7 +43,9 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       firstName: true,
       lastName: true,
       title: true,
+      email: true,
       companyName: true,
+      companyWebsite: true,
       companySize: true,
       industry: true,
       status: true,
@@ -62,6 +64,20 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
 
   if (lead.status !== "RESEARCHING") {
     // Already processed — check finalization and exit
+    await checkFinalization(leadListId, organizationId, log);
+    return;
+  }
+
+  // ── Contact-quality gate ──────────────────────────────────────────────────
+  // Only leads with proper contact details (a real email AND a website) can be
+  // qualified — we can't run outreach without them. Drop the rest before
+  // spending an AI call on them (disqualified leads are deleted).
+  if (!lead.email || !lead.companyWebsite) {
+    await log(
+      `🔴 ${lead.companyName ?? "Lead"} — missing ${!lead.email ? "email" : "website"}, removing (insufficient contact details).`,
+      "info"
+    );
+    await prisma.lead.delete({ where: { id: leadId } }).catch(() => null);
     await checkFinalization(leadListId, organizationId, log);
     return;
   }

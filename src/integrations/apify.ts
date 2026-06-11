@@ -290,15 +290,14 @@ export class ApifyClient {
       .slice(0, 8000);
   }
 
-  // ─── Search leads (leads-finder primary, Google scraper fallback) ─────────
+  // ─── Search leads ──────────────────────────────────────────────────────────
   //
-  // code_crafter/leads-finder returns structured leads with:
-  //   - Validated work emails (huge upgrade over SERP scraping)
-  //   - Mobile numbers (when available)
-  //   - Company firmographics (size, industry, description, website)
-  //   - LinkedIn profile URLs
-  //
-  // Falls back to the Google SERP scraper if the actor fails or quota exhausted.
+  // Source priority (first that returns leads wins):
+  //   1. compass/crawler-google-places — real businesses with a VERIFIED website,
+  //      email and phone scraped from their own site (highest contact quality).
+  //   2. code_crafter/leads-finder — person-level, validated emails (paid Apify).
+  //   3. nexgendata/b2b-leads-finder — person-level, free-plan, guessed emails.
+  //   4. Google SERP scraper — LinkedIn URLs only, no emails (last resort).
 
   async searchPeople(params: {
     jobTitles: string[];
@@ -313,7 +312,19 @@ export class ApifyClient {
     const mappedIndustries = mapIndustries(industries);
     const mappedSizes      = companySizes ? mapCompanySizes(companySizes) : [];
 
-    // ── Primary: code_crafter/leads-finder ────────────────────────────────
+    // ── Primary: Google Maps (real businesses w/ verified website + email) ────
+    try {
+      const mapsLeads = await this._searchWithGoogleMaps({
+        searchTerms: industries.length ? industries : jobTitles,
+        location: geographies[0] ?? "",
+        limit,
+      });
+      if (mapsLeads.length > 0) return mapsLeads;
+    } catch (err) {
+      console.warn("[apify] google-maps failed:", err instanceof Error ? err.message : String(err));
+    }
+
+    // ── Fallback 1: code_crafter/leads-finder ─────────────────────────────────
     let leadsFinderError: string | null = null;
     try {
       const leads = await this._searchWithLeadsFinder({
@@ -440,6 +451,87 @@ export class ApifyClient {
       });
     }
 
+    return leads;
+  }
+
+  // ─── Private: compass/crawler-google-places (Google Maps + contacts) ──────
+  //
+  // Scrapes Google Maps businesses and their websites for real contact details.
+  // Only returns places that have BOTH a website and a scraped email (the
+  // "proper contact details" quality bar). Business-level leads (no person
+  // name) — best for local/SMB outreach.
+
+  private async _searchWithGoogleMaps(params: {
+    searchTerms: string[];
+    location: string;
+    limit: number;
+  }): Promise<ApifyLead[]> {
+    const { searchTerms, location, limit } = params;
+    if (searchTerms.length === 0) return [];
+
+    const input: Record<string, unknown> = {
+      searchStringsArray: searchTerms.slice(0, 5),
+      maxCrawledPlacesPerSearch: Math.min(limit, 100),
+      scrapeContacts: true,     // crawl each place's website for emails/socials
+      skipClosedPlaces: true,
+      language: "en",
+    };
+    if (location) input.locationQuery = location;
+
+    const runRes = await fetch(
+      `${this.baseUrl}/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(120_000),
+      }
+    );
+
+    if (!runRes.ok) {
+      const body = await runRes.text().catch(() => "");
+      throw new Error(`google-maps actor failed (${runRes.status}): ${body.slice(0, 200)}`);
+    }
+
+    const places = (await runRes.json()) as Array<{
+      title?: string;
+      website?: string;
+      domain?: string;
+      emails?: string[];
+      city?: string;
+      categoryName?: string;
+      linkedIns?: string[];
+    }>;
+    if (!Array.isArray(places) || places.length === 0) return [];
+
+    const seen = new Set<string>();
+    const leads: ApifyLead[] = [];
+    for (const p of places) {
+      if (leads.length >= limit) break;
+      const email = p.emails?.find((e) => !!e) ?? null;
+      const website = p.website || (p.domain ? `https://${p.domain}` : null);
+
+      // Quality gate at the source: must have a website AND a real email.
+      if (!email || !website) continue;
+
+      const key = email.toLowerCase().trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      leads.push({
+        firstName: "",
+        lastName: "",
+        title: null,
+        email,
+        linkedinUrl: p.linkedIns?.[0] ?? null,
+        organization: {
+          name: p.title ?? null,
+          websiteUrl: website,
+          employeeCount: null,
+          industry: p.categoryName ?? null,
+        },
+      });
+    }
     return leads;
   }
 
