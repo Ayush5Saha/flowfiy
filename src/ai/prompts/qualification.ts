@@ -52,6 +52,16 @@ ${truncatedIcp}
 ## Qualification Criteria
 ${truncatedCriteria}
 ${serviceContext}
+## How to score (IMPORTANT)
+Every lead you see has ALREADY passed upstream filters: it matches the target
+industry and location and has a valid email and a working website. So treat it
+as a baseline fit and score it 65-80 by default. Only score below 60
+(disqualify) when there is a CLEAR, specific disqualifier — e.g. the company is
+plainly in the wrong industry, or obviously the wrong size for the ICP.
+Do NOT disqualify a lead just because the Company Analysis is sparse, generic,
+or empty — many real sites limit what can be scraped, and thin analysis is NOT
+a disqualifier. When in doubt, qualify.
+
 ## Task
 Return a JSON object.${c ? " Stay within the character limits shown." : " Be specific and detailed in each field."}
 

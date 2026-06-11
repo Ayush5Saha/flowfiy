@@ -137,27 +137,32 @@ async function filterOutExistingLeads<T extends DedupableLead>(
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** True if the URL responds with a non-error status within the timeout. */
+/**
+ * Liveness check that FAILS OPEN: a real business website is kept unless its
+ * domain genuinely doesn't resolve (DNS not-found). Real sites very often block
+ * bots (403/429), are slow, or reject HEAD — those must NOT cause us to discard
+ * an otherwise-good lead, which previously starved the pipeline.
+ */
 async function isWebsiteLive(url: string): Promise<boolean> {
   const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-  for (const method of ["HEAD", "GET"] as const) {
-    try {
-      const res = await fetch(target, {
-        method,
-        redirect: "follow",
-        signal: AbortSignal.timeout(8000),
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; FlowfiyBot/1.0)" },
-      });
-      // Some sites reject HEAD (405) but serve GET — only treat <400 as live.
-      if (res.status < 400) return true;
-      if (method === "HEAD" && (res.status === 405 || res.status === 403)) continue;
-      return false;
-    } catch {
-      if (method === "HEAD") continue; // retry once with GET
-      return false;
-    }
+  try {
+    // Any HTTP response (even 403/404/503) means the domain resolves and a
+    // server answered — treat the site as live.
+    await fetch(target, {
+      method: "GET",
+      redirect: "follow",
+      signal: AbortSignal.timeout(10000),
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FlowfiyBot/1.0)" },
+    });
+    return true;
+  } catch (err) {
+    // Only a clear "host not found" (DNS) means a dead site. Timeouts, resets,
+    // refused connections, TLS quirks → keep the lead (fail open).
+    const cause = (err as { cause?: { code?: string } })?.cause?.code ?? "";
+    const text = `${cause} ${err instanceof Error ? err.message : ""}`;
+    const dnsDead = /ENOTFOUND|ERR_NAME_NOT_RESOLVED/i.test(text);
+    return !dnsDead;
   }
-  return false;
 }
 
 interface QualityCheckable {
