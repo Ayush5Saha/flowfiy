@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
 import { getClaudeClientForOrg } from "@/ai/client";
 import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
-import { QUALIFIED_OVERFETCH_MULTIPLIER, MAX_DISCOVERY_CANDIDATES } from "@/ai/config";
+import { QUALIFIED_OVERFETCH_MULTIPLIER, MAX_DISCOVERY_CANDIDATES, MAX_DISCOVERY_ROUNDS } from "@/ai/config";
 import { markListReady } from "@/lib/pipeline-finalization";
 import { checkTokenBudget } from "@/lib/usage";
 import type { ToolContext } from "@/ai/tools/handlers";
@@ -21,7 +21,7 @@ import { handleSearchLeads } from "@/ai/tools/handlers";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
 import { appendLog, clearLogs } from "@/lib/job-logs";
-import { getLeadResearchQueue } from "@/workers/queues";
+import { getLeadResearchQueue, getLeadDiscoveryQueue } from "@/workers/queues";
 
 export interface LeadDiscoveryJobData {
   organizationId: string;
@@ -288,16 +288,36 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     });
 
     if (discoveredLeads.length === 0) {
-      // No NEW leads this round → candidate pool is exhausted. Finalize with
-      // whatever qualified so far (0 on the very first round). leadsPerRun
-      // equals the qualified target (top-up rounds are enqueued with it).
+      // No NEW leads passed discovery this round. Keep searching with a deeper
+      // pass (larger fetch) until we reach the target or the round cap —
+      // rather than giving up after a single thin round.
       const qualifiedSoFar = await prisma.lead.count({
         where: { leadListId, status: "QUALIFIED" },
       });
+
+      if (round < MAX_DISCOVERY_ROUNDS && qualifiedSoFar < leadsPerRun) {
+        const nextRound = round + 1;
+        await log(
+          `Round ${round} found no new leads with valid contact details — widening the search (round ${nextRound} of ${MAX_DISCOVERY_ROUNDS})...`,
+          "info"
+        );
+        await prisma.leadList.update({
+          where: { id: leadListId },
+          data: { discoveryRound: nextRound, status: "RESEARCHING", jobStatus: "discovering_leads" },
+        });
+        await getLeadDiscoveryQueue().add(
+          "lead-discovery",
+          { organizationId, leadListId, leadsPerRun, round: nextRound },
+          { jobId: `discover-${leadListId}-r${nextRound}` }
+        );
+        return;
+      }
+
+      // Round cap reached (or target met) with no more new leads — finalize.
       await log(
         round > 1
-          ? `No more new leads available (round ${round}). Finalizing with ${qualifiedSoFar} qualified.`
-          : "No leads were found. Broaden the ICP, industries, or location.",
+          ? `Searched ${round} rounds — ${qualifiedSoFar} qualified. No more leads with valid contact details are available for this ICP.`
+          : "No leads with valid contact details were found. Broaden the ICP, industries, or location.",
         round > 1 ? "info" : "error"
       );
       await markListReady(leadListId, organizationId, qualifiedSoFar, leadsPerRun, log);
