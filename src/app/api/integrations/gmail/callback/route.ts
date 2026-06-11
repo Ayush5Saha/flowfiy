@@ -30,16 +30,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${origin}/integrations?error=no_refresh_token`);
     }
 
-    // Get user's Gmail address
+    // Get the connected account's email via the non-sensitive userinfo.email
+    // scope (gmail.getProfile would require the restricted readonly scope).
     const auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
       redirectUri
     );
     auth.setCredentials(tokens);
-    const gmail = google.gmail({ version: "v1", auth });
-    const profile = await gmail.users.getProfile({ userId: "me" });
-    const emailAddress = profile.data.emailAddress ?? "";
+    const oauth2 = google.oauth2({ version: "v2", auth });
+    const userinfo = await oauth2.userinfo.get();
+    const emailAddress = userinfo.data.email ?? "";
 
     const encrypted = encryptCredentials({
       refreshToken: tokens.refresh_token,

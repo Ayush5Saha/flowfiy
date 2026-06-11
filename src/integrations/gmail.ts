@@ -1,8 +1,14 @@
 import { google } from "googleapis";
 
+// Send-only Gmail access. gmail.send is a "sensitive" scope (standard OAuth
+// verification, no CASA). We intentionally do NOT request gmail.readonly (a
+// "restricted" scope that would require a costly CASA security assessment).
+// openid + userinfo.email are non-sensitive and only used to read the
+// connected account's email address. Trade-off: no automatic reply detection.
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
-  "https://www.googleapis.com/auth/gmail.readonly",
+  "openid",
+  "https://www.googleapis.com/auth/userinfo.email",
 ];
 
 export function getGoogleOAuthClient(redirectUri?: string) {
