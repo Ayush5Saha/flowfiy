@@ -9,6 +9,7 @@ import {
   Users,
   Building2,
   Megaphone,
+  Newspaper,
   UserCircle2,
   CreditCard,
   ScrollText,
@@ -17,6 +18,7 @@ import {
   Activity,
   Zap,
   HandCoins,
+  UserCog,
   Menu,
   X,
 } from "lucide-react";
@@ -27,6 +29,7 @@ const NAV_MAIN = [
   { label: "Organizations", href: "/admin/organizations", icon: Building2 },
   { label: "Campaigns",     href: "/admin/campaigns",     icon: Megaphone },
   { label: "Leads",         href: "/admin/leads",         icon: UserCircle2 },
+  { label: "Blog",          href: "/admin/blog",          icon: Newspaper },
   { label: "Affiliates",    href: "/admin/affiliates",    icon: HandCoins },
 ];
 
@@ -37,11 +40,16 @@ const NAV_SYSTEM = [
   { label: "Audit Logs",    href: "/admin/audit-logs",    icon: ScrollText },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ role = "ADMIN" }: { role?: "OWNER" | "ADMIN" }) {
   const pathname = usePathname();
   const router   = useRouter();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // "Team" (admin-access management) is owner-only.
+  const systemNav = role === "OWNER"
+    ? [...NAV_SYSTEM, { label: "Team", href: "/admin/team", icon: UserCog }]
+    : NAV_SYSTEM;
 
   // Close drawer on route change
   useEffect(() => {
@@ -82,7 +90,7 @@ export default function AdminSidebar() {
           <p className="px-3 pt-4 pb-2 text-[10px] font-semibold text-zinc-600 tracking-widest uppercase">
             System
           </p>
-          {NAV_SYSTEM.map(({ label, href, icon: Icon }) => {
+          {systemNav.map(({ label, href, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link key={href} href={href}

@@ -551,3 +551,29 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+// ─── Admin Users (internal team access to the admin panel) ──────────────────────
+
+/**
+ * Employees granted access to the admin panel. The founder/owner is a built-in
+ * super-admin (env-configured) and is always able to log in; OWNER rows here can
+ * also manage the team. Passwords are scrypt-hashed (never stored in plaintext).
+ */
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+enum AdminRole {
+  OWNER
+  ADMIN
+}

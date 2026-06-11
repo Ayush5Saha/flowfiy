@@ -8,11 +8,12 @@ import {
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
-  if (!validateAdminCredentials(email, password)) {
+  const session = await validateAdminCredentials(email, password);
+  if (!session) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
-  const token = generateAdminToken();
+  const token = generateAdminToken(session);
   const response = NextResponse.json({ success: true });
   response.cookies.set(ADMIN_COOKIE_NAME, token, {
     httpOnly: true,
