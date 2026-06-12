@@ -4,6 +4,10 @@ export interface ApolloSearchParams {
   companySizes: string[];
   geographies?: string[];
   perPage?: number;
+  /** 1-based result page. Apollo masks most emails on page 1; advancing the page
+   *  surfaces a different slice of contacts (incl. other already-unlocked emails),
+   *  which is what lets top-up rounds find genuinely NEW leads. */
+  page?: number;
 }
 
 export interface ApolloContact {
@@ -32,7 +36,9 @@ export class ApolloClient {
 
   async searchPeople(params: ApolloSearchParams): Promise<ApolloContact[]> {
     const body: Record<string, unknown> = {
-      per_page: params.perPage ?? 25,
+      // Apollo caps per_page at 100; clamp so a large candidate target doesn't 400.
+      per_page: Math.min(Math.max(params.perPage ?? 25, 1), 100),
+      page: Math.max(params.page ?? 1, 1),
       person_titles: params.jobTitles,
       // Apollo v1 mixed_people/search uses q_organization_keyword_tags for free-text
       // industry matching. organization_industry_tag_ids requires numeric IDs and

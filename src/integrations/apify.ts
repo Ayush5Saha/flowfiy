@@ -333,8 +333,12 @@ export class ApifyClient {
     geographies: string[];
     limit: number;
     companySizes?: string[];
+    /** Discovery round (1-based). Higher rounds scan deeper and rotate the
+     *  primary search term so top-up rounds surface NEW leads after dedup. */
+    round?: number;
   }): Promise<ApifyLead[]> {
     const { jobTitles, industries, geographies, limit, companySizes } = params;
+    const round = Math.max(params.round ?? 1, 1);
 
     const locations        = mapGeographies(geographies);
     const mappedIndustries = mapIndustries(industries);
@@ -346,6 +350,7 @@ export class ApifyClient {
         searchTerms: industries.length ? industries : jobTitles,
         location: geographies[0] ?? "",
         limit,
+        round,
       });
       if (mapsLeads.length > 0) return mapsLeads;
     } catch (err) {
@@ -361,6 +366,7 @@ export class ApifyClient {
         locations,
         sizes: mappedSizes,
         limit,
+        round,
       });
       if (leads.length > 0) return leads;
     } catch (err) {
@@ -372,7 +378,7 @@ export class ApifyClient {
     // Works via API on FREE Apify plans (unlike code_crafter/leads-finder).
     // Structured free-text filters; emails are pattern-derived, not validated.
     try {
-      const nexgenLeads = await this._searchWithNexgen({ jobTitles, industries, geographies, limit });
+      const nexgenLeads = await this._searchWithNexgen({ jobTitles, industries, geographies, limit, round });
       if (nexgenLeads.length > 0) return nexgenLeads;
     } catch (err) {
       console.warn("[apify] nexgen b2b-leads-finder failed:", err instanceof Error ? err.message : String(err));
@@ -380,7 +386,7 @@ export class ApifyClient {
 
     // ── Fallback 2: Google SERP scraper (no emails but still useful) ──────
     try {
-      const serpLeads = await this._searchWithGoogleScraper({ jobTitles, industries, geographies, limit });
+      const serpLeads = await this._searchWithGoogleScraper({ jobTitles, industries, geographies, limit, round });
       if (serpLeads.length > 0) return serpLeads;
     } catch (serpErr) {
       // The leads-finder error (e.g. free-plan API block) is more actionable
@@ -403,12 +409,18 @@ export class ApifyClient {
     locations: string[];
     sizes: string[];
     limit: number;
+    round?: number;
   }): Promise<ApifyLead[]> {
     const { jobTitles, industries, locations, sizes, limit } = params;
+    const round = Math.max(params.round ?? 1, 1);
+    // Fetch deeper each round (capped at the free-tier 100) so top-up rounds
+    // return rows beyond what earlier rounds already saved; upstream dedup drops
+    // the overlap, leaving the new deeper leads.
+    const fetchCount = Math.min(limit * round, 100);
 
     const input: Record<string, unknown> = {
       contact_job_title: jobTitles.slice(0, 10),
-      fetch_count:       Math.min(limit, 100), // free tier cap = 100
+      fetch_count:       fetchCount,
       email_status:      ["validated"],
       seniority_level:   ["founder", "owner", "c_suite", "director", "vp", "head"],
     };
@@ -418,7 +430,7 @@ export class ApifyClient {
     if (sizes.length > 0)      input.size               = sizes;
 
     const runRes = await fetch(
-      `${this.baseUrl}/acts/code_crafter~leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${limit}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
+      `${this.baseUrl}/acts/code_crafter~leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${fetchCount}&maxTotalChargeUsd=${this.maxCharge(fetchCount)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -451,7 +463,10 @@ export class ApifyClient {
     const leads: ApifyLead[] = [];
 
     for (const item of items) {
-      if (leads.length >= limit) break;
+      // Return up to the deeper per-round count (not just `limit`) — earlier
+      // rounds' rows are removed by the caller's cross-run dedup, so capping at
+      // `limit` here would re-yield the same top rows every round.
+      if (leads.length >= fetchCount) break;
       if (!item.first_name) continue;
 
       // Deduplicate by LinkedIn URL
@@ -493,14 +508,22 @@ export class ApifyClient {
     searchTerms: string[];
     location: string;
     limit: number;
+    round?: number;
   }): Promise<ApifyLead[]> {
     const { searchTerms, location, limit } = params;
+    const round = Math.max(params.round ?? 1, 1);
     const terms = searchTerms.map((t) => t.trim()).filter((t) => t && t.toLowerCase() !== "other");
     if (terms.length === 0) return [];
 
     // Build "<business type> in <city>" queries across the market's major cities
     // so Google Maps returns real listings (a bare country query returns ~none).
-    const cities = expandLocationToCities(location);
+    // On later rounds, rotate the city order so the query set leads with cities
+    // not yet emphasised, and crawl DEEPER per search. Google Maps returns the
+    // same top results for an identical query, so depth + rotation (plus upstream
+    // dedup) is what surfaces NEW businesses on each top-up round.
+    const allCities = expandLocationToCities(location);
+    const rot = (round - 1) % Math.max(allCities.length, 1);
+    const cities = allCities.length > 1 ? [...allCities.slice(rot), ...allCities.slice(0, rot)] : allCities;
     const queries: string[] = [];
     for (const term of terms.slice(0, 4)) {
       for (const city of cities) {
@@ -508,12 +531,13 @@ export class ApifyClient {
       }
     }
     const searchStringsArray = queries.slice(0, 16);
-    // Spread the candidate budget across the queries (>=4 places each).
-    const perSearch = Math.max(4, Math.ceil(limit / searchStringsArray.length));
+    // Spread the candidate budget across the queries (>=4 places each), and dig
+    // deeper each round so we move past the listings earlier rounds already saved.
+    const perSearch = Math.max(4, Math.ceil(limit / searchStringsArray.length)) * round;
 
     const input: Record<string, unknown> = {
       searchStringsArray,
-      maxCrawledPlacesPerSearch: Math.min(perSearch, 50),
+      maxCrawledPlacesPerSearch: Math.min(perSearch, 120),
       scrapeContacts: true,     // crawl each place's website for emails/socials
       skipClosedPlaces: true,
       language: "en",
@@ -549,8 +573,12 @@ export class ApifyClient {
 
     const seen = new Set<string>();
     const leads: ApifyLead[] = [];
+    // Return up to the deeper per-round count — the caller dedups against
+    // earlier rounds and trims to the candidate target, so capping at `limit`
+    // here would re-yield the same top businesses every round.
+    const roundCap = limit * round;
     for (const p of places) {
-      if (leads.length >= limit) break;
+      if (leads.length >= roundCap) break;
       const email = p.emails?.find((e) => !!e) ?? null;
       const website = p.website || (p.domain ? `https://${p.domain}` : null);
 
@@ -591,18 +619,26 @@ export class ApifyClient {
     industries: string[];
     geographies: string[];
     limit: number;
+    round?: number;
   }): Promise<ApifyLead[]> {
     const { jobTitles, industries, geographies, limit } = params;
+    const round = Math.max(params.round ?? 1, 1);
+    // This actor takes a SINGLE title/industry. Rotate which one we use by round
+    // (and fetch deeper) so top-up rounds query a different slice of the ICP
+    // instead of repeating the same single-title search.
+    const title    = jobTitles.length ? jobTitles[(round - 1) % jobTitles.length] : "";
+    const industry = industries.length ? industries[(round - 1) % industries.length] : "";
+    const maxResults = Math.min(Math.max(limit * round, 1), 500);
 
     const input: Record<string, unknown> = {
-      jobTitle:   jobTitles[0] ?? "",
-      industry:   industries[0] ?? "",
+      jobTitle:   title,
+      industry,
       location:   geographies[0] ?? "",
-      maxResults: Math.min(Math.max(limit, 1), 500),
+      maxResults,
     };
 
     const runRes = await fetch(
-      `${this.baseUrl}/acts/nexgendata~b2b-leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(limit)}`,
+      `${this.baseUrl}/acts/nexgendata~b2b-leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(maxResults)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -630,8 +666,9 @@ export class ApifyClient {
 
     const seen = new Set<string>();
     const leads: ApifyLead[] = [];
+    const roundCap = limit * round;
     for (const it of items) {
-      if (leads.length >= limit) break;
+      if (leads.length >= roundCap) break;
       const first = (it.firstName ?? it.fullName?.split(" ")[0] ?? "").trim();
       if (!first) continue;
       if (it.linkedinUrl) {
@@ -663,10 +700,17 @@ export class ApifyClient {
     industries: string[];
     geographies: string[];
     limit: number;
+    round?: number;
   }): Promise<ApifyLead[]> {
     const { jobTitles, industries, geographies, limit } = params;
+    const round = Math.max(params.round ?? 1, 1);
 
-    const titleSample    = jobTitles.slice(0, 3);
+    // Rotate which titles lead the queries by round, and pull deeper SERP pages,
+    // so top-up rounds surface different LinkedIn profiles than earlier rounds.
+    const rotated = jobTitles.length
+      ? [...jobTitles.slice((round - 1) % jobTitles.length), ...jobTitles.slice(0, (round - 1) % jobTitles.length)]
+      : jobTitles;
+    const titleSample    = rotated.slice(0, 3);
     const industrySample = industries.slice(0, 2).join(" OR ");
     const geoSample      = geographies.slice(0, 2).join(" OR ");
 
@@ -683,7 +727,7 @@ export class ApifyClient {
     );
 
     const actorId  = "apify~google-search-scraper";
-    const maxItems = Math.min(limit * 3, 90);
+    const maxItems = Math.min(limit * 3 * round, 180);
 
     let runRes: Response;
     try {
@@ -694,7 +738,9 @@ export class ApifyClient {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             queries:          queries.join("\n"),
-            maxPagesPerQuery: 1,
+            // Pull deeper result pages on later rounds (cap 3) to move past
+            // profiles earlier rounds already captured.
+            maxPagesPerQuery: Math.min(round, 3),
             languageCode:     "en",
             countryCode:      "us",
           }),
@@ -720,8 +766,9 @@ export class ApifyClient {
     const seenUrls = new Set<string>();
     const leads: ApifyLead[] = [];
 
+    const roundCap = limit * round;
     for (const item of items) {
-      if (leads.length >= limit) break;
+      if (leads.length >= roundCap) break;
       if (!item.url?.includes("linkedin.com/in/")) continue;
       if (seenUrls.has(item.url)) continue;
       seenUrls.add(item.url);

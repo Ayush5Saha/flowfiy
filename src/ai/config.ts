@@ -66,11 +66,14 @@ export const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
 /**
  * Qualified-only delivery: not every discovered candidate qualifies, so to hit
- * the requested number of QUALIFIED leads we over-fetch this multiple of
- * candidates, research + score them all, keep the qualified, and delete the
- * rest. Capped by MAX_DISCOVERY_CANDIDATES to bound Apify/AI spend per run.
+ * the requested number of QUALIFIED leads we over-fetch this multiple of the
+ * REMAINING gap to target each round, research + score them, keep the qualified,
+ * and delete the rest. The top-up loop runs more rounds (scanning new search
+ * pages) if a round falls short, so a modest 2× buffer is enough — a larger
+ * multiplier just over-delivers far past what the user asked for (and silently
+ * burns their Apollo credits + AI tokens). Capped by MAX_DISCOVERY_CANDIDATES.
  */
-export const QUALIFIED_OVERFETCH_MULTIPLIER = 6;
+export const QUALIFIED_OVERFETCH_MULTIPLIER = 2;
 export const MAX_DISCOVERY_CANDIDATES = 120;
 
 /**
@@ -94,7 +97,7 @@ export const MAX_DISCOVERY_ROUNDS = 5;
  *  personalization:~920 chars of emails (incl. followUp3) ≈ 230 tokens. 900 gives headroom.
  */
 export const AGENT_MAX_TOKENS = {
-  icpAnalyzer:      500,
+  icpAnalyzer:      750,  // bumped from 500 — now emits a broader title/industry net
   companyAnalyzer:  512,
   qualification:    400,  // bumped from 256 — now generates serviceGaps array
   personalization:  900,  // bumped from 700 — now generates followUp3 as well

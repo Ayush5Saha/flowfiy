@@ -28,6 +28,9 @@ export interface SearchLeadsInput {
   companySizes?: string[];
   geographies?: string[];
   limit?: number;
+  /** Discovery round (1-based). Each round scans the NEXT window of Apollo result
+   *  pages so top-up rounds surface new people instead of re-fetching page 1. */
+  round?: number;
 }
 
 export interface ScrapeWebsiteInput {
@@ -235,18 +238,45 @@ async function searchViaApollo(
   const apollo = ctx.apolloClient!;
   await ctx.log?.(`Searching Apollo for leads — titles: ${input.jobTitles.slice(0, 3).join(", ")}${input.jobTitles.length > 3 ? "..." : ""}`, "tool");
 
-  const rawLeads = await apollo.searchPeople({
-    jobTitles: input.jobTitles,
-    industries: input.industries,
-    companySizes: input.companySizes ?? [],
-    geographies,
-    perPage: limit,
-  });
+  // ── Paginated fetch ───────────────────────────────────────────────────────
+  // Apollo masks most emails on a single page, so one page yields only the few
+  // already-unlocked contacts (the old ~6-7 ceiling). We scan a WINDOW of pages
+  // per round and advance the window each round, so we both (a) gather a deep
+  // enough raw pool to survive email/dup attrition, and (b) surface genuinely
+  // NEW people on every top-up round instead of re-fetching page 1.
+  const APOLLO_PER_PAGE = 100;
+  const PAGES_PER_ROUND = 3;
+  const round = Math.max(input.round ?? 1, 1);
+  const startPage = (round - 1) * PAGES_PER_ROUND + 1;
+
+  const rawLeads: Awaited<ReturnType<typeof apollo.searchPeople>> = [];
+  for (let i = 0; i < PAGES_PER_ROUND; i++) {
+    const page = startPage + i;
+    const pageLeads = await apollo.searchPeople({
+      jobTitles: input.jobTitles,
+      industries: input.industries,
+      companySizes: input.companySizes ?? [],
+      geographies,
+      perPage: APOLLO_PER_PAGE,
+      page,
+    });
+    if (pageLeads.length === 0) break; // ran out of results
+    rawLeads.push(...pageLeads);
+    // Stop early once the raw pool is comfortably larger than the candidate
+    // target (≈4× covers typical dup + locked-email attrition).
+    if (rawLeads.length >= limit * 4) break;
+  }
 
   if (rawLeads.length === 0) {
-    await ctx.log?.("No leads found in Apollo with these filters.", "info");
+    await ctx.log?.(
+      round > 1
+        ? `No more Apollo results past page ${startPage - 1} for these filters.`
+        : "No leads found in Apollo with these filters.",
+      "info"
+    );
     return { leads: [], total: 0, source: "apollo", message: "No leads found with these filters." };
   }
+  await ctx.log?.(`Scanned ${rawLeads.length} Apollo candidates across pages ${startPage}–${startPage + PAGES_PER_ROUND - 1}.`, "info");
 
   const { fresh, duplicates } = await filterOutExistingLeads(ctx.organizationId, rawLeads);
   if (duplicates > 0) {
@@ -258,14 +288,18 @@ async function searchViaApollo(
   }
 
   await ctx.log?.(`Validating contact details (valid email + working website) for ${fresh.length} leads...`, "info");
-  const { kept: quality, dropped: lowQuality } = await filterByContactQuality(fresh);
+  const { kept: qualityAll, dropped: lowQuality } = await filterByContactQuality(fresh);
   if (lowQuality > 0) {
     await ctx.log?.(`Dropped ${lowQuality} lead(s) with an invalid email or a website that doesn't load.`, "info");
   }
-  if (quality.length === 0) {
+  if (qualityAll.length === 0) {
     await ctx.log?.("No Apollo leads passed the contact-quality checks (valid email + working website).", "info");
     return { leads: [], total: 0, source: "apollo", message: "No leads passed the contact-quality checks." };
   }
+
+  // Cap to the candidate target — we over-scan pages to survive attrition, but
+  // only research/score up to `limit` candidates per round to bound AI spend.
+  const quality = qualityAll.slice(0, limit);
 
   await ctx.log?.(`Found ${quality.length} verified leads from Apollo. Saving to database...`, "success");
 
@@ -334,6 +368,9 @@ async function searchViaApify(
       geographies,
       limit,
       companySizes: input.companySizes,
+      // Each round scans DEEPER (and rotates terms) so top-up rounds surface new
+      // businesses/people instead of re-fetching the same first results.
+      round:        Math.max(input.round ?? 1, 1),
     });
   } catch (err) {
     await ctx.log?.(`Apify lead search failed: ${err instanceof Error ? err.message : String(err)}`, "error");
@@ -360,14 +397,18 @@ async function searchViaApify(
   }
 
   await ctx.log?.(`Validating contact details (valid email + working website) for ${fresh.length} leads...`, "info");
-  const { kept: quality, dropped: lowQuality } = await filterByContactQuality(fresh);
+  const { kept: qualityAll, dropped: lowQuality } = await filterByContactQuality(fresh);
   if (lowQuality > 0) {
     await ctx.log?.(`Dropped ${lowQuality} lead(s) with an invalid email or a website that doesn't load.`, "info");
   }
-  if (quality.length === 0) {
+  if (qualityAll.length === 0) {
     await ctx.log?.("No leads passed the contact-quality checks (valid email + working website). Try broadening the ICP or location.", "info");
     return { leads: [], total: 0, source: "apify", message: "No leads passed the contact-quality checks." };
   }
+
+  // Cap to the candidate target — we over-scan to survive attrition, but only
+  // research/score up to `limit` candidates per round to bound AI + Apify spend.
+  const quality = qualityAll.slice(0, limit);
 
   await ctx.log?.(`Found ${quality.length} verified leads via Apify. Saving to database...`, "success");
 

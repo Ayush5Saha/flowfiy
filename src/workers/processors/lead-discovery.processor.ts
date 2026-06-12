@@ -120,11 +120,12 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
 
     // ── ICP analysis: build a detailed, structured ICP and derive search ──────
     // filters from it. Cached on the business profile so research + qualification
-    // reuse the same analysis. Regenerated only when missing (the ICP rarely
-    // changes); falls back to the raw profile if the LLM call fails.
+    // reuse the same analysis. Regenerated when missing OR when the cached title
+    // net is too thin (< 6) — older caches held only 2-3 titles, which starved
+    // the search; the improved analyzer emits 8-14. Self-heals on the next run.
     let icpCache = businessProfile.icpAnalysisCache as Record<string, unknown> | null;
     const cachedTitles = (icpCache?.apolloSearchFilters as { jobTitles?: string[] } | undefined)?.jobTitles;
-    if (!cachedTitles || cachedTitles.length === 0) {
+    if (!cachedTitles || cachedTitles.length < 6) {
       await log("Analyzing your ICP in detail to target the right people...", "info");
       try {
         const icp = await runICPAnalyzer(
@@ -253,11 +254,23 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     };
 
     // Over-fetch candidates so we can deliver ~leadsPerRun QUALIFIED leads after
-    // research + scoring (disqualified candidates are deleted downstream). On
-    // top-up rounds we fetch progressively more so the dedup yields NEW leads
-    // beyond what earlier rounds already saved.
+    // research + scoring (disqualified candidates are deleted downstream). We
+    // size each round to the REMAINING gap to target (not the full target), so
+    // later top-up rounds shrink as qualified leads accumulate — this converges
+    // on the requested count instead of over-delivering. Depth across rounds
+    // comes from the search advancing to the NEXT page window each round
+    // (see searchViaApollo), not from inflating a single page.
+    const alreadyQualified = await prisma.lead.count({
+      where: { leadListId, status: "QUALIFIED" },
+    });
+    const remaining = Math.max(leadsPerRun - alreadyQualified, 0);
+    if (remaining === 0) {
+      await log(`Target already met — ${alreadyQualified}/${leadsPerRun} qualified. Finalizing.`, "success");
+      await markListReady(leadListId, organizationId, alreadyQualified, leadsPerRun, log);
+      return;
+    }
     const candidateTarget = Math.min(
-      leadsPerRun * QUALIFIED_OVERFETCH_MULTIPLIER * round,
+      Math.ceil(remaining * QUALIFIED_OVERFETCH_MULTIPLIER),
       MAX_DISCOVERY_CANDIDATES
     );
     await log(
@@ -277,6 +290,8 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       companySizes: filters?.companySizes ?? [],
       geographies: businessProfile.targetGeographies,
       limit: candidateTarget,
+      // Each round scans the next window of Apollo result pages → new people.
+      round,
     };
 
     await handleSearchLeads(searchParams, ctx);
