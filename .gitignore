@@ -48,3 +48,6 @@ coverage/
 .claude/
 
 .vercel
+
+# video production artifacts (frames, ffmpeg binaries, renders)
+launch-video/
