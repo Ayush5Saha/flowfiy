@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sparkles, Loader2, PencilLine, Globe } from "lucide-react";
+import { FEATURES } from "@/lib/feature-flags";
 
 const STATUS_LINES = [
   "Reading your website…",
@@ -52,52 +53,71 @@ export function MethodChooser({
       )}
 
       {/* Import from website */}
-      <div className="border border-border rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium">Import from your website</h3>
-            <p className="text-muted-foreground text-xs mt-0.5">
-              We&apos;ll read your site and draft your profile — you review before saving.
-            </p>
+      {FEATURES.websiteImport ? (
+        <div className="border border-border rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium">Import from your website</h3>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                We&apos;ll read your site and draft your profile — you review before saving.
+              </p>
 
-            {loading ? (
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                <span>{STATUS_LINES[statusIdx]}</span>
-              </div>
-            ) : (
-              <div className="mt-3 space-y-2">
-                <div className="relative">
-                  <Globe className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (url.trim()) onAnalyze();
-                      }
-                    }}
-                    placeholder="https://yourcompany.com"
-                    className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
+              {loading ? (
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>{STATUS_LINES[statusIdx]}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={onAnalyze}
-                  disabled={!url.trim()}
-                  className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  Analyze website
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (url.trim()) onAnalyze();
+                        }
+                      }}
+                      placeholder="https://yourcompany.com"
+                      className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onAnalyze}
+                    disabled={!url.trim()}
+                    className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    Analyze website
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="border border-border rounded-lg p-4 opacity-60 cursor-default">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium">Import from your website</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/15 text-primary">Coming soon</span>
+              </div>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                We&apos;re putting the finishing touches on this. Enter your details manually for now — import lands soon.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enter manually */}
       <button

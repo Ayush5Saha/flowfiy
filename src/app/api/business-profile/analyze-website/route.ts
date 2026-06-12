@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { FEATURES } from "@/lib/feature-flags";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rate-limit";
@@ -60,6 +61,10 @@ async function getOrgMembership(userId: string, organizationId: string) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!FEATURES.websiteImport) {
+    return NextResponse.json({ error: "Website import is coming soon." }, { status: 503 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
