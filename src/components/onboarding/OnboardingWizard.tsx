@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, ChevronRight } from "lucide-react";
+import { Check, Loader2, ChevronRight, Sparkles, X, ArrowLeft } from "lucide-react";
+import { MethodChooser } from "./MethodChooser";
+import type { ProfileDraft } from "@/ai/agents/profile-extractor";
 
 const STEPS = [
   { id: 1, label: "Workspace" },
@@ -34,7 +36,14 @@ export function OnboardingWizard({ userId }: { userId: string }) {
   // Step 1
   const [workspaceName, setWorkspaceName] = useState("");
 
-  // Step 2
+  // Step 2 — method chooser vs. the manual form (used by both import & manual paths)
+  const [method, setMethod] = useState<"chooser" | "form">("chooser");
+  const [analyzeUrl, setAnalyzeUrl] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState("");
+  const [draftBanner, setDraftBanner] = useState<{ domain: string; warnings: string[] } | null>(null);
+
+  // Step 2 form
   const [companyName, setCompanyName] = useState("");
   const [website, setWebsite] = useState("");
   const [serviceOffered, setServiceOffered] = useState("");
@@ -51,6 +60,51 @@ export function OnboardingWizard({ userId }: { userId: string }) {
       setArr(arr.filter((v) => v !== value));
     } else if (arr.length < 10) {
       setArr([...arr, value]);
+    }
+  }
+
+  function applyDraft(draft: ProfileDraft) {
+    setCompanyName(draft.companyName);
+    setServiceOffered(draft.serviceOffered);
+    setIcpDescription(draft.icpDescription);
+    setTargetIndustries(draft.targetIndustries);
+    setTargetGeographies(draft.targetGeographies);
+    setCompanySizeRange(draft.companySizeRange ?? "");
+    setPainPointsSolved(draft.painPointsSolved);
+    setOfferPositioning(draft.offerPositioning);
+    setOutreachTone(draft.outreachTone);
+  }
+
+  async function handleAnalyze() {
+    if (!orgId || !analyzeUrl.trim()) return;
+    setAnalyzing(true);
+    setAnalyzeError("");
+
+    try {
+      const res = await fetch("/api/business-profile/analyze-website", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId: orgId, url: analyzeUrl.trim() }),
+      });
+      const data = await res.json() as {
+        draft?: ProfileDraft; warnings?: string[]; analyzedUrl?: string; error?: string;
+      };
+
+      if (!res.ok || !data.draft) {
+        setAnalyzeError(typeof data.error === "string" ? data.error : "We couldn't analyze that website.");
+        return;
+      }
+
+      applyDraft(data.draft);
+      setWebsite(data.analyzedUrl ?? analyzeUrl.trim());
+      let domain = analyzeUrl.trim();
+      try { domain = new URL(data.analyzedUrl ?? analyzeUrl.trim()).hostname; } catch {}
+      setDraftBanner({ domain, warnings: data.warnings ?? [] });
+      setMethod("form");
+    } catch {
+      setAnalyzeError("Something went wrong. Please try again or enter your profile manually.");
+    } finally {
+      setAnalyzing(false);
     }
   }
 
@@ -170,9 +224,55 @@ export function OnboardingWizard({ userId }: { userId: string }) {
           </form>
         )}
 
-        {/* Step 2: Business Profile */}
-        {step === 2 && (
+        {/* Step 2: method chooser */}
+        {step === 2 && method === "chooser" && (
+          <MethodChooser
+            url={analyzeUrl}
+            setUrl={setAnalyzeUrl}
+            loading={analyzing}
+            error={analyzeError}
+            onAnalyze={handleAnalyze}
+            onManual={() => { setMethod("form"); setDraftBanner(null); }}
+          />
+        )}
+
+        {/* Step 2: Business Profile form (manual or prefilled from draft) */}
+        {step === 2 && method === "form" && (
           <form onSubmit={handleStep2} className="space-y-4">
+            <button
+              type="button"
+              onClick={() => { setMethod("chooser"); setAnalyzeError(""); }}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" /> change method
+            </button>
+
+            {draftBanner && (
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm">
+                <div className="flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-foreground">
+                      Drafted from <span className="font-medium">{draftBanner.domain}</span> — review and edit before saving.
+                    </p>
+                    {draftBanner.warnings.length > 0 && (
+                      <ul className="mt-1.5 list-disc list-inside text-muted-foreground text-xs space-y-0.5">
+                        {draftBanner.warnings.map((w, i) => <li key={i}>{w}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDraftBanner(null)}
+                    className="text-muted-foreground hover:text-foreground shrink-0"
+                    aria-label="Dismiss"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div>
               <h2 className="text-lg font-semibold mb-1">Define your business & ICP</h2>
               <p className="text-muted-foreground text-sm mb-4">
