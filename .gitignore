@@ -54,3 +54,4 @@ coverage/
 
 # video production artifacts (frames, ffmpeg binaries, renders)
 launch-video/
+reel-overlay/

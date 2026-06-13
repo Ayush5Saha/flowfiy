@@ -170,24 +170,38 @@ async function isWebsiteLive(url: string): Promise<boolean> {
 
 interface QualityCheckable {
   email?: string | null;
+  linkedinUrl?: string | null;
   organization?: { websiteUrl?: string | null } | null;
 }
 
-/** Filter to leads with a valid email and a live website (checked in parallel). */
+/**
+ * Keep leads with at least ONE usable contact path — a valid email OR a LinkedIn
+ * profile. Free-plan Apify sources (e.g. nexgen) return ICP-matched people with a
+ * LinkedIn URL but no email; the old "valid email AND live website" gate threw
+ * every one of them away. Email-only leads that also carry a website still get a
+ * liveness check (the original quality bar); LinkedIn-only leads pass through for
+ * LinkedIn / WhatsApp outreach or later email enrichment. `withEmail` lets callers
+ * report how many are immediately emailable.
+ */
 async function filterByContactQuality<T extends QualityCheckable>(
   leads: T[]
-): Promise<{ kept: T[]; dropped: number }> {
+): Promise<{ kept: T[]; dropped: number; withEmail: number }> {
   const flags = await Promise.all(
     leads.map(async (l) => {
       const email = (l.email ?? "").trim().toLowerCase();
-      if (!EMAIL_RE.test(email)) return false;
-      const website = l.organization?.websiteUrl;
-      if (!website) return false;
-      return isWebsiteLive(website);
+      const hasEmail = EMAIL_RE.test(email);
+      const hasLinkedIn = !!(l.linkedinUrl && /linkedin\.com/i.test(l.linkedinUrl));
+      if (!hasEmail && !hasLinkedIn) return { keep: false, email: false };
+      if (hasEmail && l.organization?.websiteUrl) {
+        const live = await isWebsiteLive(l.organization.websiteUrl);
+        if (!live) return { keep: hasLinkedIn, email: false };
+      }
+      return { keep: true, email: hasEmail };
     })
   );
-  const kept = leads.filter((_, i) => flags[i]);
-  return { kept, dropped: leads.length - kept.length };
+  const kept = leads.filter((_, i) => flags[i].keep);
+  const withEmail = flags.filter((f) => f.keep && f.email).length;
+  return { kept, dropped: leads.length - kept.length, withEmail };
 }
 
 export async function handleSearchLeads(
@@ -396,21 +410,26 @@ async function searchViaApify(
     return { leads: [], total: 0, source: "apify", message: "All matches were duplicates of existing leads." };
   }
 
-  await ctx.log?.(`Validating contact details (valid email + working website) for ${fresh.length} leads...`, "info");
-  const { kept: qualityAll, dropped: lowQuality } = await filterByContactQuality(fresh);
+  await ctx.log?.(`Validating contact details for ${fresh.length} leads...`, "info");
+  const { kept: qualityAll, dropped: lowQuality, withEmail } = await filterByContactQuality(fresh);
   if (lowQuality > 0) {
-    await ctx.log?.(`Dropped ${lowQuality} lead(s) with an invalid email or a website that doesn't load.`, "info");
+    await ctx.log?.(`Dropped ${lowQuality} lead(s) with no usable contact (no email and no LinkedIn).`, "info");
   }
   if (qualityAll.length === 0) {
-    await ctx.log?.("No leads passed the contact-quality checks (valid email + working website). Try broadening the ICP or location.", "info");
-    return { leads: [], total: 0, source: "apify", message: "No leads passed the contact-quality checks." };
+    await ctx.log?.("No leads with a usable contact path were found. On a free Apify plan the only working source returns LinkedIn profiles without emails — connect Apollo or add Apify credit for email-verified leads.", "info");
+    return { leads: [], total: 0, source: "apify", message: "No leads with a usable contact path." };
+  }
+  const noEmail = qualityAll.length - withEmail;
+  if (noEmail > 0) {
+    await ctx.log?.(`Note: ${noEmail} of ${qualityAll.length} lead(s) have a LinkedIn profile but no email (free-plan source) — they're saved for LinkedIn/WhatsApp outreach but can't be auto-emailed. Connect Apollo for email-verified leads.`, "info");
   }
 
   // Cap to the candidate target — we over-scan to survive attrition, but only
   // research/score up to `limit` candidates per round to bound AI + Apify spend.
   const quality = qualityAll.slice(0, limit);
 
-  await ctx.log?.(`Found ${quality.length} verified leads via Apify. Saving to database...`, "success");
+  const emailable = quality.filter((q) => EMAIL_RE.test((q.email ?? "").trim().toLowerCase())).length;
+  await ctx.log?.(`Found ${quality.length} leads via Apify — ${emailable} emailable, ${quality.length - emailable} LinkedIn-only. Saving to database...`, "success");
 
   const savedLeads = await Promise.all(
     quality.map((raw) =>

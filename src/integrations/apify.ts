@@ -623,36 +623,23 @@ export class ApifyClient {
   }): Promise<ApifyLead[]> {
     const { jobTitles, industries, geographies, limit } = params;
     const round = Math.max(params.round ?? 1, 1);
-    // This actor takes a SINGLE title/industry. Rotate which one we use by round
-    // (and fetch deeper) so top-up rounds query a different slice of the ICP
-    // instead of repeating the same single-title search.
-    const title    = jobTitles.length ? jobTitles[(round - 1) % jobTitles.length] : "";
+    const location = geographies[0] ?? "";
     const industry = industries.length ? industries[(round - 1) % industries.length] : "";
-    const maxResults = Math.min(Math.max(limit * round, 1), 500);
 
-    const input: Record<string, unknown> = {
-      jobTitle:   title,
-      industry,
-      location:   geographies[0] ?? "",
-      maxResults,
-    };
+    // This actor takes a SINGLE title per run. Sweep a window of the ICP's top
+    // titles (rotated by round) so ONE round covers the ICP's breadth instead of
+    // a single title — directly improves ICP match. Per-title fetch is modest to
+    // bound per-result credit spend; later rounds rotate to fresh titles.
+    const n = jobTitles.length;
+    const titles: string[] = [];
+    if (n) {
+      const start = (round - 1) % n;
+      for (let i = 0; i < Math.min(3, n); i++) titles.push(jobTitles[(start + i) % n]);
+    } else titles.push("");
+    const perTitle = Math.min(Math.max(limit, 5), 50);
+    const roundCap = limit * round;
 
-    const runRes = await fetch(
-      `${this.baseUrl}/acts/nexgendata~b2b-leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(maxResults)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-        signal: AbortSignal.timeout(120_000),
-      }
-    );
-
-    if (!runRes.ok) {
-      const body = await runRes.text().catch(() => "");
-      throw new Error(`nexgen b2b-leads-finder failed (${runRes.status}): ${body.slice(0, 200)}`);
-    }
-
-    const items = await runRes.json() as Array<{
+    type NexRow = {
       firstName?: string;
       lastName?: string;
       fullName?: string;
@@ -661,35 +648,72 @@ export class ApifyClient {
       companyDomain?: string;
       linkedinUrl?: string;
       primaryEmail?: string;
-    }>;
-    if (!Array.isArray(items) || items.length === 0) return [];
+      // This actor (DuckDuckGo→LinkedIn) ships title/industry inside `snippet`,
+      // not as dedicated columns, e.g. "Head of Business Development - E-Commerce - LinkedIn India".
+      snippet?: string;
+    };
 
     const seen = new Set<string>();
     const leads: ApifyLead[] = [];
-    const roundCap = limit * round;
-    for (const it of items) {
-      if (leads.length >= roundCap) break;
-      const first = (it.firstName ?? it.fullName?.split(" ")[0] ?? "").trim();
-      if (!first) continue;
-      if (it.linkedinUrl) {
-        if (seen.has(it.linkedinUrl)) continue;
-        seen.add(it.linkedinUrl);
+    let lastErr: string | null = null;
+
+    const parseRows = (items: NexRow[]) => {
+      for (const it of items) {
+        if (leads.length >= roundCap) break;
+        const first = (it.firstName ?? it.fullName?.split(" ")[0] ?? "").trim();
+        if (!first) continue;
+        if (it.linkedinUrl) {
+          if (seen.has(it.linkedinUrl)) continue;
+          seen.add(it.linkedinUrl);
+        }
+        const last = (it.lastName ?? it.fullName?.split(" ").slice(1).join(" ") ?? "").trim();
+        // Recover title / industry from the snippet when the columns are absent.
+        const snip = (it.snippet ?? "").replace(/\s*[-|]\s*LinkedIn\b.*$/i, "").trim();
+        const segs = snip.split(/\s+[-|]\s+/).map((s) => s.trim()).filter(Boolean);
+        leads.push({
+          firstName: first,
+          lastName:  last,
+          title:     it.jobTitle ?? segs[0] ?? null,
+          email:     it.primaryEmail ?? null,
+          linkedinUrl: it.linkedinUrl ?? null,
+          organization: {
+            name:          it.company ?? null,
+            websiteUrl:    it.companyDomain ? `https://${it.companyDomain}` : null,
+            employeeCount: null,
+            industry:      segs[1] ?? null,
+          },
+        });
       }
-      const last = (it.lastName ?? it.fullName?.split(" ").slice(1).join(" ") ?? "").trim();
-      leads.push({
-        firstName: first,
-        lastName:  last,
-        title:     it.jobTitle ?? null,
-        email:     it.primaryEmail ?? null,
-        linkedinUrl: it.linkedinUrl ?? null,
-        organization: {
-          name:          it.company ?? null,
-          websiteUrl:    it.companyDomain ? `https://${it.companyDomain}` : null,
-          employeeCount: null,
-          industry:      null,
-        },
-      });
+    };
+
+    // Sweep each ICP title (per-title actor run); aggregate + dedup across them.
+    for (const title of titles) {
+      if (leads.length >= roundCap) break;
+      try {
+        const runRes = await fetch(
+          `${this.baseUrl}/acts/nexgendata~b2b-leads-finder/run-sync-get-dataset-items?token=${this.apiKey}&maxTotalChargeUsd=${this.maxCharge(perTitle)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jobTitle: title, industry, location, maxResults: perTitle }),
+            signal: AbortSignal.timeout(120_000),
+          }
+        );
+        if (!runRes.ok) {
+          const body = await runRes.text().catch(() => "");
+          lastErr = `nexgen b2b-leads-finder failed (${runRes.status}): ${body.slice(0, 160)}`;
+          continue;
+        }
+        const items = (await runRes.json()) as NexRow[];
+        if (Array.isArray(items)) parseRows(items);
+      } catch (e) {
+        lastErr = e instanceof Error ? e.message : String(e);
+      }
     }
+
+    // Surface the actor error only when NOTHING came back, so the caller can fall
+    // through to the next source; otherwise return whatever we gathered.
+    if (leads.length === 0 && lastErr) throw new Error(lastErr);
     return leads;
   }
 
