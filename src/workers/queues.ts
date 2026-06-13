@@ -8,11 +8,15 @@ function getConnection(): Redis {
     // Prefer Railway-native Redis (REDIS_URL) over Upstash — no command limits
     const url = process.env.REDIS_URL || process.env.UPSTASH_REDIS_URL;
     if (!url) throw new Error("REDIS_URL or UPSTASH_REDIS_URL is not set");
+    // Upstash ALWAYS requires TLS — force it even if the URL was written as
+    // redis:// (a common .env typo that silently kills the whole pipeline:
+    // plaintext connections are dropped, so no job ever enqueues or runs).
+    // Railway-internal Redis uses plain redis:// and stays non-TLS.
+    const needsTls = url.startsWith("rediss://") || /upstash\.io/i.test(url);
     _connection = new Redis(url, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      // TLS required for rediss:// (Upstash) — Railway internal uses plain redis://
-      tls: url.startsWith("rediss://") ? {} : undefined,
+      tls: needsTls ? {} : undefined,
     });
   }
   return _connection;
