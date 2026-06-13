@@ -150,7 +150,9 @@ function escapeHtml(value: string) {
 }
 
 function renderInline(value: string) {
-  return escapeHtml(value).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return escapeHtml(value)
+    .replace(/\[([^\]]+)\]\((\/blog\/[a-z0-9-]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 }
 
 export function markdownToHtml(markdown: string) {
