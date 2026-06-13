@@ -344,7 +344,20 @@ export class ApifyClient {
     const mappedIndustries = mapIndustries(industries);
     const mappedSizes      = companySizes ? mapCompanySizes(companySizes) : [];
 
-    // ── Primary: Google Maps (real businesses w/ verified website + email) ────
+    // ── Primary: peakydev/leads-scraper-ppe ───────────────────────────────────
+    // Person-level B2B leads WITH emails + rich ICP filters (title/industry/
+    // country/seniority/size). Pay-per-event (~$0.0017/lead) so it runs on free
+    // Apify plans. Best fit for title-based B2B ICPs — try it first.
+    let peakyError: string | null = null;
+    try {
+      const peaky = await this._searchWithPeakyDev({ jobTitles, industries, geographies, sizes: mappedSizes, limit, round });
+      if (peaky.length > 0) return peaky;
+    } catch (err) {
+      peakyError = err instanceof Error ? err.message : String(err);
+      console.warn("[apify] peakydev leads-scraper failed:", peakyError);
+    }
+
+    // ── Fallback: Google Maps (real businesses w/ verified website + email) ───
     try {
       const mapsLeads = await this._searchWithGoogleMaps({
         searchTerms: industries.length ? industries : jobTitles,
@@ -358,7 +371,7 @@ export class ApifyClient {
     }
 
     // ── Fallback 1: code_crafter/leads-finder ─────────────────────────────────
-    let leadsFinderError: string | null = null;
+    let leadsFinderError: string | null = peakyError;
     try {
       const leads = await this._searchWithLeadsFinder({
         jobTitles,
@@ -399,6 +412,120 @@ export class ApifyClient {
     // (if any) so the user sees the real reason rather than a silent empty.
     if (leadsFinderError) throw new Error(leadsFinderError);
     return [];
+  }
+
+  // ─── Private: peakydev/leads-scraper-ppe (person-level B2B + emails) ───────
+
+  private async _searchWithPeakyDev(params: {
+    jobTitles: string[];
+    industries: string[];
+    geographies: string[];
+    sizes: string[];
+    limit: number;
+    round?: number;
+  }): Promise<ApifyLead[]> {
+    const { jobTitles, industries, geographies, sizes, limit } = params;
+    const round = Math.max(params.round ?? 1, 1);
+    // This actor enforces a minimum of 100 results per run. Fetch deeper each
+    // round so top-up rounds return rows beyond what earlier rounds saved (caller
+    // dedups the overlap). Capped to bound pay-per-event spend (~$0.0017/lead).
+    const totalResults = Math.min(Math.max(limit * round, 100), 1000);
+
+    // `industry`, `companyEmployeeSize` and `personCountry` are STRICT enums on
+    // this actor — free-text ICP values (e.g. "E-commerce") 400 the whole run.
+    // We send the free-text `personTitle` (the core filter) plus a mapped
+    // `personCountry`, and omit the other enum fields (downstream qualification
+    // re-enforces industry/size/geo).
+    const COUNTRY: Record<string, string> = {
+      "united states": "United States", usa: "United States", us: "United States",
+      "united kingdom": "United Kingdom", uk: "United Kingdom",
+      canada: "Canada", australia: "Australia", india: "India",
+      germany: "Germany", france: "France", singapore: "Singapore",
+      uae: "United Arab Emirates", "united arab emirates": "United Arab Emirates",
+    };
+    const countries = [...new Set(geographies.map((g) => COUNTRY[g.trim().toLowerCase()]).filter(Boolean))];
+
+    const input: Record<string, unknown> = {
+      totalResults,
+      includeEmails: true,
+    };
+    if (jobTitles.length) input.personTitle = jobTitles.slice(0, 10);
+    if (countries.length) input.personCountry = countries.slice(0, 5);
+    void sizes; void industries;
+
+    const runRes = await fetch(
+      `${this.baseUrl}/acts/peakydev~leads-scraper-ppe/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${totalResults}&maxTotalChargeUsd=${this.maxCharge(totalResults)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(120_000),
+      }
+    );
+
+    if (!runRes.ok) {
+      const body = await runRes.text().catch(() => "");
+      throw new Error(`peakydev leads-scraper failed (${runRes.status}): ${body.slice(0, 200)}`);
+    }
+
+    const rows = (await runRes.json()) as Array<{
+      firstName?: string;
+      lastName?: string;
+      fullName?: string;
+      position?: string;
+      email?: string;
+      all_emails?: string;
+      linkedinUrl?: string;
+      phone_numbers?: string;
+      organizationName?: string;
+      organizationWebsite?: string;
+      organizationSize?: string;
+      organizationIndustry?: string;
+    }>;
+    if (!Array.isArray(rows) || rows.length === 0) return [];
+    // The actor emits an error/notice ROW (message in a name field, no contact)
+    // instead of leads when the free monthly quota or credit is exhausted —
+    // detect it so we don't save the message as a fake lead, and surface the
+    // real reason so the chain can fall through.
+    const blob = JSON.stringify(rows).toLowerCase();
+    const realLead = rows.some((r) => r && typeof r === "object" && (r.linkedinUrl || r.email || r.organizationName));
+    if (!realLead) {
+      if (/exceed|run limit|monthly|upgrade|quota|not enough|usage/.test(blob)) {
+        throw new Error("Apify free-plan limit reached (100 leads/month) or out of credit — upgrade Apify to fetch leads.");
+      }
+      const err = rows.find((r) => r && typeof r === "object" && "error" in r) as { error?: unknown } | undefined;
+      throw new Error(`peakydev returned no leads: ${String(err?.error ?? "empty").slice(0, 160)}`);
+    }
+
+    const seen = new Set<string>();
+    const leads: ApifyLead[] = [];
+    const roundCap = limit * round;
+    for (const r of rows) {
+      if (leads.length >= roundCap) break;
+      // Skip non-lead rows (e.g. notice/error rows have no real contact).
+      if (!r.linkedinUrl && !r.email && !r.organizationName) continue;
+      const first = (r.firstName ?? r.fullName?.split(" ")[0] ?? "").trim();
+      if (!first) continue;
+      const key = (r.linkedinUrl || r.email || r.fullName || first).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const email = (r.email ?? r.all_emails?.split(/[,;\s]+/).find(Boolean) ?? null)?.trim() || null;
+      leads.push({
+        firstName: first,
+        lastName:  (r.lastName ?? r.fullName?.split(" ").slice(1).join(" ") ?? "").trim(),
+        title:     r.position ?? null,
+        email,
+        phone:     r.phone_numbers?.split(/[,;\s]+/).find(Boolean) ?? null,
+        linkedinUrl: r.linkedinUrl ?? null,
+        organization: {
+          name:          r.organizationName ?? null,
+          websiteUrl:    r.organizationWebsite ?? null,
+          employeeCount: r.organizationSize ? Number(String(r.organizationSize).replace(/\D/g, "")) || null : null,
+          industry:      r.organizationIndustry ?? null,
+        },
+      });
+    }
+    return leads;
   }
 
   // ─── Private: leads-finder actor ─────────────────────────────────────────
