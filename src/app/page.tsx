@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import LandingPage from "@/components/landing/LandingPage";
+import { LandingPageV2 } from "@/components/landing/v2/LandingPageV2";
 
 export const metadata: Metadata = {
   title: "Flowfiy — AI-Powered B2B Sales Outreach Platform India | AI Lead Generation",
@@ -223,7 +223,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <LandingPage />
+      <LandingPageV2 />
     </>
   );
 }

@@ -71,9 +71,7 @@ function StreamLine({
 function LogoTile({ reduced }: { reduced: boolean }) {
   return (
     <motion.div
-      className="relative flex h-[72px] w-[72px] items-center justify-center rounded-2xl
-                 bg-gradient-to-br from-indigo-500/20 to-violet-600/20
-                 border border-white/10 backdrop-blur-sm shadow-[0_0_40px_-6px_rgba(99,102,241,0.4)]"
+      className="relative flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-600/20 border border-white/10 backdrop-blur-sm shadow-[0_0_40px_-6px_rgba(99,102,241,0.4)]"
       animate={
         reduced
           ? {}
@@ -191,8 +189,7 @@ export function FinalCTAV2() {
 
           {/* Display headline */}
           <h2
-            className="mt-6 font-black leading-[0.96] tracking-[-0.04em] text-white
-                       text-[clamp(2.4rem,5.5vw,4.2rem)]"
+            className="mt-6 font-black leading-[0.96] tracking-[-0.04em] text-white text-[clamp(2.4rem,5.5vw,4.2rem)]"
           >
             {/* Line 1 — plain white */}
             <span className="block">
@@ -201,8 +198,7 @@ export function FinalCTAV2() {
             {/* Line 2 — indigo→violet gradient, separate masked reveal */}
             <span className="block overflow-hidden">
               <motion.span
-                className="block bg-gradient-to-r from-indigo-400 via-violet-400 to-violet-500
-                           bg-clip-text text-transparent will-change-transform"
+                className="block bg-gradient-to-r from-indigo-400 via-violet-400 to-violet-500 bg-clip-text text-transparent will-change-transform"
                 initial={reduced ? { opacity: 0 } : { y: "110%" }}
                 whileInView={reduced ? { opacity: 1 } : { y: "0%" }}
                 viewport={{ once: true, margin: "-10%" }}
