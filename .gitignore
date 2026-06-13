@@ -23,6 +23,9 @@ prisma/migrations/*.json
 .DS_Store
 Thumbs.db
 
+# Microsoft Office lock/temp files
+~$*
+
 # IDE
 .vscode/
 .idea/
