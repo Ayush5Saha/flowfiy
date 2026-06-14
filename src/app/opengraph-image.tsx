@@ -87,9 +87,12 @@ export default function Image() {
           </span>
         </div>
 
-        {/* Headline */}
+        {/* Headline — must be display:flex (Satori requires it for >1 child) */}
         <div
           style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
             fontSize: 58,
             fontWeight: 900,
             color: "white",
@@ -100,9 +103,9 @@ export default function Image() {
             letterSpacing: -1.5,
           }}
         >
-          Find leads, write emails,{" "}
+          <span>Find leads, write emails,&nbsp;</span>
           <span style={{ color: "#a78bfa" }}>close deals</span>
-          {" — automatically."}
+          <span>&nbsp;— automatically.</span>
         </div>
 
         {/* Subtext */}

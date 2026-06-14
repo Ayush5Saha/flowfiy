@@ -10,12 +10,18 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith("/blog") ||
     pathname.startsWith("/vs") ||
     pathname.startsWith("/use-cases") ||
+    pathname.startsWith("/affiliates") ||
+    pathname.startsWith("/founder") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/refund") ||
     pathname.startsWith("/contact") ||
     pathname.startsWith("/changelog") ||
     pathname.startsWith("/sitemap") ||
+    // Metadata routes that render public assets (OG/Twitter images) — must be
+    // reachable by social + search crawlers, not gated behind auth.
+    pathname.startsWith("/opengraph-image") ||
+    pathname.startsWith("/twitter-image") ||
     pathname.startsWith("/api")
   );
 }
