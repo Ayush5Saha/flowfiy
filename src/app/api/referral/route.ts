@@ -91,9 +91,24 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ valid: false, error: "Invalid request" }, { status: 400 });
 
   const { code, organizationId } = parsed.data;
+  const upperCode = code.toUpperCase();
+
+  // ── Affiliate program code (content creators) ──────────────────────────────
+  // Checked first so creator codes validate and get sent to checkout, where
+  // they set organization.referredByAffiliateId for lifetime commission.
+  const affiliate = await prisma.affiliate.findUnique({
+    where: { affiliateCode: upperCode },
+    select: { id: true, name: true, status: true },
+  });
+  if (affiliate) {
+    if (affiliate.status !== "ACTIVE") {
+      return NextResponse.json({ valid: false, error: "This affiliate code is not active" });
+    }
+    return NextResponse.json({ valid: true, referrerName: affiliate.name });
+  }
 
   const referrerOrg = await prisma.organization.findUnique({
-    where: { referralCode: code.toUpperCase() },
+    where: { referralCode: upperCode },
     select: { id: true, name: true },
   });
 

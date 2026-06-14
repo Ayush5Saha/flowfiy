@@ -90,12 +90,26 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // ── Apply affiliate commission (first payment) ────────────────────
+        await applyAffiliateConversion({
+          organizationId,
+          paymentRef: `stripe_session_${session.id}`,
+          paymentAmount: session.amount_total ?? 0,
+          plan: planKey,
+          isNewSignup: true,
+        });
+
         break;
       }
 
       // ── Renewal succeeded ──────────────────────────────────────────────────
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as unknown as { parent?: { subscription_details?: { subscription?: string } } };
+        const invoice = event.data.object as unknown as {
+          id?: string;
+          amount_paid?: number;
+          billing_reason?: string;
+          parent?: { subscription_details?: { subscription?: string } };
+        };
         const subId = invoice.parent?.subscription_details?.subscription;
         if (!subId) break;
 
@@ -107,6 +121,19 @@ export async function POST(req: NextRequest) {
             where: { id: org.id },
             data: { subscriptionStatus: "active" },
           });
+
+          // ── Recurring affiliate commission (lifetime, every renewal) ────
+          // Skip the first invoice — checkout.session.completed already paid
+          // the affiliate for it; this fires on subscription_cycle renewals.
+          if (invoice.billing_reason === "subscription_cycle" && invoice.id) {
+            await applyAffiliateConversion({
+              organizationId: org.id,
+              paymentRef: `stripe_invoice_${invoice.id}`,
+              paymentAmount: invoice.amount_paid ?? 0,
+              plan: org.plan,
+              isNewSignup: false,
+            });
+          }
         }
         break;
       }
@@ -275,5 +302,78 @@ async function applyStripeReferralReward({
   } catch (err) {
     console.error("[stripe-webhook] Failed to apply referral reward:", err);
     // Non-fatal — don't fail the webhook
+  }
+}
+
+// ─── Affiliate commission helper ──────────────────────────────────────────────
+
+/**
+ * Create an AffiliateConversion when a Stripe-billed org (referred by an
+ * affiliate) pays — first payment and every lifetime renewal. Idempotent via
+ * paymentRef. NOTE: Stripe amounts are in cents (USD); the *_in_paise columns
+ * store the smallest currency unit, so commission % is correct but the unit is
+ * USD-cents for Stripe rows vs INR-paise for Razorpay rows. Payouts must convert.
+ */
+async function applyAffiliateConversion({
+  organizationId,
+  paymentRef,
+  paymentAmount,
+  plan,
+  isNewSignup,
+}: {
+  organizationId: string;
+  paymentRef: string;
+  paymentAmount: number;
+  plan: string;
+  isNewSignup: boolean;
+}) {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { referredByAffiliateId: true },
+    });
+    if (!org?.referredByAffiliateId) return;
+
+    const affiliate = await prisma.affiliate.findUnique({
+      where: { id: org.referredByAffiliateId, status: "ACTIVE" },
+      select: { id: true, commissionRate: true },
+    });
+    if (!affiliate) return;
+
+    // Idempotency: skip if this exact payment was already recorded
+    const existing = await prisma.affiliateConversion.findFirst({
+      where: { razorpayPaymentId: paymentRef },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    const commissionAmountInPaise = BigInt(
+      Math.floor(paymentAmount * affiliate.commissionRate)
+    );
+
+    await prisma.$transaction([
+      prisma.affiliateConversion.create({
+        data: {
+          affiliateId: affiliate.id,
+          organizationId,
+          plan: plan as never,
+          paymentAmountInPaise: BigInt(paymentAmount),
+          commissionAmountInPaise,
+          razorpayPaymentId: paymentRef,
+          status: "APPROVED",
+        },
+      }),
+      prisma.affiliate.update({
+        where: { id: affiliate.id },
+        data: {
+          ...(isNewSignup ? { totalSignups: { increment: 1 } } : {}),
+          totalEarningsInPaise: { increment: commissionAmountInPaise },
+        },
+      }),
+    ]);
+
+    console.log(`[stripe-webhook] Affiliate commission created: affiliate=${affiliate.id}, ref=${paymentRef}`);
+  } catch (err) {
+    console.error("[stripe-webhook] Failed to apply affiliate commission:", err);
   }
 }

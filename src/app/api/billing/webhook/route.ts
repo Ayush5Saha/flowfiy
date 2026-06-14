@@ -100,14 +100,19 @@ export async function POST(req: NextRequest) {
           await applyRazorpayReferralReward({ referredOrgId: organizationId });
 
           // ── Apply affiliate commission (first payment) ────────────────────
+          // Only record when the payment id is present, otherwise the conversion
+          // has no idempotency key and subscription.charged (which fires for the
+          // same first payment) would create a second, double-counted commission.
           const firstPayment = event.payload.payment?.entity as Record<string, unknown> | undefined;
-          await applyAffiliateConversion({
-            organizationId,
-            razorpayPaymentId: firstPayment?.id as string | undefined,
-            paymentAmountInPaise: firstPayment?.amount as number | undefined ?? 0,
-            plan: planKey,
-            isNewSignup: true,
-          });
+          if (firstPayment?.id) {
+            await applyAffiliateConversion({
+              organizationId,
+              razorpayPaymentId: firstPayment.id as string,
+              paymentAmountInPaise: firstPayment.amount as number | undefined ?? 0,
+              plan: planKey,
+              isNewSignup: true,
+            });
+          }
         }
         break;
       }
