@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { SignupConversionTracker } from "@/components/analytics/SignupConversionTracker";
 import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
@@ -241,6 +242,7 @@ fbq('track', 'PageView');`,
         </noscript>
         {children}
         <MetaPixel />
+        <SignupConversionTracker />
         {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
       </body>
     </html>

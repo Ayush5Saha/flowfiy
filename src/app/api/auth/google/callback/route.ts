@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Sign into Supabase using the Google ID token
     const supabase = await createClient();
-    const { error: supabaseError } = await supabase.auth.signInWithIdToken({
+    const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: idToken,
     });
@@ -50,7 +50,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/login?error=supabase_auth_failed`);
     }
 
-    return NextResponse.redirect(`${appUrl}/dashboard`);
+    // The pixel can't fire in this server redirect, so first-time Google signups
+    // are flagged with ?newSignup=1 and SignupConversionTracker fires
+    // CompleteRegistration on the client. New users have created_at ≈
+    // last_sign_in_at; returning logins have a much older created_at. New users
+    // (no org yet) land on /onboarding, so the flag must ride that redirect.
+    const u = data.user;
+    let isNewUser = false;
+    if (u) {
+      const createdAt = new Date(u.created_at).getTime();
+      const lastSignIn = u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : createdAt;
+      isNewUser = lastSignIn - createdAt < 60_000; // within 60s of account creation
+    }
+
+    return NextResponse.redirect(`${appUrl}${isNewUser ? "/onboarding?newSignup=1" : "/dashboard"}`);
   } catch (err) {
     console.error("Google OAuth callback error:", err);
     return NextResponse.redirect(`${appUrl}/login?error=google_auth_failed`);
