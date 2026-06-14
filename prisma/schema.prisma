@@ -108,6 +108,10 @@ model BusinessProfile {
   offerPositioning    String   @map("offer_positioning")
   outreachTone        String   @default("professional") @map("outreach_tone")
   icpAnalysisCache    Json?    @map("icp_analysis_cache")
+  // New structured onboarding: one free-text business description (LLM email
+  // context) + structured MCQ ICP answers (precise lead-search filters).
+  businessDetails     String?  @map("business_details")
+  icp                 Json?
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

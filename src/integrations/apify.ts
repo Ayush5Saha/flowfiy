@@ -1,3 +1,5 @@
+import * as ic from "@/lib/icp";
+
 // ─── Shared lead shape returned by both Apollo and Apify ─────────────────────
 
 export interface ApifyLead {
@@ -336,8 +338,10 @@ export class ApifyClient {
     /** Discovery round (1-based). Higher rounds scan deeper and rotate the
      *  primary search term so top-up rounds surface NEW leads after dedup. */
     round?: number;
+    /** Structured MCQ ICP answers — drive precise peakydev filters when present. */
+    icp?: import("@/lib/icp").IcpAnswers;
   }): Promise<ApifyLead[]> {
-    const { jobTitles, industries, geographies, limit, companySizes } = params;
+    const { jobTitles, industries, geographies, limit, companySizes, icp } = params;
     const round = Math.max(params.round ?? 1, 1);
 
     const locations        = mapGeographies(geographies);
@@ -350,7 +354,7 @@ export class ApifyClient {
     // Apify plans. Best fit for title-based B2B ICPs — try it first.
     let peakyError: string | null = null;
     try {
-      const peaky = await this._searchWithPeakyDev({ jobTitles, industries, geographies, sizes: mappedSizes, limit, round });
+      const peaky = await this._searchWithPeakyDev({ jobTitles, industries, geographies, sizes: mappedSizes, limit, round, icp });
       if (peaky.length > 0) return peaky;
     } catch (err) {
       peakyError = err instanceof Error ? err.message : String(err);
@@ -423,35 +427,46 @@ export class ApifyClient {
     sizes: string[];
     limit: number;
     round?: number;
+    icp?: import("@/lib/icp").IcpAnswers;
   }): Promise<ApifyLead[]> {
-    const { jobTitles, industries, geographies, sizes, limit } = params;
+    const { jobTitles, geographies, limit, icp } = params;
     const round = Math.max(params.round ?? 1, 1);
     // This actor enforces a minimum of 100 results per run. Fetch deeper each
     // round so top-up rounds return rows beyond what earlier rounds saved (caller
     // dedups the overlap). Capped to bound pay-per-event spend (~$0.0017/lead).
     const totalResults = Math.min(Math.max(limit * round, 100), 1000);
 
-    // `industry`, `companyEmployeeSize` and `personCountry` are STRICT enums on
-    // this actor — free-text ICP values (e.g. "E-commerce") 400 the whole run.
-    // We send the free-text `personTitle` (the core filter) plus a mapped
-    // `personCountry`, and omit the other enum fields (downstream qualification
-    // re-enforces industry/size/geo).
-    const COUNTRY: Record<string, string> = {
-      "united states": "United States", usa: "United States", us: "United States",
-      "united kingdom": "United Kingdom", uk: "United Kingdom",
-      canada: "Canada", australia: "Australia", india: "India",
-      germany: "Germany", france: "France", singapore: "Singapore",
-      uae: "United Arab Emirates", "united arab emirates": "United Arab Emirates",
-    };
-    const countries = [...new Set(geographies.map((g) => COUNTRY[g.trim().toLowerCase()]).filter(Boolean))];
+    const input: Record<string, unknown> = { totalResults, includeEmails: true };
 
-    const input: Record<string, unknown> = {
-      totalResults,
-      includeEmails: true,
-    };
-    if (jobTitles.length) input.personTitle = jobTitles.slice(0, 10);
-    if (countries.length) input.personCountry = countries.slice(0, 5);
-    void sizes; void industries;
+    if (icp) {
+      // Structured ICP → precise, schema-valid filters via the central mappings.
+      const titles = ic.icpJobTitles(icp);
+      const seniority = ic.icpSeniority(icp);
+      const country = ic.icpCountries(icp);
+      const size = ic.icpEmployeeSize(icp);
+      const keywords = ic.icpIndustryKeywords(icp);
+      const revenue = ic.icpRevenue(icp);
+      const funding = ic.icpFundingTypes(icp);
+      if (titles.length)    input.personTitle = titles.slice(0, 10);
+      if (seniority.length) input.seniority = seniority;
+      if (country.length)   input.personCountry = country.slice(0, 5);
+      if (size.length)      input.companyEmployeeSize = size;
+      if (keywords.length)  input.industryKeywords = keywords.slice(0, 10);
+      if (revenue.length)   input.revenue = revenue;
+      if (funding.length)   input.fundingType = funding;
+    } else {
+      // Fallback (no structured ICP): free-text title + mapped country only.
+      const COUNTRY: Record<string, string> = {
+        "united states": "United States", usa: "United States", us: "United States",
+        "united kingdom": "United Kingdom", uk: "United Kingdom",
+        canada: "Canada", australia: "Australia", india: "India",
+        germany: "Germany", france: "France", singapore: "Singapore",
+        uae: "United Arab Emirates", "united arab emirates": "United Arab Emirates",
+      };
+      const countries = [...new Set(geographies.map((g) => COUNTRY[g.trim().toLowerCase()]).filter(Boolean))];
+      if (jobTitles.length) input.personTitle = jobTitles.slice(0, 10);
+      if (countries.length) input.personCountry = countries.slice(0, 5);
+    }
 
     const runRes = await fetch(
       `${this.baseUrl}/acts/peakydev~leads-scraper-ppe/run-sync-get-dataset-items?token=${this.apiKey}&maxItems=${totalResults}&maxTotalChargeUsd=${this.maxCharge(totalResults)}`,

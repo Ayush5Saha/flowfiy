@@ -31,6 +31,9 @@ export interface SearchLeadsInput {
   /** Discovery round (1-based). Each round scans the NEXT window of Apollo result
    *  pages so top-up rounds surface new people instead of re-fetching page 1. */
   round?: number;
+  /** Structured MCQ ICP answers — when present, drive precise peakydev filters
+   *  (seniority/size/country/industry-keywords/revenue/funding) directly. */
+  icp?: import("@/lib/icp").IcpAnswers;
 }
 
 export interface ScrapeWebsiteInput {
@@ -385,6 +388,7 @@ async function searchViaApify(
       // Each round scans DEEPER (and rotates terms) so top-up rounds surface new
       // businesses/people instead of re-fetching the same first results.
       round:        Math.max(input.round ?? 1, 1),
+      icp:          input.icp,
     });
   } catch (err) {
     await ctx.log?.(`Apify lead search failed: ${err instanceof Error ? err.message : String(err)}`, "error");

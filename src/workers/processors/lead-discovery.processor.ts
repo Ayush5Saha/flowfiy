@@ -18,6 +18,7 @@ import { markListReady } from "@/lib/pipeline-finalization";
 import { checkTokenBudget } from "@/lib/usage";
 import type { ToolContext } from "@/ai/tools/handlers";
 import { handleSearchLeads } from "@/ai/tools/handlers";
+import { icpJobTitles, type IcpAnswers } from "@/lib/icp";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
 import { appendLog, clearLogs } from "@/lib/job-logs";
@@ -284,14 +285,21 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     const filters = icpCache?.apolloSearchFilters as
       | { jobTitles?: string[]; industries?: string[]; companySizes?: string[] }
       | undefined;
+    // Prefer the user's structured MCQ ICP for precise sourcing: their selected
+    // decision-maker titles (not loose LLM-invented ones) and rich peakydev
+    // filters (size/country/industry/revenue/funding) — the lead-quality fix.
+    const icpAnswers = (businessProfile.icp as IcpAnswers | null) ?? null;
     const searchParams = {
-      jobTitles: filters?.jobTitles ?? [],
-      industries: filters?.industries?.length ? filters.industries : businessProfile.targetIndustries,
-      companySizes: filters?.companySizes ?? [],
+      jobTitles: icpAnswers ? icpJobTitles(icpAnswers) : (filters?.jobTitles ?? []),
+      industries: icpAnswers?.industries?.length
+        ? icpAnswers.industries
+        : (filters?.industries?.length ? filters.industries : businessProfile.targetIndustries),
+      companySizes: filters?.companySizes ?? (icpAnswers?.companySize ? [icpAnswers.companySize] : []),
       geographies: businessProfile.targetGeographies,
       limit: candidateTarget,
       // Each round scans the next window of Apollo result pages → new people.
       round,
+      icp: icpAnswers ?? undefined,
     };
 
     await handleSearchLeads(searchParams, ctx);

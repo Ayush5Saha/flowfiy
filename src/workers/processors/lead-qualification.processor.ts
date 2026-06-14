@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { getClaudeClientForOrg } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runQualification } from "@/ai/agents/qualification";
+import { icpMinScore, icpSummary as buildIcpSummary, type IcpAnswers } from "@/lib/icp";
 import { fireWebhookEvent } from "@/lib/webhooks";
 import { appendLog } from "@/lib/job-logs";
 import { getLeadPersonalizationQueue } from "@/workers/queues";
@@ -97,19 +98,31 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
         targetIndustries: true,
         serviceOffered: true,
         painPointsSolved: true,
+        icp: true,
+        businessDetails: true,
       },
     }),
   ]);
 
   const icpCache = businessProfile?.icpAnalysisCache as Record<string, unknown> | null;
 
-  const icpSummary = icpCache
-    ? `Target industries: ${businessProfile?.targetIndustries.join(", ")}. ${businessProfile?.icpDescription ?? ""}`
-    : (businessProfile?.icpDescription ?? "");
+  // Structured MCQ ICP (when present): drives a precise scoring summary and the
+  // user's chosen strictness threshold (Q12), replacing the fixed 60+ baseline.
+  const icpAnswers = (businessProfile?.icp as IcpAnswers | null) ?? null;
+  const minScore = icpAnswers ? icpMinScore(icpAnswers) : 60;
+  const avoidNote = icpAnswers?.avoidCompanies?.length
+    ? ` AVOID (auto-disqualify): ${icpAnswers.avoidCompanies.join(", ")}.`
+    : "";
+
+  const icpSummary = icpAnswers
+    ? `${buildIcpSummary(icpAnswers)}.${avoidNote} About the seller: ${businessProfile?.businessDetails ?? ""}`
+    : icpCache
+      ? `Target industries: ${businessProfile?.targetIndustries.join(", ")}. ${businessProfile?.icpDescription ?? ""}`
+      : (businessProfile?.icpDescription ?? "");
 
   const qualificationCriteria =
     (icpCache?.qualificationCriteria as string | undefined) ??
-    `Score based on: industry match, company size fit, title relevance, and observable growth/pain signals. Leads scoring 60+ qualify.`;
+    `Score based on: industry match, company size fit, title/decision-maker relevance, geography, and observable growth/pain signals.${avoidNote} Leads scoring ${minScore}+ qualify.`;
 
   const companyAnalysis = (research?.companyAnalysis ?? {}) as Record<string, unknown>;
 
@@ -161,9 +174,12 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   // Per product decision: the list should contain only qualified leads. The
   // lead (and its cascade-linked research) is removed so it never appears in
   // the deliverable list. Token usage for the work done is still counted.
-  if (!result.qualified) {
+  // Enforce the user's strictness threshold (Q12) deterministically rather than
+  // trusting the agent's baseline `qualified` flag.
+  const qualified = result.score >= minScore;
+  if (!qualified) {
     await log(
-      `🔴 ${lead.companyName ?? "Lead"} — score ${result.score}/100 → not a fit (${result.primaryReason || "below threshold"}). Removed.`,
+      `🔴 ${lead.companyName ?? "Lead"} — score ${result.score}/100 (need ${minScore}+) → not a fit (${result.primaryReason || "below threshold"}). Removed.`,
       "info"
     );
     if (runMode === "CENTRAL") await incrementTokenUsage(organizationId, 450).catch(() => null);
