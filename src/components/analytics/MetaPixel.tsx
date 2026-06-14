@@ -9,14 +9,11 @@ declare global {
   }
 }
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1625820488509651";
-
 /**
- * Re-fires PageView on client-side route changes. The base pixel + the initial
- * PageView are loaded inline in <head> (see app/layout.tsx) so the pixel is
- * present immediately and detectable by Meta's tools; this component only adds
- * the SPA navigations the raw snippet would otherwise miss, plus the <noscript>
- * fallback.
+ * Fires a Meta Pixel PageView on client-side route changes. The base pixel,
+ * initial PageView, and <noscript> fallback live inline in app/layout.tsx
+ * (loaded in <head> for immediate, detectable init); this only adds the SPA
+ * navigations the raw snippet would otherwise miss.
  */
 export function MetaPixel() {
   const pathname = usePathname();
@@ -33,18 +30,5 @@ export function MetaPixel() {
     }
   }, [pathname]);
 
-  if (!PIXEL_ID) return null;
-
-  return (
-    <noscript>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        height="1"
-        width="1"
-        style={{ display: "none" }}
-        src={`https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1`}
-        alt=""
-      />
-    </noscript>
-  );
+  return null;
 }

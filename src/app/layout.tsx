@@ -205,8 +205,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
         {/* Meta Pixel base code — inline in <head> so it loads immediately and
-            is detectable by Meta's Event Setup Tool. Route-change PageViews are
-            handled by <MetaPixel /> in the body. */}
+            is detectable by Meta's tools. Route-change PageViews (SPA nav) are
+            added by <MetaPixel /> in the body; signup conversions fire
+            CompleteRegistration via the trackMetaPixel helper. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `!function(f,b,e,v,n,t,s)
@@ -225,6 +226,17 @@ fbq('track', 'PageView');`,
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} font-sans min-h-screen`}
       >
+        {/* Meta Pixel <noscript> fallback */}
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
+            alt=""
+          />
+        </noscript>
         {children}
         <MetaPixel />
         {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
