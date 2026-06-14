@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -88,25 +89,31 @@ export async function POST(req: NextRequest) {
 
   const gateway = resolveGateway(country);
 
+  // Shared id for Meta Pixel ↔ Conversions API deduplication of the Purchase
+  // event. Threaded into the gateway (notes/metadata) so the webhook fires
+  // server-side CAPI with the SAME id the browser pixel uses.
+  const purchaseEventId = randomUUID();
+
   // ── Stripe checkout ───────────────────────────────────────────────────────
   if (gateway === "stripe") {
-    return handleStripeCheckout({ organizationId, plan: plan as StripePlanKey, organization, userEmail: user.email ?? "", referredOrgId: organizationId, referrerOrgId });
+    return handleStripeCheckout({ organizationId, plan: plan as StripePlanKey, organization, userEmail: user.email ?? "", referredOrgId: organizationId, referrerOrgId, purchaseEventId });
   }
 
   // ── Razorpay checkout (India) ─────────────────────────────────────────────
-  return handleRazorpayCheckout({ organizationId, plan: plan as PlanKey, organization, userId: user.id, userEmail: user.email ?? "" });
+  return handleRazorpayCheckout({ organizationId, plan: plan as PlanKey, organization, userId: user.id, userEmail: user.email ?? "", purchaseEventId });
 }
 
 // ─── Razorpay ─────────────────────────────────────────────────────────────────
 
 async function handleRazorpayCheckout({
-  organizationId, plan, organization, userId, userEmail,
+  organizationId, plan, organization, userId, userEmail, purchaseEventId,
 }: {
   organizationId: string;
   plan: PlanKey;
   organization: { id: string; name: string; razorpayCustomerId: string | null };
   userId: string;
   userEmail: string;
+  purchaseEventId: string;
 }) {
   const planConfig = PLANS[plan];
 
@@ -146,7 +153,7 @@ async function handleRazorpayCheckout({
     customer_notify: 1,
     total_count: 120,
     ...(customerId ? { customer_id: customerId } : {}),
-    notes: { organizationId, planKey: plan, userId, userEmail, orgName: organization.name },
+    notes: { organizationId, planKey: plan, userId, userEmail, orgName: organization.name, purchaseEventId },
   });
 
   await prisma.organization.update({
@@ -161,13 +168,14 @@ async function handleRazorpayCheckout({
     planName: planConfig.name,
     priceInr: planConfig.priceInr,
     prefill: { name: organization.name, email: userEmail },
+    purchaseEventId,
   });
 }
 
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 
 async function handleStripeCheckout({
-  organizationId, plan, organization, userEmail, referredOrgId, referrerOrgId,
+  organizationId, plan, organization, userEmail, referredOrgId, referrerOrgId, purchaseEventId,
 }: {
   organizationId: string;
   plan: StripePlanKey;
@@ -175,6 +183,7 @@ async function handleStripeCheckout({
   userEmail: string;
   referredOrgId?: string | null;
   referrerOrgId?: string | null;
+  purchaseEventId: string;
 }) {
   const planConfig = STRIPE_PLANS[plan];
 
@@ -208,12 +217,13 @@ async function handleStripeCheckout({
     customer: customerId,
     mode: "subscription",
     line_items: [{ price: planConfig.stripePriceId, quantity: 1 }],
-    success_url: `${appUrl}/billing?success=true&plan=${plan}&gateway=stripe`,
+    success_url: `${appUrl}/billing?success=true&plan=${plan}&gateway=stripe&eid=${purchaseEventId}`,
     cancel_url: `${appUrl}/billing`,
     subscription_data: {
       metadata: {
         organizationId,
         planKey: plan,
+        purchaseEventId,
         ...(referredOrgId ? { referredOrgId } : {}),
         ...(referrerOrgId ? { referrerOrgId } : {}),
       },
@@ -221,6 +231,7 @@ async function handleStripeCheckout({
     metadata: {
       organizationId,
       planKey: plan,
+      purchaseEventId,
       ...(referredOrgId ? { referredOrgId } : {}),
       ...(referrerOrgId ? { referrerOrgId } : {}),
     },

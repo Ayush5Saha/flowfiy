@@ -100,7 +100,9 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
             content_name: planObj.name,
             content_type: "subscription",
           };
-          trackMetaPixel("Purchase", params);
+          // eid is shared with the server CAPI event so Meta dedupes them.
+          const eid = searchParams.get("eid");
+          trackMetaPixel("Purchase", params, eid ? { eventID: eid } : undefined);
           trackMetaPixel("Subscribe", { ...params, predicted_ltv: value });
         }
       }
@@ -193,6 +195,7 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         keyId?: string;
         priceInr?: number;
         prefill?: { name: string; email: string };
+        purchaseEventId?: string;
         // stripe
         checkoutUrl?: string;
         priceUsd?: number;
@@ -241,7 +244,8 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         image: "/logo.png",
         prefill: data.prefill ?? {},
         handler: () => {
-          window.location.href = `/billing?success=true&plan=${planKey}`;
+          const eid = data.purchaseEventId ? `&eid=${data.purchaseEventId}` : "";
+          window.location.href = `/billing?success=true&plan=${planKey}${eid}`;
         },
         modal: {
           ondismiss: () => setLoading(null),

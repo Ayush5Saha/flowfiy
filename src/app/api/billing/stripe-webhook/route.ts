@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { getStripe, STRIPE_PLANS, getStripePlanByPriceId } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
+import { sendMetaPurchaseEvent } from "@/lib/meta-capi";
 
 /**
  * POST /api/billing/stripe-webhook
@@ -99,6 +100,16 @@ export async function POST(req: NextRequest) {
           isNewSignup: true,
         });
 
+        // ── Meta CAPI: server-confirmed Purchase ──────────────────────────
+        // Shared purchaseEventId dedupes with the browser pixel's Purchase.
+        await sendMetaPurchaseEvent({
+          eventId: session.metadata?.purchaseEventId || `stripe_session_${session.id}`,
+          value: (session.amount_total ?? 0) / 100,
+          currency: session.currency || "usd",
+          email: session.customer_details?.email,
+          plan: planConfig.name,
+        });
+
         break;
       }
 
@@ -107,6 +118,8 @@ export async function POST(req: NextRequest) {
         const invoice = event.data.object as unknown as {
           id?: string;
           amount_paid?: number;
+          currency?: string;
+          customer_email?: string;
           billing_reason?: string;
           parent?: { subscription_details?: { subscription?: string } };
         };
@@ -122,9 +135,9 @@ export async function POST(req: NextRequest) {
             data: { subscriptionStatus: "active" },
           });
 
-          // ── Recurring affiliate commission (lifetime, every renewal) ────
-          // Skip the first invoice — checkout.session.completed already paid
-          // the affiliate for it; this fires on subscription_cycle renewals.
+          // ── Recurring affiliate commission + CAPI Purchase (renewals) ───
+          // Skip the first invoice — checkout.session.completed already handled
+          // it; these fire on subscription_cycle renewals only.
           if (invoice.billing_reason === "subscription_cycle" && invoice.id) {
             await applyAffiliateConversion({
               organizationId: org.id,
@@ -132,6 +145,15 @@ export async function POST(req: NextRequest) {
               paymentAmount: invoice.amount_paid ?? 0,
               plan: org.plan,
               isNewSignup: false,
+            });
+
+            // Renewals never reach the browser — CAPI is the only tracker.
+            await sendMetaPurchaseEvent({
+              eventId: `stripe_invoice_${invoice.id}`,
+              value: (invoice.amount_paid ?? 0) / 100,
+              currency: invoice.currency || "usd",
+              email: invoice.customer_email,
+              plan: org.plan,
             });
           }
         }

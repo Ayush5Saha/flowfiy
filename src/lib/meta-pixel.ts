@@ -16,8 +16,18 @@ type MetaPixelParams = {
   [key: string]: unknown;
 };
 
-export function trackMetaPixel(event: string, params?: MetaPixelParams): void {
+export function trackMetaPixel(
+  event: string,
+  params?: MetaPixelParams,
+  options?: { eventID?: string }
+): void {
   if (typeof window !== "undefined" && typeof window.fbq === "function") {
-    window.fbq("track", event, params);
+    // The 4th arg (eventID) lets Meta dedupe this against the matching
+    // server-side Conversions API event sharing the same id.
+    if (options?.eventID) {
+      window.fbq("track", event, params, options);
+    } else {
+      window.fbq("track", event, params);
+    }
   }
 }

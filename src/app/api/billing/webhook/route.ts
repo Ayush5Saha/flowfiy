@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { getRazorpay, PLANS, getPlanByRazorpayPlanId } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
+import { sendMetaPurchaseEvent } from "@/lib/meta-capi";
 
 function verifySignature(body: string, signature: string): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
@@ -112,6 +113,17 @@ export async function POST(req: NextRequest) {
               plan: planKey,
               isNewSignup: true,
             });
+
+            // ── Meta CAPI: server-confirmed Purchase ──────────────────────
+            // Uses the shared purchaseEventId so it dedupes with the browser
+            // pixel's Purchase on the success page.
+            await sendMetaPurchaseEvent({
+              eventId: notes?.purchaseEventId || `rzp_${firstPayment.id as string}`,
+              value: ((firstPayment.amount as number | undefined) ?? 0) / 100,
+              currency: (firstPayment.currency as string | undefined) || "INR",
+              email: notes?.userEmail,
+              plan: planKey,
+            });
           }
         }
         break;
@@ -147,6 +159,22 @@ export async function POST(req: NextRequest) {
               paymentAmountInPaise: chargedPayment.amount as number,
               plan: org.plan,
               isNewSignup: false,
+            });
+          }
+
+          // ── Meta CAPI: server-confirmed Purchase on renewal ───────────────
+          // Only on actual renewals (paid_count > 1) — the first charge's
+          // Purchase is already sent by subscription.activated. Renewals never
+          // reach the browser, so CAPI is the only way to track them.
+          const paidCount = Number(sub.paid_count ?? 0);
+          if (chargedPayment?.id && paidCount > 1) {
+            const notes = sub.notes as Record<string, string> | undefined;
+            await sendMetaPurchaseEvent({
+              eventId: `rzp_${chargedPayment.id as string}`,
+              value: ((chargedPayment.amount as number | undefined) ?? 0) / 100,
+              currency: (chargedPayment.currency as string | undefined) || "INR",
+              email: notes?.userEmail,
+              plan: org.plan,
             });
           }
         }
