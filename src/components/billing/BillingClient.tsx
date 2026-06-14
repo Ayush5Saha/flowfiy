@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, Loader2, Zap, XCircle, AlertTriangle, Check, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { getLocalisedPrice, type LocalisedPrice } from "@/lib/currency";
-import { trackMetaPixel } from "@/lib/meta-pixel";
 
 interface Plan {
   key: string;
@@ -68,7 +67,6 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
   const [refStatus, setRefStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
   const [refName, setRefName] = useState<string | null>(null); // referrer org name
   const refDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const purchaseTrackedRef = useRef(false);
 
   // Detect visitor country once on mount
   useEffect(() => {
@@ -84,29 +82,6 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
     const plan = searchParams.get("plan");
     if (success === "true" && plan) {
       setSuccessBanner(`🎉 You're now on the ${plan.charAt(0) + plan.slice(1).toLowerCase()} plan! Your limits have been updated.`);
-
-      // ── Meta Pixel: Purchase + Subscribe conversion ───────────────────────
-      // Guard against double-firing if the effect re-runs while the param is set.
-      if (!purchaseTrackedRef.current) {
-        purchaseTrackedRef.current = true;
-        const planObj = plans.find((p) => p.key === plan.toUpperCase());
-        if (planObj) {
-          const isStripe = searchParams.get("gateway") === "stripe";
-          const value = isStripe ? planObj.priceUsd : planObj.priceInr;
-          const currency = isStripe ? "USD" : "INR";
-          const params = {
-            value,
-            currency,
-            content_name: planObj.name,
-            content_type: "subscription",
-          };
-          // eid is shared with the server CAPI event so Meta dedupes them.
-          const eid = searchParams.get("eid");
-          trackMetaPixel("Purchase", params, eid ? { eventID: eid } : undefined);
-          trackMetaPixel("Subscribe", { ...params, predicted_ltv: value });
-        }
-      }
-
       // Clean up the URL without reload
       window.history.replaceState({}, "", "/billing");
       // Clear referral code from localStorage on successful upgrade
@@ -117,7 +92,7 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
       setError("Payment was not completed. Please try again.");
       window.history.replaceState({}, "", "/billing");
     }
-  }, [searchParams, plans]);
+  }, [searchParams]);
 
   // Pre-fill referral code from localStorage (set when visiting /signup?ref=CODE)
   useEffect(() => {
@@ -195,7 +170,6 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         keyId?: string;
         priceInr?: number;
         prefill?: { name: string; email: string };
-        purchaseEventId?: string;
         // stripe
         checkoutUrl?: string;
         priceUsd?: number;
@@ -206,15 +180,6 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         setLoading(null);
         return;
       }
-
-      // ── Meta Pixel: InitiateCheckout ──────────────────────────────────────
-      const isStripe = data.gateway === "stripe";
-      trackMetaPixel("InitiateCheckout", {
-        value: isStripe ? data.priceUsd : data.priceInr,
-        currency: isStripe ? "USD" : "INR",
-        content_name: data.planName,
-        content_category: "subscription",
-      });
 
       // ── Stripe: redirect to hosted checkout ───────────────────────────────
       if (data.gateway === "stripe") {
@@ -244,8 +209,7 @@ export function BillingClient({ organization, usageThisMonth, plans }: BillingCl
         image: "/logo.png",
         prefill: data.prefill ?? {},
         handler: () => {
-          const eid = data.purchaseEventId ? `&eid=${data.purchaseEventId}` : "";
-          window.location.href = `/billing?success=true&plan=${planKey}${eid}`;
+          window.location.href = `/billing?success=true&plan=${planKey}`;
         },
         modal: {
           ondismiss: () => setLoading(null),
