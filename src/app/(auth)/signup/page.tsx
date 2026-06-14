@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { trackMetaPixel } from "@/lib/meta-pixel";
 
 // ── Tiny component that reads ?ref= and stores it in localStorage ─────────────
 // Must be isolated so it can be wrapped in <Suspense> (Next.js requirement for useSearchParams)
@@ -50,6 +51,7 @@ export default function SignupPage() {
       return;
     }
 
+    trackMetaPixel("CompleteRegistration", { content_name: "email_signup" });
     setEmailSent(true);
     setLoading(false);
   }
