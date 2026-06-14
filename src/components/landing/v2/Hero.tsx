@@ -52,6 +52,10 @@ export function Hero() {
           </motion.div>
 
           <h1 className="mt-7 font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(3rem,9vw,7.5rem)]">
+            {/* Crawlable keyword context for the primary heading; visually hidden. */}
+            <span className="sr-only">
+              Flowfiy — the AI outbound sales &amp; lead generation platform that builds your B2B pipeline while you sleep.{" "}
+            </span>
             <Lines text="Pipeline," delay={0.05} mode="mount" />
             {/* Static gradient fill — premium restraint, no animated gradient */}
             <span className="block overflow-hidden">
@@ -68,9 +72,9 @@ export function Hero() {
 
           <MaskReveal delay={0.32} className="mt-8" mode="mount">
             <p className="max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Flowfiy finds your ideal customers, researches every one, writes
-              outreach that lands, and books the meetings. You wake up to
-              pipeline — not a to-do list.
+              Flowfiy is the AI outbound sales platform that finds your ideal
+              customers, researches every one, writes cold outreach that lands,
+              and books the meetings. You wake up to pipeline — not a to-do list.
             </p>
           </MaskReveal>
 

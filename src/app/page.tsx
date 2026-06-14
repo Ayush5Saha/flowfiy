@@ -150,11 +150,6 @@ const jsonLd = {
     "Managed Claude Sonnet AI — No API Key Required",
     "Multi-tenant SaaS with AES-256 encryption",
   ],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    reviewCount: "127",
-  },
 };
 
 const faqJsonLd = {
