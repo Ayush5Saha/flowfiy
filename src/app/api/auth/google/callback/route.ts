@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendMetaCompleteRegistration } from "@/lib/meta-capi";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Sign into Supabase using the Google ID token
     const supabase = await createClient();
-    const { error: supabaseError } = await supabase.auth.signInWithIdToken({
+    const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: idToken,
     });
@@ -48,6 +49,27 @@ export async function GET(request: NextRequest) {
     if (supabaseError) {
       console.error("Supabase signInWithIdToken error:", supabaseError);
       return NextResponse.redirect(`${appUrl}/login?error=supabase_auth_failed`);
+    }
+
+    // ── Meta CAPI: CompleteRegistration for first-time Google signups ────────
+    // The browser pixel can't fire here (the OAuth flow redirects away), so we
+    // track it server-side. New users have created_at ≈ last_sign_in_at; a
+    // returning login has a much older created_at. event_id is per-user so a
+    // double callback can't double-count.
+    const user = data.user;
+    if (user) {
+      const createdAt = new Date(user.created_at).getTime();
+      const lastSignIn = user.last_sign_in_at
+        ? new Date(user.last_sign_in_at).getTime()
+        : createdAt;
+      const isNewUser = lastSignIn - createdAt < 60_000; // within 60s of creation
+      if (isNewUser) {
+        await sendMetaCompleteRegistration({
+          eventId: `reg_${user.id}`,
+          email: user.email,
+          method: "google",
+        });
+      }
     }
 
     return NextResponse.redirect(`${appUrl}/dashboard`);
