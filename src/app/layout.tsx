@@ -7,7 +7,9 @@ import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1625820488509651";
+// .trim() guards against a stray space in the env var, which produces an
+// invalid id like "1625820488509651 " and makes fbq('init') silently fail.
+const META_PIXEL_ID = (process.env.NEXT_PUBLIC_META_PIXEL_ID || "1625820488509651").trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
