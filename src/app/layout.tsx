@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
@@ -207,6 +208,7 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} font-sans min-h-screen`}
       >
         {children}
+        <MetaPixel />
         {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
       </body>
     </html>
