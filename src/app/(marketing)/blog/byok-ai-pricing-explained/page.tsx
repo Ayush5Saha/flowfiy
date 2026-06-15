@@ -160,6 +160,7 @@ export default function BlogPostBYOK() {
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-5">Continue reading</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
+                { href: "/blog/how-to-set-up-flowfiy", title: "How to Set Up Flowfiy: The Complete 7-Step Setup Guide" },
                 { href: "/blog/how-ai-agents-replace-sdrs", title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026" },
                 { href: "/blog/cold-email-personalization-2026", title: "Why Personalization Depth Beats Volume: Cold Email in 2026" },
               ].map((p) => (

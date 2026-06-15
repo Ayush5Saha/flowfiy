@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
 
 interface ChecklistStep {
   id: string;
@@ -15,9 +15,10 @@ interface ChecklistStep {
 interface Props {
   steps: ChecklistStep[];
   organizationId: string;
+  guideHref?: string;
 }
 
-export function OnboardingChecklist({ steps, organizationId }: Props) {
+export function OnboardingChecklist({ steps, organizationId, guideHref }: Props) {
   const storageKey = `checklist-dismissed-${organizationId}`;
   const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -61,6 +62,15 @@ export function OnboardingChecklist({ steps, organizationId }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {guideHref && (
+            <Link
+              href={guideHref}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium mr-1"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Setup guide
+            </Link>
+          )}
           <button
             onClick={() => setCollapsed((v) => !v)}
             className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"

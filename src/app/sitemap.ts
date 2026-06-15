@@ -36,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     })),
     { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE_URL}/blog/how-to-set-up-flowfiy`, lastModified: new Date("2026-06-15"), changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/blog/how-ai-agents-replace-sdrs`, lastModified: new Date("2026-05-10"), changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/blog/cold-email-personalization-2026`, lastModified: new Date("2026-05-05"), changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/blog/byok-ai-pricing-explained`, lastModified: new Date("2026-04-28"), changeFrequency: "monthly", priority: 0.75 },

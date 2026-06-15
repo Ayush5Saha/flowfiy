@@ -21,6 +21,16 @@ export type PublishedBlogPost = BlogPostCard & {
 
 export const staticBlogPosts: BlogPostCard[] = [
   {
+    slug: "how-to-set-up-flowfiy",
+    title: "How to Set Up Flowfiy: The Complete 7-Step Setup Guide",
+    excerpt:
+      "From sign-up to your first AI-personalized campaign in under 15 minutes. Add your ICP, connect your Claude or OpenRouter key, plug in Apollo or Apify, link Gmail, and add your calendar — every step explained.",
+    category: "Guides",
+    readTime: "7 min read",
+    date: "Jun 15, 2026",
+    featured: false,
+  },
+  {
     slug: "how-ai-agents-replace-sdrs",
     title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026",
     excerpt:

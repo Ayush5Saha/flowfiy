@@ -174,6 +174,7 @@ export default function BlogPostAIAgentSDR() {
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-5">Continue reading</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
+                { href: "/blog/how-to-set-up-flowfiy", title: "How to Set Up Flowfiy: The Complete 7-Step Setup Guide" },
                 { href: "/blog/cold-email-personalization-2026", title: "Why Personalization Depth Beats Volume: Cold Email in 2026" },
                 { href: "/blog/byok-ai-pricing-explained", title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation" },
               ].map((p) => (

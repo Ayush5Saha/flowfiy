@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone, Zap } from "lucide-react";
+import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone, Zap, BookOpen } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { SystemHealthCheck } from "@/components/dashboard/SystemHealthCheck";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
       <SystemHealthCheck integrations={healthIntegrations} />
 
       {/* ── Onboarding checklist ─────────────────────── */}
-      <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} />
+      <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} guideHref="/blog/how-to-set-up-flowfiy" />
 
       {/* ── Stats grid ───────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -318,6 +318,13 @@ export default async function DashboardPage() {
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
                 <span className="text-sm flex-1 font-medium">Edit ICP / Profile</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              <Link href="/blog/how-to-set-up-flowfiy" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                </div>
+                <span className="text-sm flex-1 font-medium">Setup Guide</span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
