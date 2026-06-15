@@ -133,18 +133,50 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
   name: "Flowfiy",
+  alternateName: "Flowfiy AI",
   url: BASE_URL,
   logo: `${BASE_URL}/favicon-192x192.png`,
+  image: `${BASE_URL}/opengraph-image`,
   description:
     "India's AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
+  slogan: "Your AI sales team — pipeline while you sleep.",
   foundingDate: "2026",
-  addressCountry: "IN",
+  areaServed: { "@type": "Country", name: "India" },
+  knowsAbout: [
+    "AI outbound sales",
+    "B2B lead generation",
+    "Cold email automation",
+    "AI sales development representatives (SDR)",
+    "Sales prospecting automation",
+    "Lead qualification scoring",
+  ],
+  address: { "@type": "PostalAddress", addressCountry: "IN" },
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    url: `${BASE_URL}/contact`,
+    areaServed: "IN",
+    availableLanguage: ["English", "Hindi"],
+  },
   sameAs: [
     "https://twitter.com/flowfiy",
     "https://linkedin.com/company/flowfiy",
     "https://github.com/flowfiy",
   ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
+  name: "Flowfiy",
+  url: BASE_URL,
+  description:
+    "India's AI outbound sales platform — 5 Claude AI agents find, research, qualify, and write personalized cold emails for B2B leads.",
+  inLanguage: "en-IN",
+  publisher: { "@id": `${BASE_URL}/#organization` },
 };
 
 const softwareJsonLd = {
@@ -202,6 +234,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <script
           type="application/ld+json"
