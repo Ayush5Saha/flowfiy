@@ -1,5 +1,7 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { GLOSSARY } from "@/lib/seo/glossary";
+import { COMPETITORS } from "@/lib/seo/competitors";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
 
@@ -20,6 +22,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/vs`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/vs/clay`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/vs/apollo`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    ...COMPETITORS.map((c) => ({
+      url: `${BASE_URL}/vs/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+    { url: `${BASE_URL}/glossary`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    ...GLOSSARY.map((t) => ({
+      url: `${BASE_URL}/glossary/${t.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE_URL}/blog/how-ai-agents-replace-sdrs`, lastModified: new Date("2026-05-10"), changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/blog/cold-email-personalization-2026`, lastModified: new Date("2026-05-05"), changeFrequency: "monthly", priority: 0.85 },

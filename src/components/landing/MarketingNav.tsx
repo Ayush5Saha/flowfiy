@@ -20,8 +20,8 @@ const navLinks = [
     label: "Resources",
     children: [
       { label: "Blog", href: "/blog", desc: "AI sales tips & guides" },
-      { label: "AI Lead Generation", href: "/use-cases/ai-lead-generation", desc: "Use case deep dive" },
-      { label: "Cold Email Automation", href: "/use-cases/cold-email-automation", desc: "Automate outreach" },
+      { label: "Use Cases", href: "/use-cases", desc: "Ways teams use Flowfiy" },
+      { label: "Glossary", href: "/glossary", desc: "AI sales & outbound terms" },
       { label: "About", href: "/about", desc: "Our story & mission" },
       { label: "Founder", href: "/founder", desc: "Meet the person behind Flowfiy" },
     ],
@@ -29,8 +29,12 @@ const navLinks = [
   {
     label: "Compare",
     children: [
+      { label: "All comparisons", href: "/vs", desc: "How Flowfiy stacks up" },
       { label: "vs Clay", href: "/vs/clay", desc: "Workflow builder vs AI pipeline" },
       { label: "vs Apollo", href: "/vs/apollo", desc: "Database vs end-to-end platform" },
+      { label: "vs Instantly", href: "/vs/instantly", desc: "Sending tool vs full pipeline" },
+      { label: "vs Smartlead", href: "/vs/smartlead", desc: "Email infra vs AI SDR" },
+      { label: "vs lemlist", href: "/vs/lemlist", desc: "Sequencing vs AI research" },
     ],
   },
 ];

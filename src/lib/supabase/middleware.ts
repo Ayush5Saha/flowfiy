@@ -10,6 +10,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith("/blog") ||
     pathname.startsWith("/vs") ||
     pathname.startsWith("/use-cases") ||
+    pathname.startsWith("/glossary") ||
     pathname.startsWith("/affiliates") ||
     pathname.startsWith("/founder") ||
     pathname.startsWith("/privacy") ||

@@ -42,6 +42,21 @@ const comparisons = [
     title: "Flowfiy vs Apollo",
     desc: "Apollo is a contact database — it finds leads but won't research, qualify, or write to them. Flowfiy turns those leads into personalized, ready-to-send outreach automatically.",
   },
+  {
+    href: "/vs/instantly",
+    title: "Flowfiy vs Instantly",
+    desc: "Instantly is a cold-email sending & deliverability tool. Flowfiy adds the steps before sending — finding, researching, scoring, and writing per-lead emails.",
+  },
+  {
+    href: "/vs/smartlead",
+    title: "Flowfiy vs Smartlead",
+    desc: "Smartlead is cold-email infrastructure. Flowfiy is the AI SDR layer above it that builds and qualifies the pipeline before anything sends.",
+  },
+  {
+    href: "/vs/lemlist",
+    title: "Flowfiy vs lemlist",
+    desc: "lemlist does multichannel sequencing with template tokens. Flowfiy researches each lead and writes a unique email from scratch.",
+  },
 ];
 
 export default function VsHubPage() {
