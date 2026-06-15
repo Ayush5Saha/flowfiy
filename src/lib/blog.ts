@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { markdownToHtml, slugifyBlogTitle } from "@/lib/blog-markdown";
+
+// Re-exported for existing importers (e.g. the blog post page + admin editor).
+export { markdownToHtml, slugifyBlogTitle };
 
 export type BlogPostCard = {
   slug: string;
@@ -140,91 +144,3 @@ export async function getPublishedBlogPostBySlug(slug: string): Promise<Publishe
   }
 }
 
-export function slugifyBlogTitle(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 90);
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function renderInline(value: string) {
-  return escapeHtml(value)
-    .replace(/\[([^\]]+)\]\((\/blog\/[a-z0-9-]+)\)/g, '<a href="$2">$1</a>')
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-}
-
-export function markdownToHtml(markdown: string) {
-  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-  const html: string[] = [];
-  let paragraph: string[] = [];
-  let list: string[] = [];
-
-  function flushParagraph() {
-    if (paragraph.length === 0) return;
-    html.push(`<p>${paragraph.map(renderInline).join("<br />")}</p>`);
-    paragraph = [];
-  }
-
-  function flushList() {
-    if (list.length === 0) return;
-    html.push(`<ul>${list.map((item) => `<li>${renderInline(item)}</li>`).join("")}</ul>`);
-    list = [];
-  }
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-
-    if (!line) {
-      flushParagraph();
-      flushList();
-      continue;
-    }
-
-    if (line.startsWith("### ")) {
-      flushParagraph();
-      flushList();
-      html.push(`<h3>${renderInline(line.slice(4))}</h3>`);
-      continue;
-    }
-
-    if (line.startsWith("## ")) {
-      flushParagraph();
-      flushList();
-      html.push(`<h2>${renderInline(line.slice(3))}</h2>`);
-      continue;
-    }
-
-    if (line.startsWith("# ")) {
-      flushParagraph();
-      flushList();
-      html.push(`<h2>${renderInline(line.slice(2))}</h2>`);
-      continue;
-    }
-
-    if (line.startsWith("- ")) {
-      flushParagraph();
-      list.push(line.slice(2));
-      continue;
-    }
-
-    flushList();
-    paragraph.push(line);
-  }
-
-  flushParagraph();
-  flushList();
-
-  return html.join("");
-}

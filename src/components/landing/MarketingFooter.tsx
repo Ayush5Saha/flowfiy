@@ -24,6 +24,7 @@ const footerLinks = [
     links: [
       { label: "About Us", href: "/about" },
       { label: "Blog", href: "/blog" },
+      { label: "Setup Guide", href: "/blog/how-to-set-up-flowfiy" },
       { label: "Use Cases", href: "/use-cases/ai-lead-generation" },
       { label: "Contact Us", href: "/contact" },
     ],

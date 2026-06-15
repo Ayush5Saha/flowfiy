@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Rocket } from "lucide-react";
 import { getBlogCards } from "@/lib/blog";
+
+const SETUP_GUIDE_SLUG = "how-to-set-up-flowfiy";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,11 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const posts = await getBlogCards();
+  const allPosts = await getBlogCards();
+  const setupGuide = allPosts.find((post) => post.slug === SETUP_GUIDE_SLUG) ?? null;
+  // Pin the setup guide as a dedicated "Start here" card; keep it out of the
+  // chronological grid so it isn't duplicated / buried among other posts.
+  const posts = allPosts.filter((post) => post.slug !== SETUP_GUIDE_SLUG);
   const [featured, ...rest] = posts;
   const categories = ["All", ...Array.from(new Set(posts.map((post) => post.category)))];
 
@@ -64,6 +70,34 @@ export default async function BlogPage() {
           ))}
         </div>
       </section>
+
+      {setupGuide && (
+        <section className="pt-12 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-6">Start here</p>
+            <Link href={`/blog/${setupGuide.slug}`} className="group block">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-600/10 to-zinc-900/40 p-6 sm:p-7 hover:border-violet-500/45 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shrink-0">
+                  <Rocket className="w-6 h-6 text-violet-300" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">New to Flowfiy?</span>
+                    <span className="flex items-center gap-1.5 text-xs text-zinc-500"><Clock className="w-3.5 h-3.5" /> {setupGuide.readTime}</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white group-hover:text-violet-300 transition-colors leading-snug">
+                    {setupGuide.title}
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl">{setupGuide.excerpt}</p>
+                </div>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-violet-400 group-hover:gap-3 transition-all shrink-0">
+                  Read guide <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
 
       <section className="py-16 px-4 sm:px-6 border-b border-white/5">
         <div className="max-w-5xl mx-auto">

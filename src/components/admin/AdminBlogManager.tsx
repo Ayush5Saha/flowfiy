@@ -1,19 +1,62 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Bold,
+  Code,
   Eye,
+  EyeOff,
   FilePlus2,
+  Heading2,
+  Heading3,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
   Loader2,
   Pencil,
+  Quote,
   Save,
   Search,
   Send,
   Star,
   Trash2,
 } from "lucide-react";
+import { markdownToHtml } from "@/lib/blog-markdown";
+
+type FormatAction =
+  | "h2"
+  | "h3"
+  | "bold"
+  | "italic"
+  | "ul"
+  | "ol"
+  | "quote"
+  | "link"
+  | "code";
+
+const TOOLBAR_BUTTONS: Array<{ action: FormatAction; icon: typeof Bold; label: string }> = [
+  { action: "h2", icon: Heading2, label: "Heading" },
+  { action: "h3", icon: Heading3, label: "Subheading" },
+  { action: "bold", icon: Bold, label: "Bold" },
+  { action: "italic", icon: Italic, label: "Italic" },
+  { action: "ul", icon: List, label: "Bullet list" },
+  { action: "ol", icon: ListOrdered, label: "Numbered list" },
+  { action: "quote", icon: Quote, label: "Quote" },
+  { action: "code", icon: Code, label: "Inline code" },
+  { action: "link", icon: Link2, label: "Link" },
+];
+
+// Line-prefix actions toggle a marker at the start of each selected line.
+const LINE_PREFIX: Partial<Record<FormatAction, string>> = {
+  h2: "## ",
+  h3: "### ",
+  ul: "- ",
+  ol: "1. ",
+  quote: "> ",
+};
 
 export type AdminBlogPost = {
   id: string;
@@ -107,6 +150,59 @@ export default function AdminBlogManager({ posts }: { posts: AdminBlogPost[] }) 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [showPreview, setShowPreview] = useState(true);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  // Insert markdown formatting at the current cursor / selection in the body.
+  function applyFormat(action: FormatAction) {
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+
+    const value = form.content;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = value.slice(start, end);
+
+    let nextValue = value;
+    let nextStart = start;
+    let nextEnd = end;
+
+    const prefix = LINE_PREFIX[action];
+    if (prefix) {
+      // Expand selection to the start of the first selected line.
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      const block = value.slice(lineStart, end) || (prefix ? "" : "");
+      const lines = block.split("\n");
+      const prefixed = lines
+        .map((line) => (line.startsWith(prefix) ? line : `${prefix}${line}`))
+        .join("\n");
+      nextValue = value.slice(0, lineStart) + prefixed + value.slice(end);
+      nextStart = lineStart;
+      nextEnd = lineStart + prefixed.length;
+    } else {
+      // Inline wrap actions.
+      const wraps: Record<string, [string, string, string]> = {
+        bold: ["**", "**", "bold text"],
+        italic: ["_", "_", "italic text"],
+        code: ["`", "`", "code"],
+        link: ["[", "](https://)", "link text"],
+      };
+      const [open, close, placeholder] = wraps[action] ?? ["", "", ""];
+      const inner = selected || placeholder;
+      const insert = `${open}${inner}${close}`;
+      nextValue = value.slice(0, start) + insert + value.slice(end);
+      // Select the inner text so the author can immediately type over it.
+      nextStart = start + open.length;
+      nextEnd = nextStart + inner.length;
+    }
+
+    updateField("content", nextValue);
+    // Restore focus + selection after React re-render.
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextStart, nextEnd);
+    });
+  }
 
   const selectedPost = useMemo(
     () => posts.find((post) => post.id === selectedId) ?? null,
@@ -358,15 +454,63 @@ export default function AdminBlogManager({ posts }: { posts: AdminBlogPost[] }) 
               />
             </label>
 
-            <label className="space-y-2 block">
-              <span className="text-xs font-medium text-zinc-500">Body</span>
-              <textarea
-                value={form.content}
-                onChange={(event) => updateField("content", event.target.value)}
-                rows={18}
-                className={inputClassName("resize-y font-mono leading-6")}
-              />
-            </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-zinc-500">Body</span>
+                <button
+                  type="button"
+                  onClick={() => setShowPreview((value) => !value)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 transition hover:border-amber-500/40 hover:text-amber-300"
+                >
+                  {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showPreview ? "Hide preview" : "Show preview"}
+                </button>
+              </div>
+
+              {/* Formatting toolbar */}
+              <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-zinc-800 bg-zinc-950/80 p-1.5">
+                {TOOLBAR_BUTTONS.map(({ action, icon: Icon, label }) => (
+                  <button
+                    key={action}
+                    type="button"
+                    title={label}
+                    aria-label={label}
+                    onClick={() => applyFormat(action)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-800 hover:text-amber-300"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                ))}
+              </div>
+
+              <div className={showPreview ? "grid gap-3 lg:grid-cols-2" : ""}>
+                <textarea
+                  ref={bodyRef}
+                  value={form.content}
+                  onChange={(event) => updateField("content", event.target.value)}
+                  rows={20}
+                  placeholder={"## Section heading\n\nWrite a paragraph here. Use **bold**, _italic_, and [links](https://flowfiy.com).\n\n- Bullet point\n- Another point\n\n> A pull quote that stands out."}
+                  className={`w-full rounded-b-lg ${showPreview ? "lg:rounded-bl-lg lg:rounded-br-none" : ""} border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white outline-none transition focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/10 resize-y font-mono leading-6`}
+                />
+                {showPreview && (
+                  <div className="rounded-b-lg lg:rounded-bl-none lg:rounded-br-lg border border-zinc-800 bg-[#0c0c12] p-5 overflow-y-auto" style={{ maxHeight: "32rem" }}>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600 mb-3">Live preview</p>
+                    {form.content.trim() ? (
+                      <div
+                        className="blog-content text-zinc-300"
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(form.content) }}
+                      />
+                    ) : (
+                      <p className="text-sm text-zinc-600">Start typing to see a live preview of the published article.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <p className="text-[11px] leading-relaxed text-zinc-600">
+                Formatting: <code className="text-zinc-400">## Heading</code> · <code className="text-zinc-400">### Subheading</code> · <code className="text-zinc-400">**bold**</code> · <code className="text-zinc-400">_italic_</code> · <code className="text-zinc-400">- bullet</code> · <code className="text-zinc-400">1. numbered</code> · <code className="text-zinc-400">&gt; quote</code> · <code className="text-zinc-400">[text](url)</code>. Leave a blank line between paragraphs.
+              </p>
+            </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="space-y-2">
