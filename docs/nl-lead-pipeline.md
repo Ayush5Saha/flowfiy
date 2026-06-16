@@ -280,26 +280,43 @@ centralized Gemini). Keep `CALENDLY`/`GMAIL`/`APIFY` integration types; the
 
 ## 9. Credits & metering
 
-### 9.1 Definitions
-- **1 credit = ₹1** (recommended — avoids fractional-per-lead UX; final value TBD).
-- Margin target: price = `landed_cost × MARGIN_MULTIPLIER` (default `2.0` = 50% gross;
-  raise to absorb gateway/FX/GST — see unit-economics doc).
+### 9.1 Definitions & plan (LOCKED)
+- **1 credit = ₹10.**
+- **One paid plan: $50/month, includes 400 credits.**
+- **Spend rate: 1 credit = 2 leads** → 400 credits = **~800 leads/month**.
+  - Tier by lead type to guarantee margin: **local = 3 leads/credit, B2B = 1.5 leads/credit**
+    (B2B costs ~2× local; flat 2/credit dips below 60% on all-B2B usage).
+- **No free grant** — new signups have 0 credits and must buy the plan.
+- **Top-ups**: additional credits sold at ₹10 each (same 2 leads/credit), ~65% margin.
+- Margin target: **60% net contribution** (after COGS + payment fees + GST-as-passthrough
+  + overhead/refund buffer). Corporate income tax is a separate downstream layer.
+
+**Plan P&L (target):**
+| Line | Amount | % |
+|---|---|---|
+| Revenue | $50.00 | 100% |
+| Lead COGS (~800 × $0.012) | −$9.60 | 19% |
+| Payment gateway (~3.5%) | −$1.75 | 3.5% |
+| Tax + overhead + failed/refund buffer | −$7.50 | 15% |
+| **Net contribution** | **~$31** | **~62%** |
+
+Sized at ~62% to hold ≥60% under FX moves, retries, and B2B-heavy mixes.
 
 ### 9.2 Rate config (code constants first, admin-editable later)
 ```ts
 // src/lib/credits/rates.ts (proposed)
 export const FX_INR_PER_USD = 84;          // refresh periodically
-export const MARGIN_MULTIPLIER = 2.0;
+export const CREDIT_VALUE_INR = 10;        // 1 credit = ₹10
+export const LEADS_PER_CREDIT = { LOCAL: 3, B2B: 1.5 }; // margin-protecting tiers
 export const MODEL_RATES = {               // USD per 1M tokens
   "gemini-flash-lite": { in: 0.10, out: 0.40 },
   "gemini-flash":      { in: 0.30, out: 2.50 },
 };
 export const ACTOR_RATES = {               // USD per result
-  google_maps:   0.006,
-  leads_finder:  0.010,
-  linkedin:      0.015,
+  google_maps:   0.002,
+  leads_finder:  0.00067,                   // $1 per 1,500 leads
 };
-export const ENRICH_RATES = { prospeo: 0.01 }; // USD per verified email
+export const ENRICH_RATES = { prospeo: 0.01 }; // USD per verified email (B2B, if actor lacks email)
 ```
 
 ### 9.3 Per-lead cost (computed, not guessed)
@@ -322,9 +339,10 @@ All wallet mutations go through a single `creditService` with row-level locking
 (`SELECT … FOR UPDATE` / Prisma transaction) to prevent races.
 
 ### 9.5 Buying credits
-Extend existing Razorpay/Stripe flow to sell **one-time credit packs** (not just
-subscriptions). Webhook → `PURCHASE` ledger entry + balance increment. Free
-signup grants a capped `GRANT` (since centralized AI now costs Flowfiy money).
+The **$50/month plan** grants 400 credits on each billing cycle (`PURCHASE` ledger
+entry). Extend the existing Razorpay/Stripe flow to also sell **one-time top-up
+packs** (₹10/credit) when a user runs out. Webhook → `PURCHASE` entry + balance
+increment. **No free grant** — new signups start at 0 credits.
 
 ### 9.6 Provider float
 Money lands in Flowfiy's account; **there is no per-purchase transfer to providers.**
@@ -348,8 +366,11 @@ Maintain a prepaid float with Gemini/Apify/Prospeo using their **auto-recharge**
     personalization:"gemini-flash",       // quality matters most
   };
   ```
-- Keep a **provider-abstraction seam** so a second provider (fallback) can be added
-  without touching pipeline code. Per-task fallback model on hard errors.
+- **Fallback provider (LOCKED: seam now, wire later).** Keep a provider-abstraction
+  seam so a backup LLM (e.g. an OpenRouter / OpenAI-compatible endpoint) can be added
+  as a config change without touching pipeline code. **Launch Gemini-only**; the
+  fallback exists to auto-retry on Gemini outage / rate-limit / model deprecation so
+  the whole platform doesn't fail at once. Wire a live fallback in a later phase.
 - Remove BYOK branching from `IntegrationCenter` and the pipeline (always CENTRAL).
 
 ---
@@ -358,6 +379,8 @@ Maintain a prepaid float with Gemini/Apify/Prospeo using their **auto-recharge**
 
 Curated, **fixed** set with known input/output schemas (do **not** let the LLM
 pick arbitrary marketplace actors — cost/output risk). Proposed `src/ai/actors/registry.ts`:
+
+**Launch set (LOCKED): two actors — `google_maps` + `leads_finder`. No LinkedIn at launch.**
 
 ```ts
 export const ACTORS = {
@@ -369,8 +392,14 @@ export const ACTORS = {
     paramsSchema: { search: "string", location: "string", maxResults: "number" },
     normalize: (raw) => /* → common Lead shape */,
   },
-  leads_finder: { /* B2B people/company finder actor */ },
-  linkedin:     { /* optional, higher risk — public-profile route preferred */ },
+  leads_finder: {
+    key: "leads_finder",
+    apifyActorId: "<leads-finder-actor-id>",  // ~$1 per 1,500 leads
+    leadType: "B2B",
+    description: "Find B2B people/companies by role, industry, geography.",
+    paramsSchema: { roles: "string[]", industries: "string[]", location: "string", maxResults: "number" },
+    normalize: (raw) => /* → common Lead shape; use Prospeo only if email missing */,
+  },
 };
 ```
 The planner is shown each actor's `description` + `paramsSchema` and selects one.
@@ -441,15 +470,23 @@ registry entry (no pipeline changes).
 
 ---
 
-## 16. Open decisions
+## 16. Decisions
 
-1. **Credit value** — 1 credit = ₹1 (granular) vs ₹10 (round). Pack sizes?
-2. **Margin** — confirm 2× gross, or higher to net 50% after fees/FX/GST.
-3. **Free-grant size** on signup (since AI now costs Flowfiy).
-4. **Second LLM provider** for fallback now, or Gemini-only to start?
-5. **LinkedIn actor** in the registry at launch, or local + B2B-finder first?
-6. **Credit expiry / refund** policy.
-7. **Planner cost** — charge a tiny credit fee per plan, or absorb (free)?
+**Resolved (2026-06-16):**
+1. ✅ **Credit value = ₹10.**
+2. ✅ **One plan: $50/mo → 400 credits (~800 leads). Target 60% net contribution.**
+3. ✅ **Margin = 60% net** (after COGS, fees, GST-passthrough, overhead buffer).
+4. ✅ **No free grant.**
+5. ✅ **Fallback provider: build the seam, launch Gemini-only**, wire fallback later.
+6. ✅ **Actors at launch: `google_maps` + `leads_finder` only** (no LinkedIn).
+
+**Still open:**
+- **Income-tax definition** — is 60% a contribution margin (recommended) or net-of-
+  corporate-income-tax? The latter shrinks the plan to ~250 credits / ~500 leads.
+- **Credit expiry / refund** policy (do unused plan credits roll over or expire monthly?).
+- **Planner cost** — charge a tiny credit fee per plan, or absorb (free)?
+- **Lead-type spend tiering** — confirm local = 3 / B2B = 1.5 leads per credit
+  (vs a single flat 2/credit) to guarantee ≥60% on all-B2B usage.
 
 ---
 
@@ -470,8 +507,13 @@ registry entry (no pipeline changes).
 
 ---
 
-### Appendix — worked credit example (Gemini + Prospeo + Apify)
-- Local lead: Apify Maps ~$0.006 + Gemini ~$0.007 ≈ **$0.013** → ×84 ×2 ≈ **₹2.2** → ~1 credit (at ₹1) / rounds to a sub-credit at ₹10.
-- B2B lead: LinkedIn/finder ~$0.012 + Prospeo $0.01 + Gemini ~$0.007 ≈ **$0.029** → ×84 ×2 ≈ **₹4.9** → ~2–3 credits.
+### Appendix — worked economics (Gemini + leads-finder/Maps + Prospeo)
+Per-lead COGS (conservative ~₹1 / ~$0.012):
+- **Local** (Maps ~$0.002 + Gemini ~$0.006, usually no enrichment) ≈ **$0.008 (~₹0.7)**.
+- **B2B** (leads-finder ~$0.0007 + Prospeo $0.01 + Gemini ~$0.006) ≈ **$0.017 (~₹1.4)**
+  — and *cheaper than local* if the leads-finder actor already returns emails (skip Prospeo).
 
-See `docs/unit-economics.md` (to be added) for the full editable model.
+Plan check ($50, 400 credits, 2 leads/credit = 800 leads): COGS ~$9.6 + fees ~$1.75
++ tax/overhead buffer ~$7.5 = ~$18.85 → **net ~$31 (~62%)**. ✓ ≥60%.
+
+Spend tiers to hold margin on any mix: **local = 3 leads/credit, B2B = 1.5 leads/credit.**
