@@ -349,6 +349,41 @@ Money lands in Flowfiy's account; **there is no per-purchase transfer to provide
 Maintain a prepaid float with Gemini/Apify/Prospeo using their **auto-recharge**
 (threshold-triggered). Admin alert on spend spikes. The "50%" is accounting, not a wire.
 
+### 9.7 Mid-cycle top-up (custom amount)
+
+When a subscriber burns through the plan's 400 credits before renewal, they can buy
+more **without waiting for the next cycle**.
+
+**Eligibility gate (hard rule):** top-ups are available **only to organizations with an
+active subscription**. A user who has never subscribed **cannot buy credits this way** —
+they must take the $50 plan first. Enforce in BOTH places:
+- **UI:** hide/disable the top-up panel unless `subscriptionStatus === "active"` (plan ≠ FREE);
+  show a "Subscribe to unlock credit top-ups" prompt instead.
+- **API:** `/api/credits/topup` rejects with `403` if the org has no active subscription
+  (never trust the client).
+
+**UI (`BuyCreditsPanel`):**
+- A **number input**: "How many credits?" (integer, with min/max — see §16).
+- **Live cost line below the field**, in the user's local currency, recomputed on every keystroke:
+  `cost = credits × CREDIT_VALUE_INR`, then localized via `src/lib/currency.ts`
+  (₹ for India, converted display for other countries; charge currency follows the org's
+  billing gateway — Razorpay=INR, Stripe=USD/local).
+  - e.g. `50 credits → ₹500` (or `≈ $6.0` for a USD account).
+- A **Pay** button → gateway checkout.
+
+**Flow:**
+```
+enter credits  →  live cost shown  →  Pay (Razorpay/Stripe checkout)
+   →  payment webhook verifies  →  CreditLedger PURCHASE (+credits)  →  wallet balance += credits
+   →  user returns to a "credits added" confirmation
+```
+- Credits are added **only on verified webhook** (never on client redirect) — same pattern
+  as the subscription/plan purchase, idempotent on the gateway payment id (no double-credit).
+- Top-up credits join the same balance and spend at the same rate (2 leads/credit;
+  tiered local 3 / B2B 1.5). Margin on top-ups ≈ 65% (no plan overhead).
+- Rounding: charge the exact `credits × ₹10`; for non-INR, round the displayed/charged
+  amount to the gateway's minor-unit and snapshot the FX used in the ledger `metadata`.
+
 ---
 
 ## 10. LLM centralization (Gemini)
@@ -420,7 +455,8 @@ registry entry (no pipeline changes).
 | `/api/lead-requests/[id]/review` | GET | Generated leads + drafts |
 | `/api/lead-requests/[id]/send` | POST | Approve selected → campaign → Gmail |
 | `/api/credits` | GET | Wallet balance + ledger |
-| `/api/credits/checkout` | POST | Buy a credit pack (Razorpay/Stripe) |
+| `/api/credits/quote` | GET | Live cost for N credits in the org's currency (drives the input field) |
+| `/api/credits/topup` | POST | Buy N custom credits — **403 if no active subscription** (Razorpay/Stripe) |
 
 ---
 
@@ -431,7 +467,9 @@ registry entry (no pipeline changes).
 - `PlanConfirmCard` — human summary, editable params, credit estimate, Run/Edit/Cancel.
 - `RunProgress` — live stage progress (discovery → research → qualify → write).
 - `LeadReviewTable` — leads + editable drafts + select + Approve & send.
-- `CreditBalancePill` + `BuyCreditsModal` — wallet display + top-up.
+- `CreditBalancePill` — wallet display.
+- `BuyCreditsPanel` — custom-amount top-up: credits input + live local-currency cost
+  below + Pay. Gated behind an active subscription (else shows "subscribe to unlock").
 
 ---
 
@@ -441,6 +479,8 @@ registry entry (no pipeline changes).
   (cheap) and themselves metered as a tiny fixed planner cost (or free).
 - **Result caps**: enforce a hard `maxResults` ceiling per run; reject/clamp huge requests.
 - **Insufficient balance**: block confirm, prompt top-up.
+- **Top-up requires active subscription**: `/api/credits/topup` returns `403` for non-
+  subscribers; never sell credits to an org that hasn't taken the plan (UI + API both).
 - **Mid-run exhaustion**: finish paid-for leads, pause rest (§9.4).
 - **Actor failure / empty results**: surface clearly, release held credits, no charge for failed work.
 - **Email validation**: drop invalid/role/suppressed emails (existing `SuppressedEmail`).
@@ -464,8 +504,9 @@ registry entry (no pipeline changes).
    `ClarificationPanel`.
 5. **Confirm + run + review wiring** — plan card, credit reserve, run pipeline,
    review→send.
-6. **Buy credits** — credit packs via Razorpay/Stripe, free-grant on signup,
-   low-balance prompts, provider auto-recharge + alerts.
+6. **Buy credits** — $50 plan grants 400 credits/cycle; custom mid-cycle top-up
+   (subscription-gated, live currency cost) via Razorpay/Stripe; low-balance prompts;
+   provider auto-recharge + alerts. No free grant.
 7. **Polish** — progress UX, analytics, expiry/refunds, optional auto-send toggle.
 
 ---
@@ -487,6 +528,7 @@ registry entry (no pipeline changes).
 - **Planner cost** — charge a tiny credit fee per plan, or absorb (free)?
 - **Lead-type spend tiering** — confirm local = 3 / B2B = 1.5 leads per credit
   (vs a single flat 2/credit) to guarantee ≥60% on all-B2B usage.
+- **Top-up min/max** — smallest and largest custom credit purchase (e.g. min 10, max 5,000)?
 
 ---
 
