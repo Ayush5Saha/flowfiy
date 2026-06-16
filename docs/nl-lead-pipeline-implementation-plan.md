@@ -14,10 +14,12 @@ grounded in the current code so implementation proceeds without rework.
    from the runtime path. Credits are the only meter.
 2. **Cutover:** the NL composer **replaces** the existing "Generate Leads" entry
    point in one coordinated release (no long coexistence window). CSV import stays.
-3. **Economics defaults:** 60% = *contribution* margin; plan credits **roll over
-   once / expire after 60 days**; the **planner LLM call is free** (absorbed);
-   **top-up min 50 / max 5,000 credits**; spend tiers **local 3 / B2B 1.5 leads
-   per credit** (locked).
+3. **Economics defaults:** **60% = NET profit** (after payment fees + empty-run/refund
+   buffer); charging is **cost-plus, reconciled per run** on a per-qualified-lead basis
+   (see §J) — `REVENUE_MULTIPLIER ≈ 3.2×`; plan credits **roll over once / expire after
+   60 days**; the **planner LLM call is free** (absorbed); **top-up min 50 / max 5,000
+   credits**. The "local 3 / B2B 1.5 leads per credit" tiers are kept only as the
+   *estimate* heuristic, not the charged amount (which is actual COGS × markup).
 4. **Condition-based targeting is a first-class, general capability** (see §B).
 
 ---
@@ -124,8 +126,10 @@ leads as exportable (not auto-emailable) rather than dropping them. Confirm at i
 - `src/lib/credits/service.ts` — only code that mutates wallets; all via
   `prisma.$transaction` + row locks. `getWallet / estimate / reserve(HOLD) /
   consume(CONSUME w/ true COGS) / release(RELEASE) / grant / purchase / refund / adjust`.
-- COGS: `landedCostUsd()` = actor + Prospeo? + Gemini tokens × rate; agents return
-  real token usage so `consume()` is accurate.
+  Charging uses the cost-plus reconciliation model in §J.
+- COGS: `landedCostUsd()` = actor (incl. rejected candidates) + signal probes (incl.
+  rejects) + Prospeo? + Gemini tokens (research/qualify/personalize, incl. disqualified
+  leads) × rate; agents return real token usage so reconciliation is accurate.
 - Validate on staging in **observe-only** mode (record COGS, don't charge) to confirm
   LOCAL≈1 / B2B≈2–3 credit tiers and ≥60% margin before cutover.
 
@@ -243,3 +247,38 @@ Razorpay/Stripe credit-pack ids, provider auto-recharge thresholds.
 - No-website leads with no email → keep as phone-only exportable vs. require email.
 - Exact `slow`/`outdated` thresholds for the website-audit provider.
 - Whether deeper PageSpeed/Lighthouse audit is a metered add-on (v2).
+- Final `GATEWAY_FEE_RATE` / `BUFFER_RATE` values once live gateway + refund data exist.
+
+## J. Credit charging model — cost-plus, reconciled per run
+
+Charge from **actual COGS**, spread over **qualified leads delivered**, marked up to hold
+**60% net** profit. Extends the estimate→reserve→consume→release flow:
+
+1. **Estimate** at plan time from a rate card (lead-type × criteria-tier × expected match
+   rate) → credit ceiling shown on the Plan card.
+2. **Reserve (HOLD)** the estimate at confirm. The estimate is a **ceiling** — the user is
+   never charged above what they approved.
+3. **Accrue COGS** for everything examined during the run (actor incl. rejects, signal
+   probes incl. rejects, Prospeo, all Gemini tokens incl. disqualified leads). Planner +
+   Gmail send are free.
+4. **Reconcile at run end (compute at run level, not per-lead, to avoid rounding inflation):**
+   ```
+   run_credits = ceil( total_run_COGS_usd × REVENUE_MULTIPLIER × FX_INR_PER_USD / CREDIT_VALUE_INR )
+   ```
+   clamped to ≤ the reserved hold. `CONSUME` that; `RELEASE` the remainder.
+5. **Empty / failed run (0 qualified):** charge nothing, release the full hold — the COGS
+   loss is covered by the buffer baked into the multiplier.
+
+**Multiplier (self-documenting, in `src/lib/credits/rates.ts`):**
+```
+REVENUE_MULTIPLIER = 1 / (1 - TARGET_NET_MARGIN - GATEWAY_FEE_RATE - BUFFER_RATE)
+                   = 1 / (1 - 0.60 - 0.035 - 0.05) = 1 / 0.315 ≈ 3.17×
+```
+GST is charged on top (passthrough) → excluded from the margin math.
+
+**Consequence:** leads-per-credit **varies per search** (strict/audit-heavy searches cost
+more per lead). Marketing copy (Phase 8) says "~2 leads/credit, varies by search," not a
+fixed promise.
+
+**Worked check:** "no-website cafés," ~200 candidates → 50 qualified, run COGS ≈ $1.15 →
+`ceil(1.15 × 3.17 × 84 / 10)` = **31 credits for 50 leads ≈ 1.6 leads/credit**.
