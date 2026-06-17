@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Mail, TrendingUp, Plus, ArrowRight, MessageSquare, Megaphone, Zap, BookOpen } from "lucide-react";
+import { Users, Mail, MessageSquare, CheckCircle2, ArrowRight, ArrowUpRight, Megaphone, Settings, BookOpen, Coins, Sparkles } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
-import { SystemHealthCheck } from "@/components/dashboard/SystemHealthCheck";
+import { getWallet } from "@/lib/credits/service";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+const CHART_DAYS = 14;
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -18,341 +20,256 @@ export default async function DashboardPage() {
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const chartStart = new Date(todayStart);
+  chartStart.setDate(todayStart.getDate() - (CHART_DAYS - 1));
 
-  const [totalLeads, qualifiedLeads, totalSent, totalReplied, activeCampaigns, recentLists, integrations, businessProfile, sentToday, repliedToday] =
-    await Promise.all([
-      prisma.lead.count({ where: { organizationId: organization.id } }),
-      prisma.lead.count({ where: { organizationId: organization.id, status: "QUALIFIED" } }),
-      prisma.campaignLead.count({
-        where: { campaign: { organizationId: organization.id }, status: { in: ["SENT", "REPLIED"] } },
-      }),
-      prisma.campaignLead.count({
-        where: { campaign: { organizationId: organization.id }, status: "REPLIED" },
-      }),
-      prisma.campaign.count({
-        where: { organizationId: organization.id, status: "ACTIVE" },
-      }),
-      prisma.leadList.findMany({
-        where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { id: true, name: true, status: true, totalLeads: true, qualifiedLeads: true, createdAt: true },
-      }),
-      prisma.integration.findMany({
-        where: { organizationId: organization.id, status: "CONNECTED" },
-        select: { type: true },
-      }),
-      prisma.businessProfile.findUnique({ where: { organizationId: organization.id } }),
-      prisma.campaignLead.count({
-        where: { campaign: { organizationId: organization.id }, sentAt: { gte: todayStart } },
-      }),
-      prisma.campaignLead.count({
-        where: { campaign: { organizationId: organization.id }, status: "REPLIED", updatedAt: { gte: todayStart } },
-      }),
-    ]);
+  const [
+    totalLeads, qualifiedLeads, totalSent, totalReplied, activeCampaigns,
+    recentLists, integrations, businessProfile, sentToday, sends, wallet,
+  ] = await Promise.all([
+    prisma.lead.count({ where: { organizationId: organization.id } }),
+    prisma.lead.count({ where: { organizationId: organization.id, status: "QUALIFIED" } }),
+    prisma.campaignLead.count({ where: { campaign: { organizationId: organization.id }, status: { in: ["SENT", "REPLIED"] } } }),
+    prisma.campaignLead.count({ where: { campaign: { organizationId: organization.id }, status: "REPLIED" } }),
+    prisma.campaign.count({ where: { organizationId: organization.id, status: "ACTIVE" } }),
+    prisma.leadList.findMany({
+      where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
+      orderBy: { createdAt: "desc" }, take: 5,
+      select: { id: true, name: true, status: true, totalLeads: true, qualifiedLeads: true, createdAt: true },
+    }),
+    prisma.integration.findMany({ where: { organizationId: organization.id, status: "CONNECTED" }, select: { type: true } }),
+    prisma.businessProfile.findUnique({ where: { organizationId: organization.id } }),
+    prisma.campaignLead.count({ where: { campaign: { organizationId: organization.id }, sentAt: { gte: todayStart } } }),
+    prisma.campaignLead.findMany({
+      where: { campaign: { organizationId: organization.id }, sentAt: { gte: chartStart } },
+      select: { sentAt: true }, take: 5000,
+    }),
+    getWallet(organization.id).catch(() => ({ balance: 0, held: 0 })),
+  ]);
 
   const connectedTypes = new Set(integrations.map((i) => i.type));
+  const gmailConnected = connectedTypes.has("GMAIL");
 
-  // ── System health data ───────────────────────────────────────────────────────
-  const healthIntegrations = [
-    {
-      type: "APOLLO",
-      label: "Apollo.io",
-      icon: "🚀",
-      description: "Lead discovery — required to run the generation pipeline",
-      tier: "required" as const,
-      connected: connectedTypes.has("APOLLO"),
-    },
-    {
-      type: "GMAIL",
-      label: "Gmail",
-      icon: "📧",
-      description: "Email sending — required to launch outreach campaigns",
-      tier: "required" as const,
-      connected: connectedTypes.has("GMAIL"),
-    },
-    {
-      type: "APIFY",
-      label: "Apify",
-      icon: "🕷️",
-      description: "Lead discovery + web scraping — primary lead source if Apollo not connected",
-      tier: "required" as const,
-      connected: connectedTypes.has("APIFY"),
-    },
-    {
-      type: "CALENDLY",
-      label: "Calendly",
-      icon: "📅",
-      description: "Meeting booking — auto-inserts your scheduling link into emails",
-      tier: "optional" as const,
-      connected: connectedTypes.has("CALENDLY"),
-    },
-  ];
-
-  const checklistSteps = [
-    {
-      id: "workspace",
-      label: "Create your workspace",
-      description: "Name your organization and set it up",
-      href: "/settings",
-      done: true,
-    },
-    {
-      id: "business-profile",
-      label: "Set up your business profile & ICP",
-      description: "Tell Flowfiy who your ideal customer is so it can find and qualify leads",
-      href: "/settings",
-      done: !!businessProfile,
-    },
-    {
-      id: "apollo-key",
-      label: "Connect a lead source (Apollo or Apify)",
-      description: "Apollo finds 275M+ verified contacts — or use Apify as a free alternative with validated emails",
-      href: "/integrations",
-      done: connectedTypes.has("APOLLO") || connectedTypes.has("APIFY"),
-    },
-    {
-      id: "gmail",
-      label: "Connect Gmail to send outreach",
-      description: "Emails send from your own Gmail account — no shared IP, full deliverability",
-      href: "/integrations",
-      done: connectedTypes.has("GMAIL"),
-    },
-    {
-      id: "first-leads",
-      label: "Generate your first lead list",
-      description: "Describe the leads you want — the pipeline discovers, researches, qualifies, and personalizes",
-      href: "/leads",
-      done: totalLeads > 0,
-    },
-    {
-      id: "first-campaign",
-      label: "Send your first campaign",
-      description: "Select qualified leads, preview copy, and launch your outreach",
-      href: "/campaigns",
-      done: totalSent > 0,
-    },
-  ];
+  // ── 14-day outreach series (real data, bucketed by send day) ────────────────
+  const buckets = Array.from({ length: CHART_DAYS }, (_, i) => {
+    const d = new Date(chartStart);
+    d.setDate(chartStart.getDate() + i);
+    return { date: d, count: 0 };
+  });
+  for (const s of sends) {
+    if (!s.sentAt) continue;
+    const idx = Math.floor((new Date(s.sentAt).setHours(0, 0, 0, 0) - chartStart.getTime()) / 86_400_000);
+    if (idx >= 0 && idx < CHART_DAYS) buckets[idx].count++;
+  }
+  const maxCount = Math.max(1, ...buckets.map((b) => b.count));
+  const chartTotal = buckets.reduce((a, b) => a + b.count, 0);
 
   const replyRate = totalSent > 0 ? Math.round((totalReplied / totalSent) * 100) : 0;
+  const qualRate = totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0;
+
+  // ── Onboarding checklist (managed model — no API-key step) ──────────────────
+  const checklistSteps = [
+    { id: "workspace", label: "Create your workspace", description: "Name your organization and set it up", href: "/settings", done: true },
+    { id: "business-profile", label: "Set your business profile & ICP", description: "Tell Flowfiy who your ideal customer is, so it can find and qualify the right leads", href: "/settings", done: !!businessProfile },
+    { id: "gmail", label: "Connect Gmail to send outreach", description: "Emails go out from your own inbox — no shared IPs, full deliverability", href: "/integrations", done: gmailConnected },
+    { id: "first-leads", label: "Generate your first lead list", description: "Describe the leads you want — Flowfiy discovers, researches, qualifies and writes the outreach", href: "/leads", done: totalLeads > 0 },
+    { id: "first-campaign", label: "Send your first campaign", description: "Review the qualified leads and personalized copy, then send", href: "/campaigns", done: totalSent > 0 },
+  ];
+  const onboardingDone = checklistSteps.every((s) => s.done);
+
+  const displayName =
+    ((user.user_metadata?.full_name as string | undefined) ?? user.email?.split("@")[0] ?? "there").split(" ")[0];
 
   const stats = [
-    {
-      label: "Total Leads",
-      value: totalLeads,
-      icon: Users,
-      accentFrom: "from-blue-500/40",
-      accentTo: "to-blue-500/0",
-      iconColor: "text-blue-400",
-      iconBg: "bg-blue-500/10",
-    },
-    {
-      label: "Qualified",
-      value: qualifiedLeads,
-      icon: TrendingUp,
-      accentFrom: "from-emerald-500/40",
-      accentTo: "to-emerald-500/0",
-      iconColor: "text-emerald-400",
-      iconBg: "bg-emerald-500/10",
-    },
-    {
-      label: "Emails Sent",
-      value: totalSent,
-      icon: Mail,
-      accentFrom: "from-violet-500/40",
-      accentTo: "to-violet-500/0",
-      iconColor: "text-violet-400",
-      iconBg: "bg-violet-500/10",
-    },
-    {
-      label: "Reply Rate",
-      value: `${replyRate}%`,
-      icon: MessageSquare,
-      accentFrom: "from-amber-500/40",
-      accentTo: "to-amber-500/0",
-      iconColor: "text-amber-400",
-      iconBg: "bg-amber-500/10",
-    },
+    { label: "Total leads", value: totalLeads.toLocaleString(), icon: Users, sub: `${qualifiedLeads.toLocaleString()} qualified` },
+    { label: "Qualified", value: qualifiedLeads.toLocaleString(), icon: CheckCircle2, sub: totalLeads > 0 ? `${qualRate}% of total` : "No leads yet" },
+    { label: "Emails sent", value: totalSent.toLocaleString(), icon: Mail, sub: `${sentToday.toLocaleString()} today` },
+    { label: "Reply rate", value: `${replyRate}%`, icon: MessageSquare, sub: `${totalReplied.toLocaleString()} replies` },
   ];
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Welcome back — here&apos;s your outbound overview
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {displayName}</h1>
+          <p className="text-muted-foreground text-sm mt-1">Here&apos;s how your outbound is doing.</p>
         </div>
         <Link
           href="/leads"
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-px"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          Generate Leads
+          <Sparkles className="w-4 h-4" />
+          Describe new leads
         </Link>
       </div>
 
-      {/* ── System health check ──────────────────────── */}
-      <SystemHealthCheck integrations={healthIntegrations} />
+      {/* ── Onboarding (only until complete) ───────────── */}
+      {!onboardingDone && (
+        <div className="mb-8">
+          <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} guideHref="/blog/how-to-set-up-flowfiy" />
+        </div>
+      )}
 
-      {/* ── Onboarding checklist ─────────────────────── */}
-      <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} guideHref="/blog/how-to-set-up-flowfiy" />
-
-      {/* ── Stats grid ───────────────────────────────── */}
+      {/* ── Stats ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {stats.map(({ label, value, icon: Icon, accentFrom, accentTo, iconColor, iconBg }) => (
-          <div key={label} className="relative bg-card border border-border rounded-xl p-5 overflow-hidden group hover:border-border/80 transition-colors">
-            {/* Gradient top accent */}
-            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accentFrom} via-transparent ${accentTo}`} />
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-medium text-muted-foreground">{label}</span>
-              <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center`}>
-                <Icon className={`w-4 h-4 ${iconColor}`} />
-              </div>
+        {stats.map(({ label, value, icon: Icon, sub }) => (
+          <div key={label} className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-muted-foreground">{label}</span>
+              <Icon className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
             </div>
-            <p className="text-3xl font-bold font-mono tracking-tight">
-              {typeof value === "number" ? value.toLocaleString() : value}
-            </p>
+            <p className="mt-3 text-[28px] leading-none font-semibold tracking-tight tabular-nums">{value}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{sub}</p>
           </div>
         ))}
       </div>
 
-      {/* ── Today's activity strip ───────────────────── */}
-      {(sentToday > 0 || repliedToday > 0) && (
-        <div className="flex items-center gap-3 mb-6 p-4 bg-card border border-border rounded-xl">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground font-mono">{sentToday}</strong> emails sent today
-            {repliedToday > 0 && (
-              <> · <strong className="text-emerald-400 font-mono">{repliedToday}</strong> new repl{repliedToday === 1 ? "y" : "ies"} today</>
-            )}
-          </p>
-          <Link href="/campaigns" className="ml-auto text-xs text-primary hover:underline shrink-0">
-            View campaigns →
-          </Link>
-        </div>
+      {/* ── Gmail nudge (only if not connected) ────────── */}
+      {!gmailConnected && (
+        <Link
+          href="/integrations"
+          className="flex items-center gap-3 mb-6 p-4 bg-card border border-border rounded-xl hover:border-foreground/20 transition-colors group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+            <Mail className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Connect Gmail to start sending</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Outreach sends from your own inbox after you review it.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0 group-hover:translate-x-0.5 transition-transform" />
+        </Link>
       )}
 
-      {/* ── Main content grid ─────────────────────────── */}
+      {/* ── Main grid ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Recent lead lists */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="font-semibold text-sm">Recent Lead Lists</h2>
-            <Link href="/leads" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-              View all <ArrowRight className="w-3 h-3" />
+        {/* Left — chart + recent lists */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Outreach chart */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-end justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-semibold">Outreach</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Emails sent · last {CHART_DAYS} days</p>
+              </div>
+              <span className="text-2xl font-semibold tracking-tight tabular-nums">{chartTotal.toLocaleString()}</span>
+            </div>
+
+            {chartTotal === 0 ? (
+              <div className="h-40 flex flex-col items-center justify-center text-center border border-dashed border-border rounded-lg">
+                <p className="text-sm text-muted-foreground">No emails sent in the last {CHART_DAYS} days</p>
+                <Link href="/campaigns" className="text-xs text-primary hover:underline mt-1">Launch a campaign →</Link>
+              </div>
+            ) : (
+              <div className="flex items-end gap-1.5 h-40">
+                {buckets.map((bar, i) => {
+                  const pct = Math.round((bar.count / maxCount) * 100);
+                  const isToday = i === CHART_DAYS - 1;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group" title={`${bar.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}: ${bar.count} sent`}>
+                      <div className="w-full flex-1 flex items-end">
+                        <div
+                          className={`w-full rounded-t-[3px] transition-colors ${isToday ? "bg-primary" : "bg-primary/30 group-hover:bg-primary/50"}`}
+                          style={{ height: `${Math.max(pct, bar.count > 0 ? 4 : 0)}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground/60 tabular-nums">{bar.date.getDate()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Recent lead lists */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-sm font-semibold">Recent lead lists</h2>
+              <Link href="/leads" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                View all <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {recentLists.length === 0 ? (
+              <div className="text-center py-14 px-5">
+                <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-medium">No lead lists yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Describe the leads you want and Flowfiy builds your first list.</p>
+                <Link href="/leads" className="text-primary text-sm hover:underline mt-3 inline-block">Generate your first leads →</Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {recentLists.map((list) => (
+                  <Link key={list.id} href={`/leads/${list.id}`} className="flex items-center justify-between px-5 py-3.5 hover:bg-secondary/40 transition-colors group">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate group-hover:text-foreground">{list.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">{list.totalLeads} leads · {list.qualifiedLeads} qualified</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <StatusBadge status={list.status} />
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right rail */}
+        <div className="space-y-6">
+
+          {/* Credits */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold">Credits</h2>
+              <Coins className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
+            </div>
+            <p className="text-[28px] leading-none font-semibold tracking-tight tabular-nums">{wallet.balance.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              available{wallet.held > 0 ? ` · ${wallet.held.toLocaleString()} reserved` : ""}
+            </p>
+            <Link href="/billing" className="mt-4 flex items-center justify-center gap-1.5 w-full py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors">
+              Buy credits
             </Link>
           </div>
 
-          {recentLists.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <p className="text-muted-foreground text-sm font-medium">No lead lists yet</p>
-              <p className="text-muted-foreground/60 text-xs mt-1">Generate your first leads to get started</p>
-              <Link href="/leads" className="text-primary text-sm hover:underline mt-3 inline-block font-medium">
-                Generate your first leads →
-              </Link>
+          {/* Quick actions */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-border">
+              <h2 className="text-sm font-semibold">Quick actions</h2>
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {recentLists.map((list) => (
-                <Link
-                  key={list.id}
-                  href={`/leads/${list.id}`}
-                  className="flex items-center justify-between px-5 py-3.5 hover:bg-secondary/40 transition-colors group"
-                >
-                  <div>
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">{list.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {list.totalLeads} leads · {list.qualifiedLeads} qualified
-                    </p>
+            <div className="p-2">
+              {[
+                { href: "/leads", label: "Describe new leads", icon: Sparkles },
+                { href: "/campaigns/new", label: "New campaign", icon: Megaphone, badge: activeCampaigns > 0 ? `${activeCampaigns} active` : undefined },
+                { href: "/settings", label: "Edit ICP & profile", icon: Settings },
+                { href: "/blog/how-to-set-up-flowfiy", label: "Setup guide", icon: BookOpen },
+              ].map(({ href, label, icon: Icon, badge }) => (
+                <Link key={href} href={href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/60 transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={list.status} />
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+                  <span className="text-sm flex-1">{label}</span>
+                  {badge && <span className="text-[11px] text-muted-foreground tabular-nums">{badge}</span>}
+                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-4">
-
-          {/* Quick Actions */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border">
-              <h2 className="font-semibold text-sm">Quick Actions</h2>
-            </div>
-            <div className="p-3 space-y-1.5">
-              <Link href="/leads" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4 text-blue-400" />
-                </div>
-                <span className="text-sm flex-1 font-medium">Generate Leads</span>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-              <Link href="/campaigns/new" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
-                <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
-                  <Megaphone className="w-4 h-4 text-violet-400" />
-                </div>
-                <div className="flex-1">
-                  <span className="text-sm font-medium">New Campaign</span>
-                  {activeCampaigns > 0 && (
-                    <span className="ml-2 text-xs bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium">
-                      {activeCampaigns} active
-                    </span>
-                  )}
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-              <Link href="/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                </div>
-                <span className="text-sm flex-1 font-medium">Edit ICP / Profile</span>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-              <Link href="/blog/how-to-set-up-flowfiy" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/60 transition-all group">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-4 h-4 text-amber-400" />
-                </div>
-                <span className="text-sm flex-1 font-medium">Setup Guide</span>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            </div>
           </div>
 
-          {/* AI Engine status */}
+          {/* Managed AI note */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="font-semibold text-sm">AI Engine</h2>
-              <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Active
-              </span>
-            </div>
+            <h2 className="text-sm font-semibold mb-1.5">Fully managed AI</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Claude Sonnet is fully managed by Flowfiy. No API key required — AI is included in your plan.
+              Discovery, research, scoring and copywriting run on managed AI — no API keys to set up. You only spend credits on qualified leads.
             </p>
-            {organization.plan === "FREE" && (
-              <Link
-                href="/billing"
-                className="mt-3 block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
-              >
-                Upgrade Plan
-              </Link>
-            )}
           </div>
 
         </div>
@@ -363,15 +280,13 @@ export default async function DashboardPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; class: string }> = {
-    DRAFT:       { label: "Draft",     class: "bg-secondary text-muted-foreground" },
-    QUEUED:      { label: "Queued",    class: "bg-amber-500/10 text-amber-400" },
-    RESEARCHING: { label: "Running",   class: "bg-blue-500/10 text-blue-400" },
-    READY:       { label: "Ready",     class: "bg-emerald-500/10 text-emerald-400" },
-    FAILED:      { label: "Failed",    class: "bg-destructive/10 text-destructive" },
-    ARCHIVED:    { label: "Archived",  class: "bg-secondary text-muted-foreground" },
+    DRAFT: { label: "Draft", class: "bg-secondary text-muted-foreground" },
+    QUEUED: { label: "Queued", class: "bg-secondary text-muted-foreground" },
+    RESEARCHING: { label: "Running", class: "bg-primary/10 text-primary" },
+    READY: { label: "Ready", class: "bg-emerald-500/10 text-emerald-400" },
+    FAILED: { label: "Failed", class: "bg-destructive/10 text-destructive" },
+    ARCHIVED: { label: "Archived", class: "bg-secondary text-muted-foreground" },
   };
   const { label, class: cls } = config[status] ?? { label: status, class: "bg-secondary text-muted-foreground" };
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>
-  );
+  return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>;
 }
