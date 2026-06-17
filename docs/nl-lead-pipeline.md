@@ -1,8 +1,11 @@
 # Natural-Language Lead Pipeline — Implementation Spec
 
-> Status: **Proposal for review** (not yet implemented)
+> Status: **Implemented** — shipped in the 2026-06 credits/NL-pipeline cutover.
 > Owner: Flowfiy
-> Last updated: 2026-06-16
+> Last updated: 2026-06-17
+>
+> Live addition: a **no-subscription trial** lets a new org generate up to **100
+> leads on credits alone** (min deposit 75 credits) before a subscription is required.
 
 A single natural-language input where a user describes the leads they want. A
 centralized platform LLM (Gemini) interprets the request, asks **clarifying

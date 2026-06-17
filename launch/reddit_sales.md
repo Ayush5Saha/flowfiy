@@ -11,8 +11,8 @@ You spend 20 minutes on a company, write a half-decent personalized email, send 
 
 I built Flowfiy to compress that whole process:
 
-- Drop in your ICP (who you're targeting, what pain you solve)
-- It pulls leads from Apollo, scrapes their websites, scores them 0–100
+- Describe the leads you want in plain English (even by condition — "no website", "bad reviews")
+- It finds them across Google Maps + a B2B people database, reads their websites, scores them 0–100
 - Writes a personalized subject line + initial email + 3 follow-ups for every qualified lead
 - Connects to Gmail and sends on schedule (with timezone awareness + reply detection that stops follow-ups automatically)
 
@@ -27,4 +27,4 @@ Qualification threshold is 70/100. Below that, lead is flagged for manual review
 
 Posting here because I want feedback from people who actually do outbound, not just use the tool for vanity metrics.
 
-Free tier is 50 lead generations. → flowfiy.com
+100 free leads, no subscription. Then $50/mo for 400 credits. → flowfiy.com

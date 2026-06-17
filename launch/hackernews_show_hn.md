@@ -1,36 +1,34 @@
 # Hacker News — Show HN
 
 **Title:**
-Show HN: Flowfiy – 5-agent Claude pipeline that researches leads, scores them, and writes cold emails
+Show HN: Flowfiy – describe leads in plain English; a managed AI pipeline finds, scores, and writes the outreach
 
 **Body:**
 
 Hey HN,
 
-I built Flowfiy (flowfiy.com) — a 5-agent AI pipeline for B2B outbound sales research and email generation.
+I built Flowfiy (flowfiy.com) — a natural-language B2B outbound pipeline. You describe the leads you want in plain English (including qualitative conditions like "cafés with no website"), and it does discovery → research → qualification → personalization end-to-end.
 
 **The pipeline:**
 
-1. ICP Analyzer (Haiku) — takes your business profile, outputs Apollo search filters + qualification criteria
-2. Lead Discovery — Apollo.io API, returns up to 100 prospects per run
-3. Company Analyzer (Sonnet) — Apify scrapes each website, Claude builds an intelligence report (brand maturity, acquisition gaps, tech stack signals, fit assessment)
-4. Qualification Agent (Haiku) — scores leads 0–100 against your ICP, outputs reasoning + personalization hooks
-5. Personalization Agent (Sonnet) — writes subject line + 3-touch email sequence per qualified lead, grounded in the company research
+1. Planner (Gemini) — turns the request into a search plan + a list of criteria predicates; asks ≤3 clarifying questions (≤2 rounds) if it's too vague
+2. Criteria engine — each predicate routes to the cheapest evaluator: source (pushed into the actor query), attribute (computed from results), signal (active probe, e.g. a website-audit grading none/broken/slow/outdated), or judge (LLM for fuzzy conditions). Funnel order narrows the set before the expensive checks
+3. Discovery — Apify actors (Google Maps + a B2B people finder), run via a platform token, normalized + deduped + criteria-aware quality gate
+4. Research + Qualify (Gemini) — reads each site/public data, scores 0–100 with reasoning
+5. Personalize (Gemini) — subject line + 3-touch sequence per qualified lead, grounded in the research
 
 **Technical decisions worth sharing:**
 
-- Orchestrator loop (not a fixed pipeline) — Claude decides when to scrape vs. skip based on available context
-- temperature=0 on all agents + hard input truncation caps to make token spend predictable per run (was the biggest operational headache early on)
-- ~240K tokens per 100-lead run (~$1.05) — we manage the API key centrally, no BYOK friction
-- Gmail OAuth for sending — emails go out as replies in the same thread (for follow-ups)
-- Reply detection via Gmail thread polling — follow-up sequence stops automatically on reply
-- Timezone-aware send windows — won't send at 3am in the lead's local time
+- Planner emits a typed plan (actor + params + criteria IR) so the run is deterministic and the user can confirm before anything paid happens
+- temperature=0 + hard input caps to make spend predictable; agents return real token usage
+- Cost-plus credit metering: estimate → reserve (HOLD) → reconcile actual COGS at run end (CONSUME + RELEASE). Empty runs charge nothing. AI/data are managed centrally (Gemini + Apify + Prospeo), so there's no BYOK friction
+- Gmail OAuth for sending — follow-ups go out as replies in-thread; reply detection stops the sequence; timezone-aware send windows
 
-**Stack:** Next.js 15 / Supabase / Prisma / BullMQ / Railway (workers) / Vercel (app)
+**Stack:** Next.js 15 / Supabase / Prisma / BullMQ + Upstash / Gemini / Railway (workers) / Vercel (app)
 
 **What I'm unsure about:**
 - Whether the qualification threshold (70/100) is too aggressive by default
-- Whether the company analysis step adds enough value to justify the Apify cost for every lead
+- Whether running the website-audit signal on every survivor is worth the latency vs. sampling
 - Whether "review before send" is the right UX or if fully autonomous sends would convert better
 
-Free tier: 50 lead generations. Would genuinely appreciate feedback on the architecture or the product.
+First 100 leads are free on credits (no subscription). Would genuinely appreciate feedback on the architecture or the product.

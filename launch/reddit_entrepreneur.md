@@ -21,10 +21,10 @@ Tools can write personalized emails. The hard part is knowing *which* leads to w
 
 **The onboarding friction of "connect your API key" kills conversion.**
 
-Early version required users to bring their own Anthropic API key. Killed sign-ups. Switched to managed AI — Flowfiy pays for Claude centrally, users just sign up and run. Obvious in hindsight.
+Early version required users to bring their own API key. Killed sign-ups. Switched to fully managed AI — Flowfiy runs the AI and data sources centrally, users just sign up and run. Obvious in hindsight.
 
 If you're doing any outbound and spending hours on research + personalization — that's the exact pain point this solves.
 
-Free tier: 50 leads. No credit card. → flowfiy.com
+100 free leads, no subscription, no credit card. Then $50/mo for 400 credits. → flowfiy.com
 
 Happy to answer questions about the build or the outbound strategy itself.

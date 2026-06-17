@@ -8,7 +8,7 @@ I spent 3 months building a tool to replace the worst part of running a business
 
 Here's what the process used to look like:
 
-→ Find lead on Apollo
+→ Build a lead list by hand
 → Open their website
 → Try to figure out what problem they actually have
 → Write a half-personalized email
@@ -18,13 +18,13 @@ Here's what the process used to look like:
 
 I built Flowfiy to compress this into one run:
 
-5 Claude AI agents work in sequence — ICP analysis → lead discovery → company research → qualification scoring → email writing.
+A managed AI pipeline runs in sequence — plan → discovery → company research → qualification scoring → email writing.
 
-You describe who you're targeting. The system does the research, scores every lead 0–100, and writes a personalized email sequence for each qualified one.
+You describe the leads you want in plain English. The system does the research, scores every lead 0–100, and writes a personalized email sequence for each qualified one.
 
-For 100 leads, the whole run costs ~$1.05 in AI. Takes about 20 minutes.
+You pay in credits — about 2 leads per credit, and only for qualified leads. A run takes about 20 minutes.
 
-We just launched. Free tier includes 50 leads.
+We just launched. Your first 100 leads are free — no subscription.
 
 If you do any form of B2B outbound and spend time on research + writing, I'd love your feedback.
 
@@ -60,7 +60,7 @@ Only then does it write the email — with a hook grounded in something real.
 
 The difference in reply rates between "generic personalized" and "genuinely researched" is not small.
 
-If you want to try it on your ICP — flowfiy.com (free tier available)
+If you want to try it on your ICP — flowfiy.com (100 free leads, no subscription)
 
 #ColdEmail #Outbound #B2BSales #SalesOps
 
@@ -68,27 +68,27 @@ If you want to try it on your ICP — flowfiy.com (free tier available)
 
 ## Post 3 — The Numbers Post (Day 5)
 
-Here's what 100 B2B leads actually costs with Flowfiy:
+Here's what generating B2B leads actually costs with Flowfiy:
 
-Claude Sonnet (Company Analyzer + Email Writing): $0.915
-Claude Haiku (ICP Analysis + Qualification): $0.104
-Apollo API: your subscription (not us)
-Total AI cost: ~$1.05 per 100 leads
+One plan: $50/month for 400 credits (~600–800 leads)
+~2 leads per credit — and you only pay for qualified leads
+An empty search costs nothing
+No API keys — the AI, data sources, and email verification are all managed
 
 You get:
-✓ 100 leads researched
+✓ Leads found from a plain-English description
 ✓ Every lead scored 0–100
 ✓ ~50 qualified leads with full email sequences (subject + 3 follow-ups each)
 ✓ All emails personalized based on actual website research
 
-The previous version required users to bring their own Anthropic API key. 
-Killed conversion — most people trying to fix their outbound aren't Claude API experts.
+The previous version required users to bring their own API key.
+Killed conversion — most people trying to fix their outbound aren't API experts.
 
-Switched to managed AI. Flowfiy pays for Claude, passes the cost through the plan pricing.
+Switched to fully managed AI. Flowfiy runs the AI (Gemini) and data sources centrally, metered by simple credits.
 
-Starter plan is $49/month. If you're running outbound manually right now, you're spending more than that in your own time.
+The plan is $50/month for 400 credits. If you're running outbound manually right now, you're spending more than that in your own time.
 
-Free tier: 50 leads, no credit card. → flowfiy.com
+First 100 leads free, no subscription, no credit card. → flowfiy.com
 
 #SaaS #AITools #B2BSales #Outbound
 

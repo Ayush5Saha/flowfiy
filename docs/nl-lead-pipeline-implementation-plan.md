@@ -1,11 +1,18 @@
 # NL Lead Pipeline — Implementation Plan (Master)
 
-> Status: **Planning — approved direction, not yet implemented.**
+> Status: **Implemented & shipped** — the credits / NL-pipeline cutover is live
+> (phases 1–8 landed; see git history). Retained as the design of record.
 > Companion to [`nl-lead-pipeline.md`](./nl-lead-pipeline.md) (the spec).
-> Last updated: 2026-06-16
+> Last updated: 2026-06-17
 
-This document is the single source of truth for *how* we build the spec. It is
-grounded in the current code so implementation proceeds without rework.
+This document is the single source of truth for *how* we built the spec. It is
+grounded in the current code.
+
+**Post-cutover addition — no-subscription trial:** a new org can generate up to
+**100 leads on credits alone** (minimum deposit **75 credits** = 100 leads at
+~2/credit plus a 50% buffer for high-condition leads); lead 101 requires an
+active subscription. Tracked via `Organization.trialLeadsUsed`, enforced at
+confirm and tallied at run reconcile.
 
 ## Locked decisions (from review)
 

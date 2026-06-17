@@ -1,9 +1,12 @@
 # Flowfiy's New Lead System — Explained Simply
 
-> A plain-English guide to the big upgrade we're planning.
+> A plain-English guide to Flowfiy's lead system (now live).
 > If you want the deep technical version, see
 > [`nl-lead-pipeline-implementation-plan.md`](./nl-lead-pipeline-implementation-plan.md).
-> Last updated: 2026-06-16
+> Last updated: 2026-06-17
+>
+> New: you can generate your **first 100 leads with no subscription** — just top
+> up credits (from 75). After 100, a subscription kicks in.
 
 ---
 

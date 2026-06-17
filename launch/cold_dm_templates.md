@@ -28,9 +28,9 @@ Hi [Name],
 
 Noticed you're running outbound at [Company] — saw [specific signal, e.g. "you recently posted about SDR hiring"].
 
-Built a tool that might be relevant: Flowfiy runs 5 Claude AI agents to research leads, score them 0–100, and write the personalized email sequences.
+Built a tool that might be relevant: Flowfiy is a fully managed AI pipeline that researches leads, scores them 0–100, and writes the personalized email sequences.
 
-~$1.05 per 100 leads. Free tier if you want to try it.
+$50/mo for 400 credits (~600–800 leads). 100 free leads to start — no subscription.
 
 Would the research/qualification step be useful for your team?
 
@@ -46,9 +46,9 @@ Love what you're building at [Company].
 
 Quick one — do you do any outbound to get clients? If you're still doing manual research + writing, I built something that might save you hours.
 
-Flowfiy: describe your ICP, pull 100 leads from Apollo, get them all scored + personalized emails ready to send. Takes 20 minutes, costs ~$1.
+Flowfiy: describe the leads you want in plain English, get them all scored + personalized emails ready to send. Takes about 20 minutes.
 
-Free to try (50 leads, no card). → flowfiy.com
+Free to try — 100 leads, no subscription. → flowfiy.com
 
 Curious if the qualification scoring part would be useful for you specifically.
 
@@ -64,7 +64,7 @@ Saw your post about [their specific complaint].
 
 I just launched something that might land differently — Flowfiy does the research + scoring + email writing in one pipeline, but keeps you in control (review before send, not autonomous).
 
-$49/month starter, free tier to try. → flowfiy.com
+$50/mo for 400 credits; 100 free leads to start. → flowfiy.com
 
 Does this address the thing you were frustrated about?
 
@@ -76,9 +76,9 @@ Does this address the thing you were frustrated about?
 
 Hey [Name] — building in the outbound/sales space?
 
-Just launched Flowfiy — 5-agent Claude pipeline: research leads → score 0-100 → write personalized sequences. ~$1/100 leads.
+Just launched Flowfiy — a managed AI pipeline: describe leads → score 0-100 → write personalized sequences. ~2 leads per credit.
 
-Free tier at flowfiy.com if useful.
+100 free leads (no subscription) at flowfiy.com if useful.
 
 ---
 

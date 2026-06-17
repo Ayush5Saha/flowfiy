@@ -1,6 +1,6 @@
 # 7-Day Launch Checklist — 50 Users Target
 
-Goal: 50 signups (free tier counts) by Day 7
+Goal: 50 signups (free-trial signups count) by Day 7
 Budget: $0
 Time required: ~2-3 hours/day
 
@@ -38,7 +38,7 @@ Time required: ~2-3 hours/day
 **Afternoon (1 hour)**
 - [ ] Send 30 more LinkedIn DMs
 - [ ] Post in 2-3 Slack/Discord communities (see `cold_dm_templates.md`)
-- [ ] Post on Twitter/X — short version: "Just launched Flowfiy — 5 Claude agents that research leads, score them 0-100, write cold emails. ~$1/100 leads. Free tier: flowfiy.com"
+- [ ] Post on Twitter/X — short version: "Just launched Flowfiy — managed AI that finds leads, scores them 0-100, writes cold emails. 100 free leads, no subscription. flowfiy.com"
 
 ---
 
