@@ -3,40 +3,41 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Apollo.io — AI B2B Outreach Comparison India 2026",
+  title: "Flowfiy vs Apollo.io — AI Outbound Comparison 2026",
   description:
-    "Flowfiy vs Apollo.io for AI-powered B2B outreach in India. Apollo gives you a contact database; Flowfiy adds 5 Claude AI agents for research, qualification scoring, and hyper-personalized email copy. India plans from ₹1,700/mo.",
+    "Flowfiy vs Apollo.io for AI-powered B2B outreach. Apollo gives you a contact database you have to set up; with Flowfiy you just describe the leads you want — no Apollo account, no keys — and it finds, qualifies, and writes the outreach. One plan: $50/mo for 400 credits.",
   keywords: [
     "Flowfiy vs Apollo",
-    "Apollo.io alternative India",
-    "Apollo competitor India",
+    "Apollo.io alternative",
+    "Apollo competitor",
     "Apollo vs Flowfiy",
-    "AI sales tool India comparison 2026",
-    "Apollo alternative India pricing",
-    "best Apollo alternative for Indian startups",
-    "AI lead generation India vs Apollo",
+    "AI sales tool comparison 2026",
+    "Apollo alternative pricing",
+    "best Apollo alternative for outbound",
+    "AI lead generation vs Apollo",
   ],
   openGraph: {
-    title: "Flowfiy vs Apollo.io — AI Sales Platform Comparison India 2026",
-    description: "How Flowfiy compares to Apollo.io for B2B lead generation and outreach automation in India. Plans from ₹1,700/mo.",
+    title: "Flowfiy vs Apollo.io — AI Sales Platform Comparison 2026",
+    description: "How Flowfiy compares to Apollo.io for B2B lead generation and outreach automation. One plan: $50/mo for 400 credits.",
     url: "/vs/apollo",
   },
   alternates: { canonical: "/vs/apollo" },
 };
 
 const rows = [
-  { feature: "Contact database (275M+)", outbound: "Via Apollo API", apollo: true },
-  { feature: "AI ICP analysis", outbound: true, apollo: false },
-  { feature: "AI company research (web scraping)", outbound: true, apollo: false },
+  { feature: "Describe leads in plain English", outbound: true, apollo: false },
+  { feature: "Condition-based targeting (e.g. \"no website\", \"bad reviews\")", outbound: true, apollo: false },
+  { feature: "Fully managed data sources — no account to set up", outbound: true, apollo: false },
+  { feature: "AI company research on every prospect", outbound: true, apollo: false },
   { feature: "AI qualification scoring (0–100)", outbound: true, apollo: false },
   { feature: "AI-written personalized email copy", outbound: true, apollo: "Basic AI assist" },
-  { feature: "Multi-step email sequences", outbound: "Campaign follow-ups", apollo: true },
+  { feature: "Multi-step follow-ups", outbound: "Campaign follow-ups", apollo: true },
   { feature: "Gmail OAuth sending", outbound: true, apollo: true },
-  { feature: "BYOK AI API", outbound: true, apollo: false },
-  { feature: "Per-lead AI cost to you", outbound: "$0", apollo: "Included in plan" },
+  { feature: "API keys required", outbound: "None", apollo: "Apollo account" },
+  { feature: "Pay only for qualified leads", outbound: true, apollo: false },
   { feature: "CRM integrations", outbound: "Roadmap", apollo: true },
   { feature: "Multi-tenant team workspaces", outbound: true, apollo: true },
-  { feature: "Starting price", outbound: "$0 free tier", apollo: "$49/mo" },
+  { feature: "Starting price", outbound: "$50/mo — 400 credits", apollo: "$49/mo" },
 ];
 
 export default function VsApolloPage() {
@@ -52,12 +53,11 @@ export default function VsApolloPage() {
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
             Flowfiy vs Apollo.io:{" "}
             <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-              Different layers of the stack
+              A database vs. a done-for-you pipeline
             </span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-            Apollo.io is the world&apos;s best contact database — 275M+ verified contacts with a built-in sequencer. Flowfiy is the AI intelligence layer on top: it uses Apollo&apos;s data, then adds 5 Claude agents for research, qualification, and hyper-personalized copy.
-            Many teams use both.
+            Apollo.io is a contact database with a built-in sequencer — you set up an account, build filters, and do the research and writing yourself. With Flowfiy there&apos;s no Apollo account and no keys: you describe the leads you want in plain English, and it finds matching businesses, researches and scores each one, then writes the personalized outreach for you.
           </p>
         </div>
       </section>
@@ -71,7 +71,7 @@ export default function VsApolloPage() {
               <p className="font-semibold text-white mb-3">Apollo.io is better for...</p>
               <ul className="space-y-2">
                 {[
-                  "Raw contact discovery from the 275M+ database",
+                  "Browsing a large contact database yourself",
                   "Multi-step email sequences with A/B testing",
                   "CRM sync (Salesforce, HubSpot)",
                   "Dialer + LinkedIn integration in one platform",
@@ -84,13 +84,13 @@ export default function VsApolloPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-violet-950/50 to-zinc-900/50 border border-violet-500/20 rounded-2xl p-6">
-              <p className="font-semibold text-white mb-3">Flowfiy adds...</p>
+              <p className="font-semibold text-white mb-3">Flowfiy gives you...</p>
               <ul className="space-y-2">
                 {[
-                  "AI company research on every prospect (not just enrichment)",
+                  "Just describe your leads — no Apollo account, no keys",
+                  "Condition-based targeting like \"shops with a slow or outdated site\"",
                   "0–100 qualification scoring before any email is sent",
-                  "Claude-written emails with 4+ specific facts per lead",
-                  "$0 per-generation AI cost with your own Claude key",
+                  "AI-written emails with specific facts per lead, plus follow-ups",
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
                     <Check className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
@@ -147,17 +147,17 @@ export default function VsApolloPage() {
       {/* How they work together */}
       <section className="py-16 px-4 sm:px-6 border-b border-white/5">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-6">How Flowfiy and Apollo work together</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">How Flowfiy replaces the Apollo workflow</h2>
           <p className="text-zinc-400 leading-relaxed mb-8">
-            Flowfiy integrates directly with Apollo&apos;s API. You connect your Apollo key, and Flowfiy&apos;s Lead Discovery Agent queries Apollo&apos;s database using filters constructed from your ICP.
-            The leads come back with Apollo&apos;s full data (contact info, job titles, company data), and then Flowfiy&apos;s remaining 4 agents take over — company research, qualification scoring, and personalized copy generation.
+            With Apollo you set up an account, learn the filters, build lists, then export them somewhere to research and write. Flowfiy collapses all of that into one step: you describe the leads you want in plain English, and it asks smart clarifying questions when needed.
+            The data sources are fully managed, so there&apos;s nothing to connect — Flowfiy finds matching businesses, researches and scores each one 0–100, writes personalized emails plus follow-ups, and sends from your own Gmail after review.
           </p>
           <div className="bg-zinc-900/50 border border-white/6 rounded-2xl p-6">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-4">Recommended stack</p>
+            <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-4">The whole stack, managed</p>
             <div className="space-y-3">
               {[
-                ["Apollo API (your key)", "Contact database & discovery — 275M+ contacts"],
-                ["Flowfiy", "AI research, qualification scoring, personalized copy"],
+                ["Plain-English request", "Describe your ideal leads — no account, no filters to learn"],
+                ["Flowfiy", "Managed data sources, AI research, scoring, personalized copy"],
                 ["Gmail (your account)", "Sending — native OAuth, no shared IP pools"],
               ].map(([tool, role]) => (
                 <div key={tool as string} className="flex items-start gap-4">
@@ -173,13 +173,13 @@ export default function VsApolloPage() {
       {/* CTA */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Add AI intelligence to your Apollo pipeline</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Skip the database — just describe your leads</h2>
           <p className="text-zinc-400 mb-8">
-            Connect your Apollo key to Flowfiy. Start generating qualified, AI-researched leads with personalized outreach in under 30 minutes.
+            No Apollo account, no keys, no filters to learn. Describe the leads you want and Flowfiy finds, qualifies, and writes the outreach. One plan: $50/mo for 400 credits, and you only pay for qualified leads.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
-              Get started free <ArrowRight className="w-4 h-4" />
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/vs/clay" className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl border border-white/10 text-zinc-300 font-medium text-sm hover:border-white/20 hover:text-white transition-all">
               Compare vs Clay

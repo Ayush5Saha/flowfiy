@@ -4,41 +4,41 @@ import Image from "next/image";
 import { Zap, Shield, Globe, Code2, ArrowRight, Target, Search, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform India",
+  title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform",
   description:
-    "Flowfiy is India's AI outbound sales platform — 5 Claude AI agents automate lead research, qualification scoring, and personalized cold email outreach. Zero SDR needed. Built for Indian startups and agencies.",
+    "Flowfiy is the AI outbound sales platform where you describe the leads you want in plain English — and it finds, qualifies, and writes the outreach. Fully managed AI and data. No API keys, no SDR needed.",
   keywords: [
     "about Flowfiy",
-    "AI sales platform India",
-    "Claude AI sales tool",
-    "B2B outreach automation India",
-    "AI SDR platform India",
-    "AI outbound sales India",
-    "outbound sales software India",
-    "AI sales automation startup India",
+    "AI sales platform",
+    "describe your leads",
+    "B2B outreach automation",
+    "AI SDR platform",
+    "AI outbound sales",
+    "outbound sales software",
+    "condition-based lead targeting",
   ],
   openGraph: {
-    title: "About Flowfiy — India's AI-Powered B2B Sales Platform",
-    description: "Learn how Flowfiy uses 5 Claude AI agents to replace the manual SDR stack. Built for Indian startups and agencies. Plans from ₹1,700/mo.",
+    title: "About Flowfiy — The AI-Powered B2B Sales Platform",
+    description: "Learn how Flowfiy turns a plain-English description of your ideal leads into researched, scored, and written outreach. Fully managed AI and data. One plan, $50/mo for 400 credits.",
     url: "/about",
   },
   alternates: { canonical: "/about" },
 };
 
 const values = [
-  { icon: Shield, title: "Security first", desc: "Every API key stored with AES-256-GCM. Your credentials never appear in logs. Full tenant isolation via Supabase RLS." },
-  { icon: Globe, title: "Global from day one", desc: "Stripe billing in 135+ currencies. Multi-language ICP support. Built for revenue teams everywhere, not just Silicon Valley." },
-  { icon: Code2, title: "Transparent stack", desc: "Next.js 15, Supabase, Prisma, BullMQ, Upstash Redis, Anthropic SDK. No black boxes. Engineers know exactly what runs their pipeline." },
-  { icon: Zap, title: "AI included, BYOK available", desc: "Paid plans include fully managed Claude Sonnet — no API key needed. Prefer your own Anthropic key? BYOK mode is always an option. No AI cost markup either way." },
+  { icon: Shield, title: "Security first", desc: "Your data is encrypted and fully tenant-isolated. We send only from your own Gmail, after your review — nothing leaves without you." },
+  { icon: Globe, title: "Global from day one", desc: "Billed in your local currency (rupees in India). Describe your leads in plain English for any market. Built for revenue teams everywhere." },
+  { icon: Code2, title: "You only pay for results", desc: "1 plan, 400 credits a month. About 2 qualified leads per credit, and an empty search costs nothing. Top up anytime — no AI cost markup." },
+  { icon: Zap, title: "Fully managed AI", desc: "The AI and data sources are managed for you — no API keys, no per-tool setup. Just describe who you want to reach and Flowfiy does the rest." },
 ];
 
 const stack = [
-  { name: "Claude (Anthropic)", role: "AI backbone — 5 specialized agents", color: "from-orange-500/20 to-amber-500/20 border-orange-500/20" },
+  { name: "Google Gemini", role: "Fully managed AI — research, scoring & writing", color: "from-orange-500/20 to-amber-500/20 border-orange-500/20" },
   { name: "Next.js 15", role: "App Router, server components, API routes", color: "from-zinc-700/40 to-zinc-800/40 border-white/8" },
   { name: "Supabase", role: "PostgreSQL + Auth + RLS multi-tenant isolation", color: "from-emerald-500/15 to-green-500/15 border-emerald-500/20" },
   { name: "BullMQ + Upstash Redis", role: "AI pipeline job queue with retry & backoff", color: "from-red-500/15 to-rose-500/15 border-red-500/20" },
-  { name: "Apollo.io", role: "275M+ contact database for lead discovery", color: "from-blue-500/15 to-indigo-500/15 border-blue-500/20" },
-  { name: "Apify", role: "Web scraping for company research signals", color: "from-violet-500/15 to-purple-500/15 border-violet-500/20" },
+  { name: "Google Maps + B2B database", role: "Lead sources for local businesses & people", color: "from-blue-500/15 to-indigo-500/15 border-blue-500/20" },
+  { name: "Email verification & enrichment", role: "Included — clean, deliverable contacts", color: "from-violet-500/15 to-purple-500/15 border-violet-500/20" },
 ];
 
 export default function AboutPage() {
@@ -60,8 +60,8 @@ export default function AboutPage() {
             <br />We rebuilt it with AI.
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed mb-8">
-            Manual SDR work — scraping LinkedIn, researching companies, writing cold emails — is repetitive, slow, and expensive.
-            Flowfiy replaces that entire workflow with 5 specialized Claude AI agents that run 24/7, never get tired, and personalize every single touchpoint.
+            Manual SDR work — finding companies, researching them, writing cold emails — is repetitive, slow, and expensive.
+            Flowfiy replaces that entire workflow. Describe the leads you want in plain English, and it finds, qualifies, and writes personalized outreach for every one.
           </p>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
             We built this for revenue teams who want pipeline quality, not just volume. Every lead is researched, scored, and written for — before a single email leaves your inbox.
@@ -80,7 +80,7 @@ export default function AboutPage() {
             For years, building a real outbound sales machine meant hiring SDRs, subscribing to five different tools, and spending weeks on setup. That was fine if you were a large enterprise. For everyone else, it was out of reach.
           </p>
           <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl pl-8 mt-4">
-            Flowfiy changes that. Describe who you sell to, and within minutes you have a list of researched, scored, and personally written-for prospects — ready to hear from you. No team required.
+            Flowfiy changes that. Describe who you sell to in plain English — even by condition, like &quot;coffee shops with no website&quot; or &quot;SaaS that recently raised&quot; — and within minutes you have a list of researched, scored, and personally written-for prospects. No team required.
           </p>
         </div>
       </section>
@@ -214,21 +214,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* How the 5 agents work */}
+      {/* How the pipeline works */}
       <section className="py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12">
             <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-3 block">Under the hood</span>
-            <h2 className="text-3xl font-bold text-white mb-3">5 AI agents. One seamless pipeline.</h2>
-            <p className="text-zinc-400 max-w-xl">Each agent is built for one specific job. They pass context to each other — so every step gets smarter as the pipeline runs.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">One pipeline. Five steps.</h2>
+            <p className="text-zinc-400 max-w-xl">Each step is built for one specific job, and passes context to the next — so the work gets smarter as the pipeline runs. All of it is fully managed; there are no API keys to set up.</p>
           </div>
           <ol className="space-y-4">
             {[
-              { n: "01", title: "ICP Analyzer", desc: "Reads your business profile and builds a precise picture of who your ideal customer is — industries, company sizes, job titles, and the pain points they have." },
-              { n: "02", title: "Lead Discovery", desc: "Searches 275M+ contacts using the targeting profile from step one. Pulls only the people and companies that match. No manual filter-clicking." },
-              { n: "03", title: "Company Analyzer", desc: "Visits each prospect's company website and reads it. Extracts growth signals, identifies service gaps, and builds context for personalisation." },
-              { n: "04", title: "Qualification Agent", desc: "Scores every lead from 0 to 100 based on how well they fit your service. Only high-scoring leads move forward — along with a clear reason why." },
-              { n: "05", title: "Personalization Agent", desc: "Writes a subject line, email body, and two follow-ups for each qualified lead — using real details from their company, not generic merge tags." },
+              { n: "01", title: "Understand your ICP", desc: "Reads your business profile and your plain-English request, then builds a precise picture of who to target — industries, company sizes, job titles, and the conditions that qualify a lead." },
+              { n: "02", title: "Discover leads", desc: "Searches Google Maps and a B2B people database using that brief. Condition-based targeting finds matches a simple filter can't — like \"no website\" or \"bad reviews\" — and pulls only the businesses and people that fit." },
+              { n: "03", title: "Research each company", desc: "Visits each prospect's website and reads it. Extracts growth signals, website health, and service gaps, building context for personalisation." },
+              { n: "04", title: "Qualify & score", desc: "Scores every lead from 0 to 100 based on how well they fit your service. Only high-scoring leads move forward — along with a clear reason why, and you only spend credits on the ones that qualify." },
+              { n: "05", title: "Personalize outreach", desc: "Writes a subject line, email body, and follow-ups for each qualified lead — using real details from their company, not generic merge tags — ready to send from your own Gmail." },
             ].map(({ n, title, desc }) => (
               <li key={n} className="flex gap-5 bg-zinc-900/40 border border-white/6 rounded-2xl p-6">
                 <span className="text-xs font-mono text-violet-400 mt-0.5 shrink-0">{n}</span>
@@ -246,10 +246,10 @@ export default function AboutPage() {
       <section className="py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to see it in action?</h2>
-          <p className="text-zinc-400 mb-8">Start with 100 free leads. No credit card. First results in under 10 minutes.</p>
+          <p className="text-zinc-400 mb-8">$50/month for 400 credits — no API keys. First results in under 10 minutes.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
-              Get started free <ArrowRight className="w-4 h-4" />
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/blog" className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl border border-white/10 text-zinc-300 font-medium text-sm hover:border-white/20 hover:text-white transition-all">
               Read the blog

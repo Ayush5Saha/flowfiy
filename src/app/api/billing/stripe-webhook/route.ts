@@ -3,6 +3,8 @@ import type Stripe from "stripe";
 import { getStripe, STRIPE_PLANS, getStripePlanByPriceId } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
+import { grantCreditsOnce } from "@/lib/credits/service";
+import { PLAN_CREDITS } from "@/lib/credits/rates";
 
 /**
  * POST /api/billing/stripe-webhook
@@ -50,7 +52,24 @@ export async function POST(req: NextRequest) {
       // ── First payment completed via Checkout Session ───────────────────────
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const { organizationId, planKey, referredOrgId, referrerOrgId } = session.metadata ?? {};
+        const meta = session.metadata ?? {};
+
+        // ── One-time credit top-up (payment mode) ──────────────────────────
+        if (meta.kind === "credit_topup" && meta.organizationId && meta.credits) {
+          const granted = await grantCreditsOnce(meta.organizationId, Number(meta.credits), "topup", session.id);
+          if (granted) {
+            await createAuditLog({
+              organizationId: meta.organizationId,
+              action: "credits.topup",
+              resourceType: "payment",
+              resourceId: session.id,
+              metadata: { credits: Number(meta.credits), gateway: "stripe" },
+            }).catch(() => null);
+          }
+          break;
+        }
+
+        const { organizationId, planKey, referredOrgId, referrerOrgId } = meta;
         const subId = session.subscription as string | null;
 
         if (!organizationId || !planKey || !subId) break;
@@ -80,6 +99,9 @@ export async function POST(req: NextRequest) {
           resourceId: subId,
           metadata: { plan: planKey, gateway: "stripe" },
         });
+
+        // ── Grant the plan's monthly credits (idempotent) ─────────────────
+        await grantCreditsOnce(organizationId, PLAN_CREDITS, "plan_grant", session.id).catch(() => null);
 
         // ── Apply referral reward to the referrer ─────────────────────────
         if (referredOrgId && referrerOrgId) {
@@ -133,6 +155,8 @@ export async function POST(req: NextRequest) {
               plan: org.plan,
               isNewSignup: false,
             });
+            // Grant the plan's monthly credits on renewal (idempotent).
+            await grantCreditsOnce(org.id, PLAN_CREDITS, "plan_grant", invoice.id).catch(() => null);
           }
         }
         break;

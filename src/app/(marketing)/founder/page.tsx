@@ -19,26 +19,26 @@ import {
 export const metadata: Metadata = {
   title: "Ayush Saha — Founder of Flowfiy | AI Sales Automation",
   description:
-    "Ayush Saha is the founder of Flowfiy — India's AI-powered B2B outbound sales platform. Building AI agents that replace the manual SDR stack. Formerly an AI automation consultant.",
+    "Ayush Saha is the founder of Flowfiy — the AI outbound sales platform where you describe the leads you want and Flowfiy finds, qualifies, and writes the outreach. Formerly an AI automation consultant.",
   openGraph: {
     title: "Ayush Saha — Founder of Flowfiy",
     description:
-      "Building Flowfiy — AI agents that automate B2B lead research, scoring, and personalised outreach. Based in India.",
+      "Building Flowfiy — the AI platform that finds, scores, and writes personalised outreach from a plain-English description of the leads you want.",
     url: "/founder",
   },
   alternates: { canonical: "/founder" },
 };
 
 const skills = [
-  "AI Agents",
+  "AI Sales",
   "B2B Sales Automation",
-  "Claude API",
+  "Condition-Based Targeting",
   "Next.js",
   "Supabase",
   "Cold Email",
   "Lead Generation",
   "SaaS",
-  "MCP",
+  "Gemini",
   "TypeScript",
   "Growth",
   "Product",
@@ -57,7 +57,7 @@ const openTo = [
     title: "Feedback & beta testing",
     desc: "Revenue teams, agencies, and founders who want to try Flowfiy early and help shape the product roadmap.",
     href: "/signup",
-    cta: "Start for free",
+    cta: "Get started",
   },
   {
     icon: Building2,
@@ -72,17 +72,17 @@ const timeline = [
   {
     year: "2026",
     title: "Founded Flowfiy",
-    desc: "Launched India's first Claude-native AI outbound sales platform — 5 agents, zero SDR required.",
+    desc: "Launched the AI outbound sales platform where you describe the leads you want in plain English — and Flowfiy finds, qualifies, and writes the outreach. Zero SDR required.",
   },
   {
     year: "2025",
     title: "AI Automation Consultant",
-    desc: "Helped 20+ businesses across India set up automated lead generation workflows using AI tooling.",
+    desc: "Helped 20+ businesses set up automated lead generation workflows using AI tooling.",
   },
   {
     year: "2024",
     title: "Discovered the gap",
-    desc: "Spent months experimenting with Clay, Apollo, and Smartlead. Realised none of them combined AI reasoning with deep company research.",
+    desc: "Spent months experimenting with Clay and Smartlead. Realised none of them let you target leads by real-world conditions — like shops with no website or a slow, outdated one.",
   },
 ];
 
@@ -124,9 +124,10 @@ export default function ProfilePage() {
                 </Link>
               </p>
               <p className="text-zinc-400 leading-relaxed max-w-xl mb-6">
-                Building AI agents that replace the manual SDR stack — so any team can run a
-                world-class outbound pipeline without hiring a single salesperson.
-                India-based. Obsessed with AI, B2B sales, and making complex things simple.
+                Building the AI platform that replaces the manual SDR stack — describe the leads
+                you want and Flowfiy finds, qualifies, and writes the outreach, so any team can
+                run a world-class pipeline without hiring a single salesperson.
+                Obsessed with AI, B2B sales, and making complex things simple.
               </p>
 
               {/* Social links */}
@@ -184,19 +185,20 @@ export default function ProfilePage() {
                   </span>
                 </div>
                 <p className="text-zinc-400 leading-relaxed mb-5">
-                  India&apos;s first end-to-end AI outbound sales platform. Five Claude AI agents
-                  handle the entire pipeline — ICP analysis, lead discovery from 275M+ contacts,
-                  company research, qualification scoring (0–100), and hyper-personalised email
-                  copy — all in one run. No SDR. No manual research.
+                  The end-to-end AI outbound sales platform. Describe the leads you want in plain
+                  English — even by real-world conditions like &ldquo;coffee shops with no
+                  website&rdquo; — and Flowfiy finds matching businesses, researches and scores
+                  each 0–100, and writes personalised cold emails plus follow-ups, ready to send
+                  from your own Gmail. No SDR. No manual research.
                 </p>
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                   {[
-                    { icon: Zap, label: "5 AI agents", sublabel: "Specialized pipeline" },
-                    { icon: TrendingUp, label: "₹1,700/mo", sublabel: "Starts from" },
-                    { icon: Users, label: "275M+", sublabel: "Contact database" },
-                    { icon: Sparkles, label: "Claude-native", sublabel: "Anthropic powered" },
+                    { icon: Zap, label: "Plain English", sublabel: "Describe your leads" },
+                    { icon: TrendingUp, label: "$50/mo", sublabel: "400 credits" },
+                    { icon: Users, label: "600–800 leads", sublabel: "Per month" },
+                    { icon: Sparkles, label: "Fully managed", sublabel: "No API keys" },
                   ].map(({ icon: Icon, label, sublabel }) => (
                     <div key={label} className="bg-white/[0.03] border border-white/6 rounded-xl p-3 text-center">
                       <Icon className="w-4 h-4 text-violet-400 mx-auto mb-1.5" />
@@ -211,7 +213,7 @@ export default function ProfilePage() {
                     href="/signup"
                     className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25"
                   >
-                    Try Flowfiy free <ArrowRight className="w-4 h-4" />
+                    Get started <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/about"
@@ -318,7 +320,7 @@ export default function ProfilePage() {
               href="/signup"
               className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl border border-white/10 text-zinc-300 font-medium text-sm hover:border-white/20 hover:text-white transition-all"
             >
-              Try Flowfiy free
+              Get started
             </Link>
           </div>
         </div>

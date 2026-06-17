@@ -18,7 +18,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       "An AI SDR is software that automates the work of a sales development rep — finding leads, researching them, and writing outreach — without a human doing it manually.",
     body: [
       "A traditional SDR spends most of their week building lists, researching companies, and writing cold emails. An AI SDR does that work automatically using AI agents, so a founder or small team can run outbound at scale without hiring.",
-      "Flowfiy is an AI SDR platform: five Claude AI agents handle ICP analysis, lead discovery, company research, qualification scoring, and personalized email writing end-to-end.",
+      "Flowfiy is an AI SDR platform: you describe the leads you want in plain English, and its managed AI handles lead discovery, company research, qualification scoring, and personalized email writing end-to-end.",
     ],
     related: ["outbound-sales", "cold-email", "lead-scoring"],
   },
@@ -100,15 +100,37 @@ export const GLOSSARY: GlossaryTerm[] = [
     related: ["ai-sdr", "cold-email", "ideal-customer-profile"],
   },
   {
-    slug: "byok",
-    term: "BYOK (Bring Your Own Key)",
+    slug: "condition-based-targeting",
+    term: "Condition-Based Targeting",
     short:
-      "BYOK (Bring Your Own Key) lets you connect your own AI provider API key to a product, so AI usage runs on — and is billed to — your own account.",
+      "Condition-based targeting is finding leads by qualitative conditions — like \"coffee shops with no website\" or \"dentists with bad reviews\" — rather than just category and location.",
     body: [
-      "BYOK gives you control over AI costs and usage limits, and is common with developer-friendly tools. The alternative is a fully managed model where the platform handles the AI for you.",
-      "Flowfiy supports BYOK with your Anthropic Claude key on any plan, and also offers fully managed Claude on paid plans so no key is required.",
+      "Most lead tools only filter by firmographics: industry, size, geography. Condition-based targeting goes further, matching on real-world signals such as a slow or outdated website, poor reviews, or a recent funding round — the things that actually indicate a prospect needs what you sell.",
+      "With Flowfiy you describe the leads you want in plain English, and its managed AI finds matching businesses, scores each 0–100, and writes the outreach — no API keys to set up.",
     ],
-    related: ["ai-sdr"],
+    related: ["ideal-customer-profile", "ai-sdr", "lead-scoring"],
+  },
+  {
+    slug: "lead-credits",
+    term: "Lead Credits",
+    short:
+      "Lead credits are a prepaid in-app currency used to meter AI lead generation — you spend credits as the platform delivers qualified leads, rather than paying per API call or per month for unlimited use.",
+    body: [
+      "Credits make AI lead generation predictable: instead of juggling per-token AI bills and per-tool data charges, you hold a credit balance and spend it as leads are delivered. Each search reserves an estimate and is charged the actual cost when it finishes, so you're never billed above what you approved — and a search that returns no qualified leads costs nothing.",
+      "Flowfiy runs on one plan: $50/month for 400 credits — roughly 600–800 leads, about two leads per credit, varying by how specific the search is. The AI and data sources are fully managed, so there are no API keys and no separate provider bills.",
+    ],
+    related: ["ai-sdr", "lead-scoring", "condition-based-targeting"],
+  },
+  {
+    slug: "website-audit",
+    term: "Website Audit",
+    short:
+      "A website audit is an automated check of a business's website health — grading it as having no site, broken, slow, or outdated — used to find prospects who need web design, performance, or marketing help.",
+    body: [
+      "For agencies and freelancers, website health is a buying signal: a business with no website, a broken one, or a slow, outdated site is a prospect who needs what you sell. An automated audit grades each site (none, broken, slow, outdated) from signals like load time, mobile readiness, HTTPS, and page metadata.",
+      "Flowfiy runs a website-audit signal as part of condition-based targeting, so you can ask for leads like \"cafés with no website\" or \"agencies with an outdated site\" and get only the businesses that match — each tagged with the reason it qualified.",
+    ],
+    related: ["condition-based-targeting", "lead-enrichment", "lead-scoring"],
   },
 ];
 

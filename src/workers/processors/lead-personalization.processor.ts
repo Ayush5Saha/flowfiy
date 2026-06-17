@@ -14,7 +14,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
-import { getClaudeClientForOrg } from "@/ai/client";
+import { getCentralLLMClient } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runPersonalization } from "@/ai/agents/personalization";
 import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
@@ -119,7 +119,7 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
   const painPointMatch = research?.painPointMatch ?? "Operational inefficiencies and growth bottlenecks";
 
   // ── Run Personalization Agent (Sonnet) ────────────────────────────────────
-  const { client, mode: runMode } = await getClaudeClientForOrg(organizationId);
+  const { client, mode: runMode } = getCentralLLMClient("personalization");
 
   await log(`✍️  Writing personalized email for ${lead.companyName ?? "lead"}`, "tool");
 

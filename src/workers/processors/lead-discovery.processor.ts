@@ -11,7 +11,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
-import { getClaudeClientForOrg } from "@/ai/client";
+import { getCentralLLMClient } from "@/ai/client";
 import { runICPAnalyzer } from "@/ai/agents/icp-analyzer";
 import { QUALIFIED_OVERFETCH_MULTIPLIER, MAX_DISCOVERY_CANDIDATES, MAX_DISCOVERY_ROUNDS } from "@/ai/config";
 import { markListReady } from "@/lib/pipeline-finalization";
@@ -23,6 +23,8 @@ import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
 import { appendLog, clearLogs } from "@/lib/job-logs";
 import { getLeadResearchQueue, getLeadDiscoveryQueue } from "@/workers/queues";
+import { runNlDiscovery } from "@/lib/nl-pipeline/discovery";
+import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
 
 export interface LeadDiscoveryJobData {
   organizationId: string;
@@ -30,7 +32,9 @@ export interface LeadDiscoveryJobData {
   leadsPerRun: number;
   /** Top-up round number (1 = initial). Later rounds fetch progressively more. */
   round?: number;
-  mode?: "apollo" | "apify" | "import";
+  mode?: "apollo" | "apify" | "import" | "nl";
+  /** NL pipeline: the LeadRequest that owns this run (criteria-aware discovery). */
+  leadRequestId?: string;
   /** Import mode: leads already inserted into DB, skip discovery */
   preloadedLeads?: Array<{
     leadId: string;
@@ -70,6 +74,23 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
     });
   }
 
+  // ── NL pipeline: criteria-aware discovery via the actor registry ──────────
+  if (job.data.mode === "nl" && job.data.leadRequestId) {
+    const leadRequestId = job.data.leadRequestId;
+    try {
+      await runNlDiscovery({ organizationId, leadListId, leadRequestId });
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Unknown error";
+      await appendLog(leadListId, `Discovery failed: ${errMsg}`, "error").catch(() => null);
+      await prisma.leadList
+        .update({ where: { id: leadListId }, data: { status: "FAILED", jobStatus: "failed", jobError: errMsg } })
+        .catch(() => null);
+      await releaseLeadRequestHold(leadRequestId, organizationId, "FAILED", errMsg).catch(() => null);
+      throw err;
+    }
+    return;
+  }
+
   try {
     if (isRetry) {
       await log(`━━━ Retry attempt ${attemptNumber}/3 — resuming discovery ━━━`, "info");
@@ -105,7 +126,7 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
       throw new Error("Monthly AI token budget exceeded. Resets at the start of next month.");
     }
 
-    const { client, mode: runMode } = await getClaudeClientForOrg(organizationId);
+    const { client, mode: runMode } = getCentralLLMClient("icpAnalyzer");
 
     const apolloCreds = await getIntegrationCredentials(organizationId, "APOLLO");
     const apolloClient = apolloCreds?.apiKey ? new ApolloClient(apolloCreds.apiKey as string) : null;

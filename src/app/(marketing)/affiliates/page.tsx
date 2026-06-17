@@ -7,11 +7,13 @@ import type { Metadata } from "next";
 
 const COMMISSION_RATE = 30;
 
+// One plan: $50/mo (≈ ₹4,200). At 30% recurring, each active customer pays
+// you ≈ ₹1,260/mo — earnings scale with how many you refer.
 const earningsTable = [
-  { referrals: 5, plan: "Starter (₹4,900)", monthly: "₹7,350" },
-  { referrals: 10, plan: "Starter (₹4,900)", monthly: "₹14,700" },
-  { referrals: 5, plan: "Growth (₹9,900)", monthly: "₹14,850" },
-  { referrals: 10, plan: "Growth (₹9,900)", monthly: "₹29,700" },
+  { referrals: 5, plan: "Flowfiy ($50/mo)", monthly: "₹6,300" },
+  { referrals: 10, plan: "Flowfiy ($50/mo)", monthly: "₹12,600" },
+  { referrals: 25, plan: "Flowfiy ($50/mo)", monthly: "₹31,500" },
+  { referrals: 50, plan: "Flowfiy ($50/mo)", monthly: "₹63,000" },
 ];
 
 const steps = [

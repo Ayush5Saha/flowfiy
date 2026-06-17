@@ -17,7 +17,7 @@ export async function generateMetadata(
   const title = `Flowfiy vs ${c.name} — AI Sales Tool Comparison (India 2026)`;
   return {
     title,
-    description: `${c.positioning} See features, pricing, and which fits your B2B team. Flowfiy from ₹1,700/mo, starts free.`,
+    description: `${c.positioning} See features, pricing, and which fits your B2B team. Flowfiy is $50/mo for 400 credits — fully managed AI, no API keys.`,
     keywords: [
       `Flowfiy vs ${c.name}`,
       `${c.name} alternative`,
@@ -122,7 +122,7 @@ export default async function VsCompetitorPage(
             <h2 className="text-lg font-semibold text-white mb-2">The verdict</h2>
             <p className="text-sm leading-relaxed text-zinc-300">{c.verdict}</p>
             <Link href="/signup" className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500">
-              Try Flowfiy free <ArrowRight className="w-4 h-4" />
+              Try Flowfiy <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 

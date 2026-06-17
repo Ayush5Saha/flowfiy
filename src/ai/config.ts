@@ -48,6 +48,34 @@ export const CLAUDE_MODELS = {
 } as const;
 
 /**
+ * Centralized Gemini models (the platform default for all pipeline AI work).
+ * Logical → concrete model id, overridable via env without a code change so we
+ * can track Gemini model renames/deprecations.
+ */
+export const GEMINI_MODELS = {
+  flash:     process.env.GEMINI_FLASH_MODEL ?? "gemini-2.5-flash",
+  flashLite: process.env.GEMINI_FLASH_LITE_MODEL ?? "gemini-2.5-flash-lite",
+} as const;
+
+export type AgentTask =
+  | "planner"
+  | "icpAnalyzer"
+  | "companyAnalyzer"
+  | "research"
+  | "qualification"
+  | "personalization";
+
+/** Per-task model map. Cheap tier for scoring/research, flash for routing + copy. */
+export const TASK_MODELS: Record<AgentTask, string> = {
+  planner:         GEMINI_MODELS.flash,       // routing + clarification
+  icpAnalyzer:     GEMINI_MODELS.flash,
+  companyAnalyzer: GEMINI_MODELS.flashLite,
+  research:        GEMINI_MODELS.flashLite,
+  qualification:   GEMINI_MODELS.flashLite,
+  personalization: GEMINI_MODELS.flash,       // quality matters most
+};
+
+/**
  * Curated OpenRouter models offered in the BYOK provider picker.
  * All free, general-purpose instruct models that follow JSON instructions well
  * (verified live against https://openrouter.ai/api/v1/models). Users can also

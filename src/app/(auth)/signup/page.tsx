@@ -87,7 +87,7 @@ export default function SignupPage() {
 
       <h1 className="text-2xl font-semibold mb-1">Create your account</h1>
       <p className="text-muted-foreground text-sm mb-6">
-        Start generating AI-powered outreach for free
+        Describe the leads you want — AI finds, qualifies and writes the outreach
       </p>
 
       <button

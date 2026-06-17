@@ -3,13 +3,13 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Flowfiy",
-  description: "Flowfiy's privacy policy. How we collect, use, store, and protect your data — including API credentials, lead data, and email content.",
+  description: "Flowfiy's privacy policy. How we collect, use, store, and protect your data — including your Gmail connection, lead data, and email content.",
   alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },
 };
 
 export default function PrivacyPage() {
-  const lastUpdated = "May 12, 2026";
+  const lastUpdated = "June 16, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -36,19 +36,19 @@ export default function PrivacyPage() {
             <h3 className="text-base font-medium text-white mb-2">Account data</h3>
             <p>When you create an account: email address, name, and (optionally) Google profile data if you sign in with Google OAuth.</p>
 
-            <h3 className="text-base font-medium text-white mb-2 mt-5">Integration credentials</h3>
+            <h3 className="text-base font-medium text-white mb-2 mt-5">Connected accounts</h3>
             <p>
-              API keys and OAuth tokens you connect (Claude AI, Apollo, Apify, Gmail, Calendly) are encrypted at rest using AES-256-GCM before storage. The encryption key is stored in our infrastructure environment variables and is never stored in the database. We cannot read your credentials in plaintext.
+              When you connect your Gmail account so Flowfiy can send approved outreach on your behalf, the OAuth tokens are encrypted at rest using AES-256-GCM before storage. The encryption key is stored in our infrastructure environment variables and is never stored in the database. We cannot read your tokens in plaintext. The AI model and lead data sources are fully managed by Flowfiy — you never bring your own API keys.
             </p>
 
             <h3 className="text-base font-medium text-white mb-2 mt-5">Lead and outreach data</h3>
             <p>
-              Contact information discovered via Apollo, company research data from Apify, AI-generated qualification scores, and outreach copy are stored in your workspace and are never shared with other tenants.
+              The plain-English descriptions of the leads you want, matching businesses and people we find and enrich, AI-generated qualification scores, and the cold emails and follow-ups we draft are stored in your workspace and are never shared with other tenants.
             </p>
 
             <h3 className="text-base font-medium text-white mb-2 mt-5">Usage data</h3>
             <p>
-              We track generation counts to enforce plan limits and provide usage dashboards. We do not sell usage data.
+              We track credit usage to manage your subscription, process top-ups, and provide usage dashboards. We do not sell usage data.
             </p>
 
             <h3 className="text-base font-medium text-white mb-2 mt-5">Payment data</h3>
@@ -61,8 +61,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-white mb-3">3. How we use your data</h2>
             <ul className="list-disc list-inside space-y-2 text-zinc-400">
               <li>To authenticate you and maintain your session</li>
-              <li>To execute the AI pipeline on your behalf (using your own API keys)</li>
-              <li>To enforce generation limits based on your subscription tier</li>
+              <li>To run the AI pipeline on your behalf using Flowfiy-managed AI and data providers</li>
+              <li>To meter credit usage and reconcile it against your subscription and top-ups</li>
               <li>To send transactional emails (account verification, password reset)</li>
               <li>To improve platform reliability and fix bugs (aggregate, anonymized error data)</li>
             </ul>
@@ -86,9 +86,12 @@ export default function PrivacyPage() {
                     ["Supabase", "Database, authentication, file storage", "US / EU"],
                     ["Railway", "Background worker infrastructure", "US"],
                     ["Upstash", "Redis job queue", "US"],
-                    ["Razorpay", "Payment processing", "India / Global"],
+                    ["Razorpay", "Payment processing (India)", "India / Global"],
+                    ["Stripe", "Payment processing (international)", "US / Global"],
                     ["Vercel", "Web application hosting", "Global CDN"],
-                    ["Anthropic", "AI inference (via your API key)", "US"],
+                    ["Google (Gemini)", "Managed AI inference for the pipeline", "US / Global"],
+                    ["Apify", "Lead discovery (Google Maps & B2B sources)", "US / EU"],
+                    ["Prospeo", "B2B email resolution", "EU"],
                   ].map(([name, purpose, loc]) => (
                     <tr key={name as string} className="bg-zinc-900/20">
                       <td className="py-2.5 px-4 text-zinc-300">{name}</td>

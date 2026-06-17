@@ -2,35 +2,37 @@
 import { LandingPageV2 } from "@/components/landing/v2/LandingPageV2";
 
 export const metadata: Metadata = {
-  title: "Flowfiy — AI-Powered B2B Sales Outreach Platform India | AI Lead Generation",
+  title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
   description:
-    "India's AI outbound sales platform. 5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. No SDR needed. Fully managed AI — starts free, plans from ₹1,700/mo.",
+    "Describe the leads you want in plain English — Flowfiy finds matching businesses, scores each 0–100, and writes personalized cold emails sent from your Gmail. Target by conditions like 'coffee shops with no website'. No API keys. $50/mo for 400 credits.",
   keywords: [
-    // Primary India-targeted
-    "AI outbound sales platform India",
-    "AI lead generation software India",
-    "AI SDR platform India",
-    "B2B lead generation AI India",
-    "AI sales automation India",
-    "cold email automation India",
-    "outbound sales tool India",
-    // Primary global
-    "AI sales outreach",
+    // Primary
+    "AI outbound sales platform",
     "AI lead generation software",
     "AI SDR",
     "B2B lead generation",
+    "AI sales automation",
+    "cold email automation",
+    "outbound sales tool",
     "personalized cold email",
-    "Claude AI sales tool",
-    "outbound sales platform",
+    "describe leads in plain English",
+    "condition-based lead targeting",
+    // Differentiators
+    "find businesses with no website",
+    "find leads by qualitative conditions",
+    "AI lead scoring software",
+    "automated lead research",
+    "AI cold email writer",
+    "Gmail cold outreach automation",
     // Long-tail
-    "AI-powered B2B prospecting India",
-    "automated lead generation India",
-    "AI email outreach India",
-    "best AI sales tool for startups India",
-    "AI outreach tool for agencies India",
-    "AI sales pipeline automation India",
-    "AI-driven cold email India",
-    "B2B outbound automation India",
+    "AI-powered B2B prospecting",
+    "automated lead generation",
+    "AI email outreach",
+    "best AI sales tool for startups",
+    "AI outreach tool for agencies",
+    "AI sales pipeline automation",
+    "no API key lead generation",
+    "B2B outbound automation",
   ],
   authors: [{ name: "Flowfiy" }],
   creator: "Flowfiy",
@@ -50,9 +52,9 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "/",
     siteName: "Flowfiy",
-    title: "Flowfiy — India's AI-Powered B2B Sales Outreach Platform",
+    title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
     description:
-      "5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
+      "Describe the leads you want in plain English — Flowfiy finds, qualifies, and writes personalized outreach sent from your Gmail. Target by conditions like 'dentists with bad reviews'. $50/mo for 400 credits.",
     images: [
       {
         url: `${process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com"}/opengraph-image`,
@@ -66,9 +68,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@flowfiy",
     creator: "@flowfiy",
-    title: "Flowfiy — India's AI-Powered B2B Sales Outreach Platform",
+    title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
     description:
-      "5 Claude AI agents research, score, and write personalized outreach for every lead. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
+      "Describe your ideal leads in plain English — Flowfiy finds, qualifies, and writes personalized outreach for every prospect. $50/mo for 400 credits, no API keys.",
     images: [`${process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com"}/opengraph-image`],
   },
   robots: {
@@ -96,59 +98,28 @@ const jsonLd = {
   name: "Flowfiy",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  inLanguage: "en-IN",
+  inLanguage: "en",
   description:
-    "India's AI outbound sales platform — 5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. Starts free, plans from ₹1,700/mo.",
+    "Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups sent from your own Gmail. No API keys. $50/month for 400 credits.",
   offers: [
     {
       "@type": "Offer",
-      name: "Free",
-      price: "0",
-      priceCurrency: "INR",
-      description: "100 generations/month, 1 seat, 1 campaign",
-    },
-    {
-      "@type": "Offer",
-      name: "Indie",
-      price: "1700",
-      priceCurrency: "INR",
+      name: "Flowfiy",
+      price: "50",
+      priceCurrency: "USD",
       billingIncrement: "month",
-      description: "2,500 generations/month, 1 seat, 3 campaigns, BYOK",
-    },
-    {
-      "@type": "Offer",
-      name: "Starter",
-      price: "4900",
-      priceCurrency: "INR",
-      billingIncrement: "month",
-      description: "10,000 generations/month, 1 seat, 5 campaigns",
-    },
-    {
-      "@type": "Offer",
-      name: "Growth",
-      price: "9900",
-      priceCurrency: "INR",
-      billingIncrement: "month",
-      description: "30,000 generations/month, 5 seats, unlimited campaigns",
-    },
-    {
-      "@type": "Offer",
-      name: "Agency",
-      price: "24900",
-      priceCurrency: "INR",
-      billingIncrement: "month",
-      description: "Unlimited generations, 20 seats, unlimited campaigns",
+      description: "400 credits per month (about 600–800 leads). Fully managed AI and data sources, condition-based targeting, lead scoring, personalized emails, and Gmail sending. Extra credits via top-ups anytime. Billed in local currency.",
     },
   ],
   featureList: [
-    "ICP Analysis with Claude AI",
-    "Apollo.io Lead Discovery",
-    "Company Research via Apify",
-    "AI Lead Qualification Scoring",
-    "Hyper-Personalized Email Copy Generation",
-    "Gmail Integration for Outreach",
-    "Managed Claude Sonnet AI — No API Key Required",
-    "Multi-tenant SaaS with AES-256 encryption",
+    "Describe your ideal leads in plain English",
+    "Smart clarifying questions when a search needs them",
+    "Condition-based targeting (e.g. coffee shops with no website, SaaS that recently raised)",
+    "Automated company and prospect research",
+    "AI lead qualification scoring 0–100",
+    "Personalized cold emails and follow-ups",
+    "Send from your own Gmail after review",
+    "Fully managed AI and data sources — no API keys",
   ],
 };
 
@@ -161,7 +132,7 @@ const faqJsonLd = {
       name: "What is Flowfiy?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Flowfiy is an AI-powered B2B outbound sales platform. You describe your ideal customer, and Flowfiy automatically finds matching leads, researches each company, scores prospects 0–100, and writes personalised cold emails — all without any manual work.",
+        text: "Flowfiy is an AI outbound sales platform. You describe the leads you want in plain English, and Flowfiy finds matching businesses and people, researches each one, scores prospects 0–100, writes personalized cold emails and follow-ups, and sends them from your own Gmail after you review.",
       },
     },
     {
@@ -169,15 +140,23 @@ const faqJsonLd = {
       name: "How does Flowfiy generate leads?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Flowfiy uses 5 specialised AI agents: an ICP Analyzer that maps your ideal customer profile, a Lead Discovery agent that searches 275M+ contacts via Apollo, a Company Analyzer that scrapes and reads each company's website, a Qualification Agent that scores each lead 0–100, and a Personalization Agent that writes a subject line, email body, and follow-ups for every qualified lead.",
+        text: "Just describe who you want to reach in plain English. Flowfiy asks smart clarifying questions when a search needs them, then finds matching businesses and people, researches each one, scores them 0–100, and writes a subject line, email body, and follow-ups for every qualified lead. The AI and data sources are fully managed — no API keys or per-tool setup.",
       },
     },
     {
       "@type": "Question",
-      name: "Do I need an Anthropic API key to use Flowfiy?",
+      name: "Can I find leads by specific conditions, not just category and location?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. On paid plans, Claude AI is fully managed by Flowfiy — no API key needed. You can also bring your own Anthropic key (BYOK) on any plan if you prefer.",
+        text: "Yes — condition-based targeting is a core feature. You can search for qualitative conditions like 'coffee shops with no website', 'dentists with bad reviews', 'shops with a slow or outdated site', or 'SaaS that recently raised', not just category plus location.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do I need any API keys to use Flowfiy?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No. The AI and all data sources are fully managed by Flowfiy — there are no API keys to bring and no per-tool setup. You connect your Gmail to send the outreach, and that's it.",
       },
     },
     {
@@ -185,23 +164,23 @@ const faqJsonLd = {
       name: "How much does Flowfiy cost?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Flowfiy has a free plan with 100 lead generations per month. Paid plans start at ₹1,700/month (Indie), with Starter at ₹4,900/month, Growth at ₹9,900/month, and Agency at ₹24,900/month. All plans include a free trial.",
+        text: "Flowfiy is one simple plan: $50/month for 400 credits, which is about 600–800 leads (it varies by search). You only pay for qualified leads, so an empty search costs nothing. Subscribers can buy extra credits via top-ups anytime. It's billed in your local currency, including rupees in India.",
       },
     },
     {
       "@type": "Question",
-      name: "How is Flowfiy different from Apollo or Clay?",
+      name: "How do credits work?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Apollo is a contact database — it finds leads but doesn't research them, score them, or write emails. Clay is a data enrichment workflow builder that requires significant setup. Flowfiy is a complete end-to-end pipeline: it discovers leads, researches each company, qualifies prospects with AI scoring, and generates personalised outreach — all in one platform with no setup required.",
+        text: "Credits power your searches — about 2 leads per credit on average, varying by search. The $50/month plan includes 400 credits, and you only spend credits on qualified leads. If you run out, subscribers can top up extra credits anytime. There is no free tier, so new accounts subscribe to start.",
       },
     },
     {
       "@type": "Question",
-      name: "Is Flowfiy available in India?",
+      name: "How is Flowfiy different from a contact database or enrichment tool?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Flowfiy is built for the Indian market with INR pricing, India-targeted lead sourcing, and full support for Indian business types. Plans start from ₹1,700/month.",
+        text: "Most contact databases just hand you a list and enrichment tools require heavy workflow setup. Flowfiy is end-to-end: you describe the leads you want in plain English — including qualitative conditions like 'coffee shops with no website' — and it finds them, researches each company, scores prospects with AI, writes personalized outreach, and sends it from your Gmail. No setup, no API keys.",
       },
     },
   ],

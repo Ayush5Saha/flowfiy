@@ -17,33 +17,33 @@ type Step = {
 const STEPS: Step[] = [
   {
     index: "01",
-    kicker: "DISCOVER",
-    title: "You describe your ideal customer",
-    body: "Tell Flowfiy the company type you sell to, the role you target, and the problem you solve. That's the only input you give.",
+    kicker: "DESCRIBE",
+    title: "Describe the leads you want",
+    body: "In plain English: \"coffee shops with no website\", \"dentists with bad reviews\", \"SaaS that recently raised\". Condition-based targeting, not just category and location.",
   },
   {
     index: "02",
-    kicker: "RESEARCH",
-    title: "We find & study every match",
-    body: "Flowfiy searches 275M+ contacts, pulls only the businesses that fit, then reads each company's website so your outreach references real specifics.",
+    kicker: "CLARIFY",
+    title: "Flowfiy asks the right questions",
+    body: "When your request is fuzzy, Flowfiy asks a few smart clarifying questions — location, size, signals — so it finds exactly who you mean.",
   },
   {
     index: "03",
-    kicker: "QUALIFY",
-    title: "We filter out the weak fits",
-    body: "Every lead is scored 0–100. Only the prospects most likely to buy move forward — no budget wasted on bad fits.",
+    kicker: "PLAN",
+    title: "See the plan and the cost upfront",
+    body: "Flowfiy shows what it will search and the estimated credits before it runs. You only pay for qualified leads — an empty search costs nothing.",
   },
   {
     index: "04",
-    kicker: "WRITE",
-    title: "We write a personal email to each",
-    body: "A subject line, body, and two follow-ups — composed individually per lead from what we learned about their company.",
+    kicker: "RUN",
+    title: "Find, research and score every match",
+    body: "Flowfiy finds matching businesses and people, researches each one, scores them 0–100, then writes a personalized cold email and follow-ups.",
   },
   {
     index: "05",
-    kicker: "BOOK",
-    title: "Replies handled, meetings booked",
-    body: "Flowfiy triages every reply and books the meeting straight to your calendar. You wake up to pipeline.",
+    kicker: "SEND",
+    title: "Review, then send from your Gmail",
+    body: "Every lead and draft lands ready for review. Approve what you like and Flowfiy sends it straight from your own Gmail.",
   },
 ];
 
@@ -75,14 +75,14 @@ function DeviceFrame({ children }: { children: React.ReactNode }) {
 // Stage 01 — ICP target chips
 function StageDiscover() {
   const fields = [
-    { k: "Company", v: "B2B SaaS · 11–200" },
-    { k: "Role", v: "Head of Sales" },
-    { k: "Problem", v: "Pipeline too thin" },
+    { k: "Type", v: "Coffee shops" },
+    { k: "Where", v: "Austin, TX" },
+    { k: "Condition", v: "No website" },
   ];
   return (
     <div className="flex h-full flex-col justify-center gap-3">
       <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
-        Your input
+        You describe
       </p>
       {fields.map((f, i) => (
         <motion.div
@@ -106,7 +106,7 @@ function StageDiscover() {
       >
         <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
         <span className="font-mono text-[11px] text-violet-200">
-          ICP locked
+          Request set
         </span>
       </motion.div>
     </div>
@@ -116,20 +116,20 @@ function StageDiscover() {
 // Stage 02 — researched company card
 function StageResearch() {
   const rows = [
-    "Hiring 4 SDRs — scaling outbound",
-    "Recently raised Series A",
-    "No personalization in current emails",
+    "Which city or region should I focus on?",
+    "How many leads are you after?",
+    "Local cafés only, or small chains too?",
   ];
   return (
     <div className="flex h-full flex-col justify-center gap-4">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/30 to-violet-500/30 font-mono text-sm font-bold text-white">
-          NV
+          AI
         </div>
         <div>
-          <p className="text-sm font-semibold text-white">Northvale Labs</p>
+          <p className="text-sm font-semibold text-white">Flowfiy</p>
           <p className="font-mono text-[11px] text-zinc-500">
-            northvale.io · 64 employees
+            A few quick questions
           </p>
         </div>
       </div>
@@ -148,7 +148,7 @@ function StageResearch() {
         ))}
       </div>
       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-        Signals read from site
+        Clarifying your request
       </p>
     </div>
   );
@@ -218,14 +218,14 @@ function StageQualify({ active }: { active: boolean }) {
             {n}
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-            fit score
+            est. credits
           </span>
         </div>
       </div>
       <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3.5 py-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
         <span className="font-mono text-[11px] text-emerald-200">
-          Qualified — advance
+          Plan ready — approve
         </span>
       </div>
     </div>

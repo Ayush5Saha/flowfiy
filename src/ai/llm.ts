@@ -263,3 +263,168 @@ export class OpenRouterLLMClient implements LLMClient {
     },
   };
 }
+
+// ─── Gemini adapter (Google Generative Language REST API) ─────────────────────
+//
+// Centralized provider for the whole pipeline. Maps Anthropic-style messages +
+// tool-use to Gemini's `generateContent` (contents / systemInstruction /
+// functionDeclarations) and back to the LLMResponse shape the agents read.
+
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+
+interface GeminiPart {
+  text?: string;
+  functionCall?: { name: string; args?: Record<string, unknown> };
+  functionResponse?: { name: string; response: Record<string, unknown> };
+}
+interface GeminiContent {
+  role: "user" | "model";
+  parts: GeminiPart[];
+}
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: GeminiPart[] }; finishReason?: string }>;
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  error?: { message?: string };
+}
+
+/** Anthropic-style messages → Gemini contents. Resolves tool_use_id → name so
+ *  tool results round-trip as functionResponse (Gemini keys on name, not id). */
+function toGeminiContents(messages: LLMMessage[]): GeminiContent[] {
+  const idToName = new Map<string, string>();
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue;
+    for (const b of m.content as Array<Record<string, unknown>>) {
+      if (b.type === "tool_use" && b.id && b.name) idToName.set(String(b.id), String(b.name));
+    }
+  }
+
+  const out: GeminiContent[] = [];
+  for (const m of messages) {
+    const role: "user" | "model" = m.role === "assistant" ? "model" : "user";
+    if (typeof m.content === "string") {
+      out.push({ role, parts: [{ text: m.content }] });
+      continue;
+    }
+    if (!Array.isArray(m.content)) continue;
+
+    const parts: GeminiPart[] = [];
+    for (const b of m.content as Array<Record<string, unknown>>) {
+      const type = b.type as string;
+      if (type === "text" && typeof b.text === "string") {
+        parts.push({ text: b.text });
+      } else if (type === "tool_use") {
+        parts.push({ functionCall: { name: String(b.name ?? ""), args: (b.input as Record<string, unknown>) ?? {} } });
+      } else if (type === "tool_result") {
+        const name = idToName.get(String(b.tool_use_id)) ?? "tool";
+        const c = b.content;
+        let response: Record<string, unknown>;
+        if (typeof c === "string") {
+          try { response = JSON.parse(c) as Record<string, unknown>; }
+          catch { response = { result: c }; }
+        } else {
+          response = (c as Record<string, unknown>) ?? {};
+        }
+        parts.push({ functionResponse: { name, response } });
+      }
+    }
+    if (parts.length) out.push({ role, parts });
+  }
+  return out;
+}
+
+function toGeminiTools(tools?: LLMTool[]) {
+  if (!tools?.length) return undefined;
+  return [
+    {
+      functionDeclarations: tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema ?? { type: "object", properties: {} },
+      })),
+    },
+  ];
+}
+
+export class GeminiLLMClient implements LLMClient {
+  private readonly apiKey: string;
+  private readonly model: string;
+
+  constructor(opts: { apiKey: string; model: string }) {
+    this.apiKey = opts.apiKey;
+    this.model = opts.model;
+  }
+
+  readonly messages = {
+    create: async (params: LLMCreateParams): Promise<LLMResponse> => {
+      const body: Record<string, unknown> = {
+        contents: toGeminiContents(params.messages),
+        generationConfig: {
+          maxOutputTokens: params.max_tokens,
+          ...(params.temperature !== undefined ? { temperature: params.temperature } : {}),
+        },
+      };
+      const sys = flattenSystem(params.system);
+      if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+      const tools = toGeminiTools(params.tools);
+      if (tools) body.tools = tools;
+
+      const url = `${GEMINI_BASE}/${this.model}:generateContent?key=${this.apiKey}`;
+
+      // Retry transient 429/503 (rate limit / model warmup) with backoff + jitter.
+      let res: Response | null = null;
+      const MAX_TRIES = 3;
+      for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(90_000),
+        });
+        if ((res.status === 429 || res.status === 503) && attempt < MAX_TRIES) {
+          await new Promise((r) => setTimeout(r, 1000 * attempt + Math.floor(Math.random() * 500)));
+          continue;
+        }
+        break;
+      }
+      if (!res) throw new Error("Gemini request failed to send");
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`Gemini API error ${res.status}: ${errText.slice(0, 200)}`);
+      }
+
+      const data = (await res.json()) as GeminiResponse;
+      if (data.error) throw new Error(`Gemini error: ${data.error.message ?? "unknown"}`);
+
+      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const content: LLMContentBlock[] = [];
+      let hasToolCall = false;
+      parts.forEach((p, i) => {
+        if (typeof p.text === "string" && p.text.length > 0) {
+          content.push({ type: "text", text: p.text });
+        } else if (p.functionCall) {
+          hasToolCall = true;
+          content.push({
+            type: "tool_use",
+            id: `call_${p.functionCall.name}_${i}`,
+            name: p.functionCall.name,
+            input: p.functionCall.args ?? {},
+          });
+        }
+      });
+      if (content.length === 0) content.push({ type: "text", text: "" });
+
+      const finish = data.candidates?.[0]?.finishReason;
+      const stop_reason = hasToolCall ? "tool_use" : finish === "MAX_TOKENS" ? "max_tokens" : "end_turn";
+
+      return {
+        content,
+        stop_reason,
+        usage: {
+          input_tokens: data.usageMetadata?.promptTokenCount ?? 0,
+          output_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+        },
+      };
+    },
+  };
+}

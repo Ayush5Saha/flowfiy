@@ -356,7 +356,7 @@ function Hero() {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium mb-8"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Your first 100 leads are free — no card required
+          Describe your leads — Flowfiy finds, qualifies and writes the outreach
         </motion.div>
 
         <motion.h1
@@ -386,8 +386,8 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Your AI sales team. Tell Flowfiy who your ideal customer is — it finds them, researches their business,
-          scores how likely they are to buy, and writes a personal email to each one. All on autopilot.
+          Describe the leads you want in plain English. Flowfiy finds matching businesses, researches each one,
+          scores how likely they are to buy, and writes a personal cold email — sent from your own Gmail after you review.
         </motion.p>
 
         <motion.div
@@ -400,7 +400,7 @@ function Hero() {
             href="/signup"
             className="group relative inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5"
           >
-            <span>Start for free</span>
+            <span>Get started</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
           </Link>
@@ -420,15 +420,15 @@ function Hero() {
           className="mt-8"
         >
           <p className="text-xs text-zinc-600 mb-5">
-            No credit card required · 100 free leads · Cancel anytime
+            $50/month · 400 credits (about 600–800 leads) · Cancel anytime
           </p>
           {/* Trust strip */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {[
               { icon: "⚡", text: "First leads in under 10 min" },
-              { icon: "👥", text: "275M+ companies to target" },
+              { icon: "🎯", text: "Target by qualitative conditions" },
               { icon: "📧", text: "Sends from your own Gmail" },
-              { icon: "🎯", text: "Set up in 5 minutes" },
+              { icon: "🔑", text: "No API keys, nothing to set up" },
             ].map(({ icon, text }) => (
               <div key={text} className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <span className="text-sm">{icon}</span>
@@ -550,9 +550,9 @@ function StatsBar() {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
   const stats = [
-    { value: 275,  suffix: "M+", label: "Companies you can target" },
+    { value: 800,  suffix: "+",  label: "Leads from a single subscription" },
     { value: 5,    suffix: "x",  label: "Faster than doing it manually" },
-    { value: 87,   suffix: "%",  label: "Leads correctly filtered out" },
+    { value: 100,  suffix: "",   label: "0–100 fit score on every lead" },
     { value: 10,   suffix: " min", label: "To your first qualified leads" },
   ];
 
@@ -629,11 +629,11 @@ function HowItWorks() {
   const springLine = useSpring(lineScaleY, { stiffness: 40, damping: 15 });
 
   const steps = [
-    { num: "01", icon: "🧠", title: "You describe your ideal customer", desc: "Tell Flowfiy the type of company you sell to, the role you target, and what problem you solve. That's all the input you give." },
-    { num: "02", icon: "🔍", title: "We find matching companies", desc: "Flowfiy searches 275M+ contacts and pulls only the people and businesses that match what you described. No manual list-building." },
-    { num: "03", icon: "🕷️", title: "We research each company", desc: "Each company's website is visited and read automatically — so your outreach references real, specific things about their business." },
-    { num: "04", icon: "⚡", title: "We filter out the weak fits", desc: "Every lead gets a score from 0 to 100. Only the ones most likely to care about your service move forward. No wasted emails." },
-    { num: "05", icon: "✉️", title: "We write a personal email to each one", desc: "A subject line, email body, and two follow-ups — written for each lead individually, based on what we learned about their company." },
+    { num: "01", icon: "🧠", title: "Describe the leads you want", desc: "Tell Flowfiy who you're after in plain English — even qualitative conditions like \"coffee shops with no website\" or \"SaaS that recently raised.\" It asks smart clarifying questions when needed." },
+    { num: "02", icon: "🔍", title: "We find matching businesses", desc: "Flowfiy pulls only the people and businesses that match what you described, from fully managed data sources. No lists to buy, no API keys to wire up." },
+    { num: "03", icon: "🕷️", title: "We research each business", desc: "Each company's website is visited and read automatically — so your outreach references real, specific things about their business." },
+    { num: "04", icon: "⚡", title: "We filter out the weak fits", desc: "Every lead gets a score from 0 to 100. Only the ones most likely to care about your service move forward. You only pay for qualified leads." },
+    { num: "05", icon: "✉️", title: "We write a personal email to each one", desc: "A subject line, email body, and follow-ups — written for each lead individually — then sent from your own Gmail after you review." },
   ];
 
   return (
@@ -704,12 +704,12 @@ function FeatureCard({ f, index }: { f: { icon: string; title: string; desc: str
 
 function Features() {
   const features = [
-    { icon: "⚡", title: "Works out of the box — zero setup", desc: "No accounts to create, no API keys to manage, no technical configuration. Sign up, describe your customer, and your first leads are ready in minutes." },
-    { icon: "🏢", title: "Built for teams too", desc: "Invite your whole team and work together. Each person sees the same leads, campaigns, and results — with roles to control who can do what." },
-    { icon: "📊", title: "Only talk to the best fits", desc: "Every lead gets a score from 0 to 100. See at a glance who's worth your time and skip everyone who isn't. Focus on real opportunities." },
+    { icon: "⚡", title: "Works out of the box — zero setup", desc: "No API keys, no per-tool config. The AI and data sources are fully managed. Sign up, describe your leads, and your first results are ready in minutes." },
+    { icon: "🎯", title: "Target by conditions, not just lists", desc: "Find leads by qualitative conditions — \"dentists with bad reviews,\" \"shops with a slow or outdated site,\" \"businesses with no website.\" Not just category and location." },
+    { icon: "📊", title: "Only talk to the best fits", desc: "Every lead gets a score from 0 to 100. See at a glance who's worth your time and skip everyone who isn't. You only pay for qualified leads." },
     { icon: "✏️", title: "You approve every email", desc: "AI writes the first draft. You read it, edit it, or regenerate it before anything is sent. You're always in control of what goes out." },
     { icon: "📧", title: "Sends from your own inbox", desc: "Emails go out from your Gmail — not a shared sender pool. Replies come back to you directly. It looks like you wrote every single one." },
-    { icon: "🔒", title: "Your data stays private", desc: "Your login credentials and API connections are encrypted before being stored. We can't read them. They never appear in any logs or reports." },
+    { icon: "🔒", title: "Your data stays private", desc: "Your Gmail connection is encrypted before being stored. We can't read it. It never appears in any logs or reports." },
   ];
 
   return (
@@ -754,34 +754,17 @@ function Pricing() {
 
   const plans = [
     {
-      name: "Free", priceInr: 0, desc: "Try it out", gens: "100/mo", seats: 1,
-      apiMode: "byok" as const,
-      features: ["All 5 AI agents", "1 campaign", "Gmail integration", "BYOK (your API key)", "Community support"],
-      cta: "Get started", highlight: false,
-    },
-    {
-      name: "Indie", priceInr: 1700, desc: "Solo builders", gens: "2,500/mo", seats: 1,
-      apiMode: "byok" as const,
-      features: ["All 5 AI agents", "3 campaigns", "CSV import", "BYOK (your API key)", "Email support"],
-      cta: "Start free trial", highlight: false,
-    },
-    {
-      name: "Starter", priceInr: 4900, desc: "Solo founders", gens: "2,500/mo", seats: 1,
-      apiMode: "both" as const,
-      features: ["All 5 AI agents", "5 campaigns", "Managed AI included", "BYOK option", "Email support"],
-      cta: "Start free trial", highlight: false,
-    },
-    {
-      name: "Growth", priceInr: 9900, desc: "Growing teams", gens: "7,500/mo", seats: 5,
-      apiMode: "both" as const,
-      features: ["Unlimited campaigns", "Team workspace", "Managed AI included", "BYOK option", "A/B testing", "Priority support"],
-      cta: "Start free trial", highlight: true,
-    },
-    {
-      name: "Agency", priceInr: 24900, desc: "Agencies & scale", gens: "Unlimited", seats: 20,
-      apiMode: "both" as const,
-      features: ["Unlimited everything", "20 team seats", "Managed AI included", "BYOK option", "Webhooks", "Dedicated support"],
-      cta: "Contact sales", highlight: false,
+      name: "Flowfiy", priceInr: 4000, desc: "Everything, one subscription", gens: "400", seats: 1,
+      apiMode: "managed" as const,
+      features: [
+        "About 600–800 leads/month",
+        "Describe leads in plain English",
+        "Condition-based targeting",
+        "Fully managed AI — no API keys",
+        "Sends from your own Gmail",
+        "Add extra credits anytime",
+      ],
+      cta: "Get started", highlight: true,
     },
   ];
 
@@ -792,8 +775,8 @@ function Pricing() {
       <div className="max-w-6xl mx-auto relative z-10">
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-medium text-violet-400 tracking-widest uppercase mb-4 block">Pricing</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Start free. Scale when you&apos;re ready.</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">100 leads free — no card required. Upgrade when you need more volume or seats for your team.</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">One simple plan. Top up anytime.</h2>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">$50/month for 400 credits — about 600–800 leads. Billed in your local currency. Need more? Add credits whenever you want.</p>
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
@@ -815,12 +798,8 @@ function Pricing() {
                     <div className="mb-5">
                       <p className="font-semibold text-white mb-0.5">{plan.name}</p>
                       <p className="text-xs text-zinc-500">{plan.desc}</p>
-                      <span className={`inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        plan.apiMode === "byok"
-                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                          : "bg-green-500/10 text-green-400 border border-green-500/20"
-                      }`}>
-                        {plan.apiMode === "byok" ? "🔑 BYOK" : "🤖 Managed + BYOK"}
+                      <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                        🤖 Fully managed
                       </span>
                     </div>
                     <div className="mb-5">
@@ -831,8 +810,8 @@ function Pricing() {
                       )}
                     </div>
                     <div className="mb-5 p-3 rounded-xl bg-black/20 border border-white/5">
-                      <p className="text-xs text-zinc-400"><span className="text-white font-medium">{plan.gens}</span> generations</p>
-                      <p className="text-xs text-zinc-400 mt-1"><span className="text-white font-medium">{plan.seats}</span> seat{plan.seats > 1 ? "s" : ""}</p>
+                      <p className="text-xs text-zinc-400"><span className="text-white font-medium">{plan.gens}</span> credits</p>
+                      <p className="text-xs text-zinc-400 mt-1"><span className="text-white font-medium">~600–800</span> leads</p>
                     </div>
                     <ul className="space-y-2 mb-6">
                       {plan.features.map(f => (
@@ -869,7 +848,7 @@ function Testimonials() {
   const quotes = [
     { text: "We went from 2 hours of manual research per lead to 90 seconds fully automated. The qualification scoring alone saved us from chasing dead-end prospects.", name: "Jordan Blake", role: "Head of Growth, CloudBridge", stars: 5 },
     { text: "The personalization is genuinely impressive. Each email references something specific about the prospect's company. Our reply rate went from 3% to 18% in the first month.", name: "Sarah Chen", role: "VP Engineering, Streamline Labs", stars: 5 },
-    { text: "As an agency running outbound for 8 clients, the multi-tenant setup and team seats are exactly what we needed. Claude is managed by Flowfiy — no infrastructure headaches for us.", name: "Marcus Rivera", role: "Founder, RevOps Agency", stars: 5 },
+    { text: "As an agency running outbound for 8 clients, the multi-tenant setup and team seats are exactly what we needed. The AI and data sources are managed by Flowfiy — no infrastructure headaches for us.", name: "Marcus Rivera", role: "Founder, RevOps Agency", stars: 5 },
   ];
 
   return (
@@ -947,13 +926,13 @@ function FinalCTA() {
               Ready to stop<br />chasing leads?
             </h2>
             <p className="text-zinc-400 text-lg mb-10 max-w-md mx-auto">
-              Get your first 100 leads free. No credit card. No setup. First results in under 10 minutes.
+              $50/month for 400 credits — no API keys, no setup. First results in under 10 minutes.
             </p>
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary rounded-xl text-white font-semibold hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 text-base"
             >
-              Get started free
+              Get started
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

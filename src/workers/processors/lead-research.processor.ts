@@ -13,7 +13,7 @@
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
-import { getClaudeClientForOrg } from "@/ai/client";
+import { getCentralLLMClient } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runCompanyAnalyzer } from "@/ai/agents/company-analyzer";
 import { handleScrapeWebsite } from "@/ai/tools/handlers";
@@ -73,7 +73,7 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
   }
 
   // ── Client setup ──────────────────────────────────────────────────────────
-  const { client, mode: runMode } = await getClaudeClientForOrg(organizationId);
+  const { client, mode: runMode } = getCentralLLMClient("companyAnalyzer");
 
   const apifyCreds = await prisma.integration.findUnique({
     where: { organizationId_type: { organizationId, type: "APIFY" } },

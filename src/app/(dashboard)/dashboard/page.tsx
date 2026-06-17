@@ -121,7 +121,7 @@ export default async function DashboardPage() {
     {
       id: "first-leads",
       label: "Generate your first lead list",
-      description: "Run the 5-agent pipeline: ICP → discover → research → qualify → personalize",
+      description: "Describe the leads you want — the pipeline discovers, researches, qualifies, and personalizes",
       href: "/leads",
       done: totalLeads > 0,
     },

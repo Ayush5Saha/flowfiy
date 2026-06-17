@@ -212,8 +212,8 @@ export function FinalCTAV2() {
           {/* Sub-copy */}
           <MaskReveal delay={0.36} className="mt-6">
             <p className="max-w-md text-base leading-relaxed text-zinc-400">
-              Your first 100 leads are free. No card, no setup.
-              First results in under 10 minutes.
+              $50/month for 400 credits — about 600–800 qualified leads.
+              No API keys, no setup. You only pay for leads we find.
             </p>
           </MaskReveal>
 
@@ -226,7 +226,7 @@ export function FinalCTAV2() {
             transition={{ duration: 0.7, delay: 0.46, ease: EASE }}
           >
             <GlowButton href="/signup" variant="primary">
-              Get started free →
+              Start finding leads →
             </GlowButton>
             <GlowButton href="#pricing" variant="ghost">
               See pricing
@@ -241,7 +241,7 @@ export function FinalCTAV2() {
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 0.7, delay: 0.6 }}
           >
-            No card required · BYOK or managed AI · Built on Claude
+            Fully managed AI · Sends from your Gmail · Cancel anytime
           </motion.p>
 
           {/* Hairline base rule — editorial detail */}

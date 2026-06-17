@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
-  const lastUpdated = "May 12, 2026";
+  const lastUpdated = "June 16, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -34,10 +34,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">2. Description of service</h2>
             <p>
-              Flowfiy is a multi-tenant SaaS platform that provides AI-powered outbound sales tooling, including ICP analysis, lead discovery, company research, qualification scoring, and email copy generation. The platform orchestrates third-party AI and data services using credentials you provide.
+              Flowfiy is a multi-tenant SaaS platform that provides AI-powered outbound sales. You describe the leads you want in plain English; Flowfiy finds matching businesses and people, researches and scores each lead 0-100, and writes personalized cold emails and follow-ups that you send from your own Gmail after review.
             </p>
             <p className="mt-3">
-              You are responsible for maintaining your own API credentials (Anthropic, Apollo, Apify, Gmail, etc.) and for any usage costs those providers charge directly to your accounts.
+              The AI and data sources are fully managed by Flowfiy — there are no API keys to provide and no per-tool setup. You connect your Gmail account so the Service can send the outreach you approve.
             </p>
           </section>
 
@@ -47,20 +47,23 @@ export default function TermsPage() {
               <li>You must provide accurate information when creating an account</li>
               <li>You are responsible for maintaining the security of your login credentials</li>
               <li>You must be at least 18 years old to use the Service</li>
-              <li>One person or legal entity may not maintain more than one Free tier account</li>
+              <li>An active subscription is required to use the Service; there is no free tier</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">4. Subscriptions and billing</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">4. Subscriptions, credits and billing</h2>
             <p>
-              Paid plans are billed monthly or annually in advance. Payment is processed by Razorpay. By subscribing, you authorize recurring charges to your payment method.
+              Flowfiy is sold as a subscription: $50 per month, which grants 400 credits per billing cycle. Payment is processed by Razorpay (India) or Stripe (international). By subscribing, you authorize recurring charges to your payment method. Prices are exclusive of taxes; applicable GST or other sales taxes are added at checkout and passed through to the relevant authority.
             </p>
             <p className="mt-3">
-              Plan generation limits reset on your billing anniversary date. Unused generations do not roll over. Exceeding your plan limit will pause generation capability until the next billing cycle or you upgrade.
+              Credits are a prepaid, in-app unit used to meter lead generation (1 credit = ₹10 in value). They are an advance payment for future services and are recognized as revenue only as they are consumed; until then they are held as deferred revenue. Credits have no cash value, are non-transferable, and cannot be exchanged for currency.
             </p>
             <p className="mt-3">
-              Cancellations take effect at the end of the current billing period. We do not offer prorated refunds for partial months.
+              Each search reserves an estimated number of credits and is charged the actual cost when it completes — never more than the estimate you approve. A search that returns no qualified leads is not charged. Plan credits roll over once into the following cycle and expire 60 days after they are issued; purchased top-up credits follow the same 60-day expiry.
+            </p>
+            <p className="mt-3">
+              Cancellations take effect at the end of the current billing period. We do not offer prorated refunds for partial months. Refunds are governed by our <Link href="/refund" className="text-violet-400 hover:text-violet-300">Refund &amp; Cancellation Policy</Link>.
             </p>
           </section>
 
@@ -88,12 +91,12 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">7. API credentials and BYOK</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">7. AI and data providers</h2>
             <p>
-              You grant Flowfiy permission to use your API credentials (Anthropic, Apollo, Apify, Gmail OAuth tokens) solely to execute the pipeline actions you initiate. Credentials are stored encrypted at rest (AES-256-GCM) and are never shared with other users or tenants.
+              The AI model and lead-data sources used by Flowfiy — Google (Gemini), Apify, and Prospeo — are operated and paid for by Flowfiy. You do not provide, and are not billed by, any third-party AI or data provider. The only credential you connect is your Gmail OAuth token, used solely to send the outreach you approve; it is stored encrypted at rest (AES-256-GCM) and is never shared with other users or tenants.
             </p>
             <p className="mt-3">
-              You are responsible for monitoring your own API usage and costs at each third-party provider. Flowfiy is not liable for unexpected costs incurred at Anthropic, Apollo, Apify, or any other connected provider.
+              Your use of the Service is metered by credits as described in Section 4. Flowfiy absorbs all underlying provider costs, so you are never exposed to per-token, per-API, or per-tool charges from those providers.
             </p>
           </section>
 

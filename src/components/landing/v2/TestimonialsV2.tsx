@@ -32,7 +32,7 @@ const SUPPORTING = [
   },
   {
     quote:
-      "Running outbound for 8 clients, the multi-tenant setup and team seats are exactly what we needed. Claude is managed by Flowfiy — no infra headaches.",
+      "Running outbound for 8 clients, I just describe the leads I want and Flowfiy finds them. The AI and data sources are fully managed — no API keys, no infra headaches.",
     name: "Marcus Rivera",
     role: "Founder, RevOps Agency",
     initial: "M",

@@ -7,7 +7,7 @@ import { getStripe, STRIPE_PLANS, type StripePlanKey, resolveGateway } from "@/l
 
 const schema = z.object({
   organizationId: z.string().uuid(),
-  plan: z.enum(["INDIE", "STARTER", "GROWTH", "AGENCY"]),
+  plan: z.enum(["FLOWFIY", "INDIE", "STARTER", "GROWTH", "AGENCY"]),
   /** Country code from /api/geo — determines which gateway to use */
   country: z.string().length(2).optional().default("IN"),
   /** Optional referral code entered by the buyer */

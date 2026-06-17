@@ -60,7 +60,7 @@ export function MarketingFooter() {
               <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-              AI-powered outbound sales platform. Bring your own Claude key, generate qualified leads, and send hyper-personalized outreach — at scale.
+              AI-powered outbound sales platform. Describe the leads you want — Flowfiy finds, qualifies and writes the outreach. No API keys, fully managed.
             </p>
             <div className="flex items-center gap-3">
               {socials.map(({ icon: Icon, href, label }) => (
@@ -103,14 +103,14 @@ export function MarketingFooter() {
         {/* CTA strip */}
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
           <div>
-            <p className="text-sm font-medium text-white mb-0.5">Start generating leads for free</p>
-            <p className="text-xs text-zinc-500">100 free generations. No credit card required.</p>
+            <p className="text-sm font-medium text-white mb-0.5">Start finding qualified leads</p>
+            <p className="text-xs text-zinc-500">$50/month for 400 credits. You only pay for qualified leads.</p>
           </div>
           <Link
             href="/signup"
             className="shrink-0 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Get started free →
+            Get started →
           </Link>
         </div>
 
@@ -118,7 +118,7 @@ export function MarketingFooter() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <span>Built with Claude AI · Powered by Anthropic</span>
+            <span>AI outbound, fully managed · No API keys required</span>
             <span className="hidden sm:inline">·</span>
             <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">support@flowfiy.com</Link>
           </div>

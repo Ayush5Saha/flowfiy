@@ -14,7 +14,7 @@
  */
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
-import { getClaudeClientForOrg } from "@/ai/client";
+import { getCentralLLMClient } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runQualification } from "@/ai/agents/qualification";
 import { icpMinScore, icpSummary as buildIcpSummary, type IcpAnswers } from "@/lib/icp";
@@ -51,6 +51,9 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       companySize: true,
       industry: true,
       status: true,
+      signals: true,
+      whatsApp: true,
+      linkedinUrl: true,
     },
   });
 
@@ -71,12 +74,17 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   }
 
   // ── Contact-quality gate ──────────────────────────────────────────────────
-  // Only leads with proper contact details (a real email AND a website) can be
-  // qualified — we can't run outreach without them. Drop the rest before
-  // spending an AI call on them (disqualified leads are deleted).
-  if (!lead.email || !lead.companyWebsite) {
+  // Legacy path requires email + website. NL leads already passed their criteria
+  // and a contactability check at discovery (and may intentionally have no
+  // website — e.g. "businesses with no website"), so we only require ANY usable
+  // contact path (email / phone / LinkedIn) for them.
+  const isNlLead = lead.signals != null;
+  const hasContact = isNlLead
+    ? !!(lead.email || lead.whatsApp || lead.linkedinUrl)
+    : !!(lead.email && lead.companyWebsite);
+  if (!hasContact) {
     await log(
-      `🔴 ${lead.companyName ?? "Lead"} — missing ${!lead.email ? "email" : "website"}, removing (insufficient contact details).`,
+      `🔴 ${lead.companyName ?? "Lead"} — no usable contact, removing.`,
       "info"
     );
     await prisma.lead.delete({ where: { id: leadId } }).catch(() => null);
@@ -127,7 +135,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   const companyAnalysis = (research?.companyAnalysis ?? {}) as Record<string, unknown>;
 
   // ── Run Qualification Agent (Haiku) ───────────────────────────────────────
-  const { client, mode: runMode } = await getClaudeClientForOrg(organizationId);
+  const { client, mode: runMode } = getCentralLLMClient("qualification");
 
   const scoreLabel = (score: number) => score >= 80 ? "🟢" : score >= 60 ? "🟡" : "🔴";
 

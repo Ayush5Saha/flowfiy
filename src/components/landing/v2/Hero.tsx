@@ -12,6 +12,7 @@ import {
 } from "./motion";
 import { EngineCanvas } from "./EngineCanvas";
 import { ShaderField } from "./ShaderField";
+import { HeroLeadInput } from "./HeroLeadInput";
 
 const TICKER = [
   { value: 1247, suffix: "", label: "leads found today" },
@@ -40,9 +41,9 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#030305] via-[#030305]/85 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030305]/90 via-transparent to-[#030305]/40" />
 
-      {/* Content — editorial, left-aligned in the left ~55% */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1320px] flex-1 flex-col justify-center px-6 pb-40 pt-32 sm:px-8">
-        <div className="max-w-[58%] min-w-0 max-md:max-w-full">
+      {/* Content — editorial copy on the left, the input bar centered on the right */}
+      <div className="relative z-10 mx-auto grid w-full max-w-[1320px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-40 pt-32 sm:px-8 lg:grid-cols-2 lg:gap-16">
+        <div className="min-w-0 max-w-2xl">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,9 +55,9 @@ export function Hero() {
           <h1 className="mt-7 font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(3rem,9vw,7.5rem)]">
             {/* Crawlable keyword context for the primary heading; visually hidden. */}
             <span className="sr-only">
-              Flowfiy — the AI outbound sales &amp; lead generation platform that builds your B2B pipeline while you sleep.{" "}
+              Flowfiy — the AI outbound sales platform: describe the leads you want and it finds, qualifies and writes the outreach.{" "}
             </span>
-            <Lines text="Pipeline," delay={0.05} mode="mount" />
+            <Lines text="Describe the leads" delay={0.05} mode="mount" />
             {/* Static gradient fill — premium restraint, no animated gradient */}
             <span className="block overflow-hidden">
               <motion.span
@@ -65,42 +66,39 @@ export function Hero() {
                 animate={reduced ? { opacity: 1 } : { y: "0%" }}
                 transition={{ duration: 0.9, delay: 0.13, ease: EASE }}
               >
-                while you sleep.
+                you want.
               </motion.span>
             </span>
           </h1>
 
           <MaskReveal delay={0.32} className="mt-8" mode="mount">
             <p className="max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Flowfiy is the AI outbound sales platform that finds your ideal
-              customers, researches every one, writes cold outreach that lands,
-              and books the meetings. You wake up to pipeline — not a to-do list.
+              Say it in plain English — even by condition, like "coffee shops
+              with no website." Flowfiy finds matching businesses, scores each
+              one 0–100, and writes personalized cold emails sent from your Gmail
+              after review. No API keys, no setup.
             </p>
           </MaskReveal>
 
+          {/* Secondary action + trust line */}
           <motion.div
-            className="mt-10 flex flex-wrap items-center gap-4"
+            className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2"
             initial={{ opacity: 0, y: reduced ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
+            transition={{ duration: 0.7, delay: 0.6, ease: EASE }}
           >
-            <GlowButton href="/signup" variant="primary">
-              Start free — 100 leads on us
-            </GlowButton>
             <GlowButton href="#story" variant="ghost">
               See how it works ↓
             </GlowButton>
+            <p className="font-mono text-[11px] text-zinc-500">
+              Fully managed AI · No API keys · You only pay for qualified leads
+            </p>
           </motion.div>
+        </div>
 
-          {/* Trust line — normal flow directly under the CTA row */}
-          <motion.p
-            className="mt-5 font-mono text-[11px] text-zinc-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.7 }}
-          >
-            No card required · BYOK or managed AI · Built on Claude
-          </motion.p>
+        {/* Right: Perplexity-style entry — type your leads, pick a count, go */}
+        <div className="flex w-full justify-center">
+          <HeroLeadInput />
         </div>
       </div>
 

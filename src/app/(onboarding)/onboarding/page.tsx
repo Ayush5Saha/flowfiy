@@ -23,7 +23,7 @@ export default async function OnboardingPage() {
           </div>
           <h1 className="text-2xl font-semibold">Set up your workspace</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Takes 3 minutes. You&apos;ll get 100 free lead generations to start.
+            Takes 3 minutes. Tell us who you sell to, then describe your first search.
           </p>
         </div>
         <OnboardingWizard userId={user.id} />

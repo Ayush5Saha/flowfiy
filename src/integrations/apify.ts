@@ -975,6 +975,38 @@ export class ApifyClient {
 
   // ─── Key validation ───────────────────────────────────────────────────────
 
+  // ─── Generic actor runner (centralized NL pipeline) ───────────────────────
+  //
+  // Runs any actor synchronously and returns its raw dataset items. The actor
+  // registry uses this with the platform-owned token, then normalizes the rows.
+
+  async runActor(
+    actorId: string,
+    input: Record<string, unknown>,
+    opts: { maxItems?: number; maxTotalChargeUsd?: number; timeoutMs?: number } = {}
+  ): Promise<Record<string, unknown>[]> {
+    const slug = actorId.replace("/", "~");
+    const qs = new URLSearchParams({ token: this.apiKey });
+    if (opts.maxItems) qs.set("maxItems", String(opts.maxItems));
+    qs.set("maxTotalChargeUsd", String(opts.maxTotalChargeUsd ?? this.maxCharge(opts.maxItems ?? 100)));
+
+    const res = await fetch(
+      `${this.baseUrl}/acts/${slug}/run-sync-get-dataset-items?${qs.toString()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(opts.timeoutMs ?? 180_000),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Apify actor ${actorId} failed (${res.status}): ${body.slice(0, 200)}`);
+    }
+    const items = (await res.json()) as unknown;
+    return Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
+  }
+
   async validateKey(): Promise<boolean> {
     try {
       const res = await fetch(`${this.baseUrl}/users/me?token=${this.apiKey}`);
@@ -983,4 +1015,10 @@ export class ApifyClient {
       return false;
     }
   }
+}
+
+/** Platform-owned Apify client for the centralized NL pipeline. Null if unset. */
+export function getPlatformApifyClient(): ApifyClient | null {
+  const token = process.env.APIFY_PLATFORM_TOKEN;
+  return token ? new ApifyClient(token) : null;
 }

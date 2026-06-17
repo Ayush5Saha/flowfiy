@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | Flowfiy",
   },
   description:
-    "Your AI sales team. Flowfiy's 5 Claude AI agents find leads, research their business, score them 0–100, and send hyper-personalized cold emails — all on autopilot. No SDR needed. Starts free. Plans from ₹1,700/mo.",
+    "Your AI sales team. Describe the leads you want in plain English — Flowfiy finds them, researches each business, scores 0–100, and writes hyper-personalized cold emails, then sends from your Gmail. No API keys, fully managed AI. One plan: $50/mo for 400 credits.",
   keywords: [
     // Primary
     "AI outbound sales platform",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     "AI SaaS for lead generation",
     "AI automation for agencies",
     "AI-powered outreach for startups",
-    "Claude AI sales tool",
+    "managed AI sales tool",
     "B2B outbound automation",
     "AI lead scoring software",
     "AI sales pipeline automation",
@@ -76,9 +76,9 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: BASE_URL,
     siteName: "Flowfiy",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform India",
+    title: "Flowfiy — AI-Powered B2B Sales Outreach Platform",
     description:
-      "5 Claude AI agents research leads, score prospects 0–100, and write hyper-personalized cold emails. India's AI outbound sales platform. Plans from ₹1,700/mo.",
+      "Describe the leads you want — Flowfiy finds, researches, scores 0–100, and writes hyper-personalized cold emails. No API keys. One plan: $50/mo for 400 credits.",
     images: [
       {
         url: `${BASE_URL}/opengraph-image`,
@@ -92,9 +92,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@flowfiy",
     creator: "@flowfiy",
-    title: "Flowfiy — AI-Powered B2B Sales Outreach India",
+    title: "Flowfiy — AI-Powered B2B Sales Outreach",
     description:
-      "5 Claude AI agents for B2B outbound. Research, score, personalize, send. India's AI outbound sales platform — starts free, plans from ₹1,700/mo.",
+      "Describe the leads you want; Flowfiy researches, scores, personalizes and sends. No API keys, fully managed AI — one plan: $50/mo for 400 credits.",
     images: [`${BASE_URL}/opengraph-image`],
   },
   alternates: {
@@ -140,7 +140,7 @@ const organizationJsonLd = {
   logo: `${BASE_URL}/favicon-192x192.png`,
   image: `${BASE_URL}/opengraph-image`,
   description:
-    "India's AI-powered B2B outbound sales platform with 5 Claude AI agents for lead research, qualification scoring, and personalized email outreach.",
+    "AI-powered B2B outbound sales platform — describe the leads you want and Flowfiy finds, researches, qualifies, and writes personalized email outreach. Fully managed AI, billed by credits.",
   slogan: "Your AI sales team — pipeline while you sleep.",
   foundingDate: "2026",
   areaServed: { "@type": "Country", name: "India" },
@@ -174,7 +174,7 @@ const websiteJsonLd = {
   name: "Flowfiy",
   url: BASE_URL,
   description:
-    "India's AI outbound sales platform — 5 Claude AI agents find, research, qualify, and write personalized cold emails for B2B leads.",
+    "India's AI outbound sales platform — describe the leads you want in plain English, and fully managed AI finds, researches, qualifies, and writes personalized cold emails for B2B leads.",
   inLanguage: "en-IN",
   publisher: { "@id": `${BASE_URL}/#organization` },
 };
@@ -187,35 +187,25 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: BASE_URL,
   description:
-    "India's AI outbound sales platform. 5 Claude AI agents research leads, score prospects 0–100, and generate personalized cold emails. Starts free — plans from ₹1,700/mo.",
+    "India's AI outbound sales platform. Describe the leads you want in plain English; fully managed AI researches leads, scores prospects 0–100, and generates personalized cold emails. One plan: $50/month for 400 credits.",
   offers: [
     {
       "@type": "Offer",
-      price: "0",
-      priceCurrency: "INR",
-      description: "Free tier — 100 AI lead generations/month",
-    },
-    {
-      "@type": "Offer",
-      price: "1700",
-      priceCurrency: "INR",
-      description: "Indie plan — 2,500 generations/month",
-    },
-    {
-      "@type": "Offer",
-      price: "4900",
-      priceCurrency: "INR",
-      description: "Starter plan — 10,000 generations/month",
+      price: "50",
+      priceCurrency: "USD",
+      description: "$50/month for 400 credits (~600–800 leads). No API keys — fully managed AI.",
     },
   ],
   featureList: [
-    "AI ICP Analysis",
-    "Apollo API Lead Discovery",
+    "Describe leads in plain English",
+    "Condition-based targeting (no website, bad reviews, slow site)",
+    "Google Maps + B2B people-database discovery",
     "AI Company Research",
     "AI Qualification Scoring 0-100",
-    "Claude AI Personalized Email Writing",
+    "AI Personalized Email Writing",
     "Gmail OAuth Sending",
-    "BYOK Claude API",
+    "Fully managed AI — no API keys",
+    "Credit-based metering",
     "Multi-tenant Workspaces",
     "AI SDR Automation",
     "B2B Lead Generation India",

@@ -39,6 +39,20 @@ export const PLANS = {
     features: ["100 generations/mo", "1 seat", "1 campaign", "Gmail integration", "BYOK (own Anthropic key)", "Community support"],
     razorpayPlanId: null as string | null,
   },
+  // ── Current model: one managed plan, metered by credits ──────────────────────
+  // $50/mo grants 400 credits (≈600–800 leads). The webhook grants PLAN_CREDITS
+  // on activation + each renewal. generationLimit is legacy/ignored under credits.
+  FLOWFIY: {
+    name: "Flowfiy",
+    priceUsd: 50,
+    priceInr: 4200,        // ₹4,200/mo (≈ $50)
+    currency: "INR",
+    generationLimit: 400,  // legacy field — credits are the real meter
+    seats: 1,
+    apiMode: "CENTRAL" as const, // fully managed AI + data, no BYOK
+    features: ["400 credits / month (≈600–800 leads)", "Describe leads in plain English", "Condition-based targeting", "Fully managed AI — no API keys", "Sends from your own Gmail", "Top up extra credits anytime"],
+    razorpayPlanId: process.env.RAZORPAY_FLOWFIY_PLAN_ID ?? null,
+  },
   INDIE: {
     name: "Indie",
     priceUsd: 20,

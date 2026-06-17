@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeadDiscoveryQueue } from "@/workers/queues";
 import { fireWebhookEvent } from "@/lib/webhooks";
 import { MAX_DISCOVERY_ROUNDS } from "@/ai/config";
+import { reconcileLeadRequest } from "@/lib/nl-pipeline/reconcile";
 
 type Logger = (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>;
 
@@ -38,6 +39,17 @@ export async function finalizeOrTopUp(
 
   const qualified = await prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } });
   const target = list.targetQualified ?? 0;
+
+  // ── NL runs: single criteria-aware actor pass, no top-up rounds. Finalize
+  // (which reconciles credits) as soon as all leads have cleared the pipeline.
+  const nlRequest = await prisma.leadRequest.findUnique({
+    where: { leadListId },
+    select: { id: true },
+  });
+  if (nlRequest) {
+    await markListReady(leadListId, organizationId, qualified, target, log);
+    return;
+  }
 
   // ── Short of target → trigger another discovery round ─────────────────────
   if (target > 0 && qualified < target && list.discoveryRound < MAX_DISCOVERY_ROUNDS) {
@@ -103,4 +115,8 @@ export async function markListReady(
     totalLeads,
     qualifiedLeads: qualified,
   }).catch(() => null);
+
+  // NL runs: charge actual COGS against the reserved hold, release the rest,
+  // and flip the LeadRequest to READY_FOR_REVIEW. No-op for legacy lists.
+  await reconcileLeadRequest(leadListId, organizationId).catch(() => null);
 }

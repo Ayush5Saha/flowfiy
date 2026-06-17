@@ -23,6 +23,15 @@ export function getStripe(): StripeClient {
 // Amounts in USD cents — shown in UI, not charged (Stripe uses the price object).
 
 export const STRIPE_PLANS = {
+  // ── Current model: one managed plan, metered by credits ($50/mo → 400 credits) ──
+  FLOWFIY: {
+    name: "Flowfiy",
+    priceUsd: 50,
+    currency: "usd",
+    generationLimit: 400,        // legacy field — credits are the real meter
+    apiMode: "CENTRAL" as const, // fully managed AI + data, no BYOK
+    stripePriceId: process.env.STRIPE_FLOWFIY_PRICE_ID ?? null,
+  },
   INDIE: {
     name: "Indie",
     priceUsd: 20,

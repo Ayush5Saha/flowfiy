@@ -7,38 +7,22 @@ import { useEffect, useState } from "react";
 import { getLocalisedPrice } from "@/lib/currency";
 import { EASE, Eyebrow, Lines, MaskReveal, useReducedMotionSafe } from "./motion";
 
-// ── Plans (verbatim from the live LandingPage pricing) ──────────────
-// apiMode carries `as const` so the union narrows to "byok" | "both".
+// ── Plan (single managed plan — $50/mo for 400 credits) ─────────────
+// priceInr ≈ $50/mo; getLocalisedPrice shows the local-currency equivalent.
 const PLANS = [
   {
-    name: "Free", priceInr: 0, desc: "Try it out", gens: "100/mo", seats: 1,
-    apiMode: "byok" as const,
-    features: ["All 5 AI agents", "1 campaign", "Gmail integration", "BYOK (your API key)", "Community support"],
-    cta: "Get started", highlight: false,
-  },
-  {
-    name: "Indie", priceInr: 1700, desc: "Solo builders", gens: "2,500/mo", seats: 1,
-    apiMode: "byok" as const,
-    features: ["All 5 AI agents", "3 campaigns", "CSV import", "BYOK (your API key)", "Email support"],
-    cta: "Start free trial", highlight: false,
-  },
-  {
-    name: "Starter", priceInr: 4900, desc: "Solo founders", gens: "2,500/mo", seats: 1,
-    apiMode: "both" as const,
-    features: ["All 5 AI agents", "5 campaigns", "Managed AI included", "BYOK option", "Email support"],
-    cta: "Start free trial", highlight: false,
-  },
-  {
-    name: "Growth", priceInr: 9900, desc: "Growing teams", gens: "7,500/mo", seats: 5,
-    apiMode: "both" as const,
-    features: ["Unlimited campaigns", "Team workspace", "Managed AI included", "BYOK option", "A/B testing", "Priority support"],
-    cta: "Start free trial", highlight: true,
-  },
-  {
-    name: "Agency", priceInr: 24900, desc: "Agencies & scale", gens: "Unlimited", seats: 20,
-    apiMode: "both" as const,
-    features: ["Unlimited everything", "20 team seats", "Managed AI included", "BYOK option", "Webhooks", "Dedicated support"],
-    cta: "Contact sales", highlight: false,
+    name: "Flowfiy", priceInr: 4200, desc: "Everything you need to run outbound", gens: "400", seats: 1,
+    features: [
+      "About 600–800 qualified leads/mo",
+      "Describe leads in plain English",
+      "Condition-based targeting",
+      "Research + 0–100 scoring on every lead",
+      "Personalized emails + follow-ups",
+      "Send from your own Gmail after review",
+      "Fully managed AI & data — no API keys",
+      "Top up extra credits anytime",
+    ],
+    cta: "Get started", highlight: true,
   },
 ];
 
@@ -81,14 +65,14 @@ export function PricingV2() {
               <Eyebrow>PRICING</Eyebrow>
             </MaskReveal>
             <h2 className="mt-7 font-black leading-[0.98] tracking-[-0.04em] text-white text-[clamp(2.4rem,5.5vw,4.2rem)]">
-              <Lines text={"Start free.\nScale when ready."} />
+              <Lines text={"One plan.\nEverything included."} />
             </h2>
           </div>
           <div className="lg:col-span-5 lg:pb-2">
             <MaskReveal delay={0.12}>
               <p className="max-w-md text-base leading-relaxed text-zinc-400 lg:ml-auto lg:text-right">
-                100 leads free — no card. Upgrade when you need more volume or
-                seats.
+                400 credits a month — roughly 600–800 qualified leads. Need
+                more? Top up credits anytime.
               </p>
             </MaskReveal>
           </div>
@@ -128,7 +112,7 @@ export function PricingV2() {
         {/* ── Closing reassurance line ── */}
         <MaskReveal delay={0.1} className="mt-12">
           <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600">
-            No card required · BYOK or managed AI · Cancel anytime
+            Pay only for qualified leads · Fully managed · Cancel anytime
           </p>
         </MaskReveal>
       </div>
@@ -224,7 +208,6 @@ function PlanCard({
 // ── Sub-parts ───────────────────────────────────────────────────────
 
 function PlanHeader({ plan }: { plan: (typeof PLANS)[number] }) {
-  const isByok = plan.apiMode === "byok";
   return (
     <div className="mb-6">
       <div className="flex items-baseline justify-between gap-2">
@@ -236,20 +219,10 @@ function PlanHeader({ plan }: { plan: (typeof PLANS)[number] }) {
         </span>
       </div>
       <p className="mt-1 text-xs text-zinc-500">{plan.desc}</p>
-      {/* apiMode badge — hairline-pill v2 language, amber=BYOK / green=Managed */}
-      <span
-        className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] ${
-          isByok
-            ? "border-amber-400/25 bg-amber-400/[0.07] text-amber-300/90"
-            : "border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-300/90"
-        }`}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            isByok ? "bg-amber-400" : "bg-emerald-400"
-          }`}
-        />
-        {isByok ? "BYOK" : "Managed + BYOK"}
+      {/* Managed badge — hairline-pill v2 language */}
+      <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/[0.07] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-300/90">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        Fully managed
       </span>
     </div>
   );
@@ -300,11 +273,11 @@ function PlanMeta({
     >
       <p className="text-xs text-zinc-400">
         <span className="font-mono font-semibold text-white">{plan.gens}</span>{" "}
-        generations
+        credits
       </p>
       <p className="mt-1.5 text-xs text-zinc-400">
-        <span className="font-mono font-semibold text-white">{plan.seats}</span>{" "}
-        seat{plan.seats > 1 ? "s" : ""}
+        <span className="font-mono font-semibold text-white">~2</span>{" "}
+        leads per credit
       </p>
     </div>
   );

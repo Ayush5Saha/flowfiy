@@ -47,6 +47,9 @@ model Organization {
   auditLogs         AuditLog[]
   suppressedEmails  SuppressedEmail[]
   webhookEndpoints  WebhookEndpoint[]
+  creditWallet      CreditWallet?
+  creditLedger      CreditLedger[]
+  leadRequests      LeadRequest[]
   referralsMade          Referral[]            @relation("referrerOrg")
   referredBy             Referral[]            @relation("referredOrg")
   referredByAffiliateId  String?               @map("referred_by_affiliate_id")
@@ -175,6 +178,7 @@ model LeadList {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   leads        Lead[]
   campaigns    Campaign[]
+  leadRequest  LeadRequest?
 
   @@map("lead_lists")
 }
@@ -207,6 +211,7 @@ model Lead {
   whatsApp          String?    @map("whats_app")
   source            String?
   rawData           Json?      @map("raw_data")
+  signals           Json?      @map("signals")   // criteria-engine match results (website audit, etc.)
   status            LeadStatus @default(NEW)
   qualificationScore Int?      @map("qualification_score")
   waStatus          String?    @map("wa_status")   // WhatsApp outreach status: sent | replied | bounced
@@ -580,4 +585,89 @@ model AdminUser {
 enum AdminRole {
   OWNER
   ADMIN
+}
+
+// ─── Natural-Language Lead Requests ─────────────────────────────────────────────
+//
+// The NL request that owns a run: raw query → clarification → plan (actor +
+// params + criteria) → confirm → links to the resulting LeadList. Credits are
+// reserved at confirm and reconciled when the run finishes.
+
+model LeadRequest {
+  id               String            @id @default(uuid())
+  organizationId   String            @map("organization_id")
+  rawQuery         String            @map("raw_query")
+  status           LeadRequestStatus @default(DRAFTING)
+  clarifications   Json?                                  // [{id, question, answer}]
+  plan             Json?                                  // { actorKey, params, criteria[], leadType, ... }
+  leadType         String?           @map("lead_type")    // LOCAL | B2B
+  estimatedCredits Int?              @map("estimated_credits")
+  heldCredits      Int?              @map("held_credits")  // amount reserved at confirm
+  actualCredits    Int?              @map("actual_credits")
+  costMeta         Json?             @map("cost_meta")     // { candidatesExamined, audited, enriched, actorPerResultUsd }
+  leadListId       String?           @unique @map("lead_list_id")
+  error            String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadList     LeadList?    @relation(fields: [leadListId], references: [id])
+
+  @@index([organizationId, status])
+  @@map("lead_requests")
+}
+
+enum LeadRequestStatus {
+  DRAFTING
+  CLARIFYING
+  PLANNED
+  CONFIRMED
+  RUNNING
+  READY_FOR_REVIEW
+  SENDING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+// ─── Credits (prepaid wallet + ledger) ───────────────────────────────────────────
+
+model CreditWallet {
+  id             String   @id @default(uuid())
+  organizationId String   @unique @map("organization_id")
+  balance        Int      @default(0)   // spendable credits
+  held           Int      @default(0)   // reserved by in-flight runs
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("credit_wallets")
+}
+
+model CreditLedger {
+  id             String          @id @default(uuid())
+  organizationId String          @map("organization_id")
+  type           CreditEntryType
+  amount         Int                                    // signed: +purchase/grant/release, -hold/consume
+  balanceAfter   Int             @map("balance_after")
+  costUsd        Decimal?        @map("cost_usd") @db.Decimal(12, 6)  // true COGS snapshot on CONSUME
+  refType        String?         @map("ref_type")       // "lead_request" | "payment" | ...
+  refId          String?         @map("ref_id")
+  metadata       Json?
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("credit_ledger")
+}
+
+enum CreditEntryType {
+  PURCHASE   // user bought credits
+  GRANT      // promo / plan-cycle grant
+  HOLD       // reserved at confirm
+  RELEASE    // unused reservation returned
+  CONSUME    // actual spend
+  REFUND
+  ADJUST     // admin correction
 }

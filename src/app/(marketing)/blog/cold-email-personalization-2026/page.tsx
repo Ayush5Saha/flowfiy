@@ -165,9 +165,9 @@ export default function BlogPostColdEmail() {
 
           <div className="bg-gradient-to-br from-violet-950/50 to-zinc-900/50 border border-violet-500/20 rounded-2xl p-8 text-center">
             <h3 className="text-xl font-bold text-white mb-3">Generate deeply personalized cold emails at scale</h3>
-            <p className="text-zinc-400 text-sm mb-6">Flowfiy researches every lead and writes 4+ specific facts per email. Start free.</p>
+            <p className="text-zinc-400 text-sm mb-6">Describe the leads you want — Flowfiy finds and researches every one, then writes 4+ specific facts per email.</p>
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
-              Start for free <ArrowRight className="w-4 h-4" />
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -175,9 +175,9 @@ export default function BlogPostColdEmail() {
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-5">Continue reading</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { href: "/blog/how-to-set-up-flowfiy", title: "How to Set Up Flowfiy: The Complete 7-Step Setup Guide" },
-                { href: "/blog/how-ai-agents-replace-sdrs", title: "How 5 AI Agents Are Replacing the Entire SDR Stack in 2026" },
-                { href: "/blog/byok-ai-pricing-explained", title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation" },
+                { href: "/blog/how-to-set-up-flowfiy", title: "How to Set Up Flowfiy: The Complete 4-Step Setup Guide" },
+                { href: "/blog/how-ai-agents-replace-sdrs", title: "How AI Is Replacing the Entire SDR Stack in 2026" },
+                { href: "/blog/byok-ai-pricing-explained", title: "Why We Removed API Keys: Simple Credit Pricing" },
               ].map((p) => (
                 <Link key={p.href} href={p.href} className="group block p-5 bg-zinc-900/40 border border-white/6 rounded-xl hover:border-violet-500/20 transition-colors">
                   <p className="text-sm font-medium text-white group-hover:text-violet-300 transition-colors leading-snug">{p.title}</p>

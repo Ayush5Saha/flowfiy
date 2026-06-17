@@ -22,6 +22,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { MemberRole, Organization } from "@prisma/client";
+import { CreditBalancePill } from "@/components/leads/CreditBalancePill";
 
 const mainNav = [
   { href: "/dashboard",    icon: LayoutDashboard, label: "Dashboard" },
@@ -135,17 +136,6 @@ export function Sidebar({
     setDrawerOpen(false);
   }, [pathname]);
 
-  const usagePct =
-    organization.generationLimit === -1
-      ? 0
-      : Math.min(
-          Math.round(
-            (organization.generationCount / organization.generationLimit) * 100
-          ),
-          100
-        );
-  const usageHigh = usagePct > 80;
-
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -195,23 +185,10 @@ export function Sidebar({
             />
           ))}
 
-          {/* ── Usage bar (compact) ───────────────────── */}
-          {organization.generationLimit !== -1 && (
-            <div className="mx-1 mt-4 mb-1 px-2.5 py-2.5 rounded-lg bg-sidebar-accent/60 border border-sidebar-border">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-muted-foreground font-medium">Generations</span>
-                <span className={`text-[10px] font-mono font-semibold ${usageHigh ? "text-destructive" : "text-muted-foreground"}`}>
-                  {organization.generationCount.toLocaleString()} / {organization.generationLimit.toLocaleString()}
-                </span>
-              </div>
-              <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${usageHigh ? "bg-destructive" : "bg-primary"}`}
-                  style={{ width: `${usagePct}%` }}
-                />
-              </div>
-            </div>
-          )}
+          {/* ── Credit balance ────────────────────────── */}
+          <div className="mx-1 mt-4 mb-1 flex">
+            <CreditBalancePill className="w-full justify-center" />
+          </div>
 
           {/* ── Account section ───────────────────────── */}
           <div className="pt-3 pb-1 px-3">

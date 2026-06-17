@@ -3,6 +3,8 @@ import { createHmac } from "crypto";
 import { getRazorpay, PLANS, getPlanByRazorpayPlanId } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
+import { grantCreditsOnce } from "@/lib/credits/service";
+import { PLAN_CREDITS } from "@/lib/credits/rates";
 
 function verifySignature(body: string, signature: string): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
@@ -113,6 +115,14 @@ export async function POST(req: NextRequest) {
               isNewSignup: true,
             });
           }
+
+          // ── Grant the plan's monthly credits (idempotent) ─────────────────
+          await grantCreditsOnce(
+            organizationId,
+            PLAN_CREDITS,
+            "plan_grant",
+            (firstPayment?.id as string) ?? (sub.id as string)
+          ).catch(() => null);
         }
         break;
       }
@@ -148,6 +158,11 @@ export async function POST(req: NextRequest) {
               plan: org.plan,
               isNewSignup: false,
             });
+          }
+
+          // ── Grant the plan's monthly credits on each renewal (idempotent) ──
+          if (chargedPayment?.id) {
+            await grantCreditsOnce(org.id, PLAN_CREDITS, "plan_grant", chargedPayment.id as string).catch(() => null);
           }
         }
         break;
@@ -260,6 +275,39 @@ export async function POST(req: NextRequest) {
               generationLimit: PLANS.FREE.generationLimit,
             },
           });
+        }
+        break;
+      }
+
+      // ── One-time credit top-up captured ────────────────────────────────────
+      case "payment.captured": {
+        if (!payment) break;
+        const p = payment as Record<string, unknown>;
+        let notes = (p.notes ?? {}) as Record<string, string>;
+        const orderId = p.order_id as string | undefined;
+        // Top-up metadata lives on the order — fetch it when the payment lacks it.
+        if (notes.kind !== "credit_topup" && orderId) {
+          try {
+            const order = await getRazorpay().orders.fetch(orderId);
+            notes = (order.notes ?? {}) as Record<string, string>;
+          } catch { /* ignore */ }
+        }
+        if (notes.kind === "credit_topup" && notes.organizationId && notes.credits) {
+          const granted = await grantCreditsOnce(
+            notes.organizationId,
+            Number(notes.credits),
+            "topup",
+            p.id as string
+          ).catch(() => false);
+          if (granted) {
+            await createAuditLog({
+              organizationId: notes.organizationId,
+              action: "credits.topup",
+              resourceType: "payment",
+              resourceId: p.id as string,
+              metadata: { credits: Number(notes.credits), gateway: "razorpay" },
+            }).catch(() => null);
+          }
         }
         break;
       }

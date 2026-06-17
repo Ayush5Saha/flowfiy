@@ -280,7 +280,7 @@ export function MarketingNav() {
                 href="/signup"
                 className="text-sm font-medium px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all hover:shadow-lg hover:shadow-primary/25"
               >
-                Get started free
+                Get started
               </Link>
             </>
           )}
@@ -347,7 +347,7 @@ export function MarketingNav() {
               ) : (
                 <>
                   <Link href="/login" className="text-sm text-center py-2.5 border border-white/10 rounded-lg text-zinc-300">Sign in</Link>
-                  <Link href="/signup" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">Get started free</Link>
+                  <Link href="/signup" className="text-sm text-center py-2.5 bg-primary rounded-lg text-white font-medium">Get started</Link>
                 </>
               )}
             </div>

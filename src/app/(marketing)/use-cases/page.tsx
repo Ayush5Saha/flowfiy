@@ -3,20 +3,20 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy Use Cases — AI Lead Generation & Cold Email Automation India",
+  title: "Flowfiy Use Cases — AI Lead Generation & Cold Email Automation",
   description:
-    "See how teams use Flowfiy's AI agents for B2B lead generation, cold email automation, and outbound prospecting in India. Real workflows, from ₹1,700/mo. Starts free.",
+    "See how teams use Flowfiy for B2B lead generation, condition-based targeting, and cold email automation. Describe the leads you want and Flowfiy finds, qualifies and writes the outreach. $50/mo for 400 credits.",
   keywords: [
     "AI sales use cases",
-    "AI lead generation use cases India",
+    "AI lead generation use cases",
+    "condition-based lead targeting",
     "cold email automation use cases",
     "B2B outbound automation examples",
-    "AI SDR use cases India",
   ],
   openGraph: {
     title: "Flowfiy Use Cases — AI Outbound Sales Workflows",
     description:
-      "How Indian B2B teams use Flowfiy's 5 AI agents for lead generation and cold email automation. Starts free.",
+      "How B2B teams use Flowfiy to find, qualify and write outreach to the exact leads they describe. $50/mo for 400 credits.",
     url: "/use-cases",
   },
   alternates: { canonical: "/use-cases" },
@@ -27,20 +27,25 @@ const jsonLd = {
   "@type": "CollectionPage",
   name: "Flowfiy Use Cases",
   description:
-    "Ways B2B teams use Flowfiy's AI agents for outbound sales: AI lead generation and cold email automation.",
-  inLanguage: "en-IN",
+    "Ways B2B teams use Flowfiy for outbound sales: AI lead generation, condition-based targeting, and cold email automation.",
+  inLanguage: "en",
 };
 
 const useCases = [
   {
     href: "/use-cases/ai-lead-generation",
     title: "AI Lead Generation",
-    desc: "Describe your ICP and let Flowfiy's agents discover, research, and qualify matching leads from 275M+ contacts — scored 0–100, ready to contact.",
+    desc: "Describe the leads you want in plain English and Flowfiy finds matching businesses and people, researches each, and scores them 0–100 — ready to contact.",
   },
   {
     href: "/use-cases/cold-email-automation",
     title: "Cold Email Automation",
-    desc: "Generate hyper-personalized cold emails for every lead and send them from your own Gmail — no templates, no manual research, no SDR needed.",
+    desc: "Get hyper-personalized cold emails and follow-ups for every lead and send them from your own Gmail after review — no templates, no manual research, no SDR needed.",
+  },
+  {
+    href: "/use-cases/condition-based-targeting",
+    title: "Condition-Based Targeting",
+    desc: "Go beyond category and location. Find leads by qualitative conditions like “coffee shops with no website”, “dentists with bad reviews” or “SaaS that recently raised”.",
   },
 ];
 
@@ -60,9 +65,9 @@ export default function UseCasesHubPage() {
               What you can do with Flowfiy
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl">
-              Flowfiy&apos;s 5 Claude AI agents run your entire outbound motion — from
-              finding leads to writing the emails that book meetings. Here are the
-              core ways Indian B2B teams put them to work.
+              Describe the leads you want and Flowfiy finds, qualifies and writes the
+              outreach — running your entire outbound motion from discovery to the
+              emails that book meetings. Here are the core ways B2B teams put it to work.
             </p>
           </div>
         </section>
@@ -89,7 +94,7 @@ export default function UseCasesHubPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-500"
             >
-              Start free — 100 leads on us
+              Get started — $50/mo for 400 credits
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

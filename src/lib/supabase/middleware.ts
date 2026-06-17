@@ -7,6 +7,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname === "/" ||
     pathname === "/home" ||
     pathname.startsWith("/about") ||
+    pathname.startsWith("/pricing") ||
     pathname.startsWith("/blog") ||
     pathname.startsWith("/vs") ||
     pathname.startsWith("/use-cases") ||

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function RefundPage() {
-  const lastUpdated = "May 13, 2026";
+  const lastUpdated = "June 16, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -32,9 +32,9 @@ export default function RefundPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">2. Free tier</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">2. Subscription and credits</h2>
             <p>
-              The Free tier includes 100 lead generations per month at no cost. No payment information is required and no charges are ever made on a Free account. There is nothing to cancel or refund on the Free tier.
+              Flowfiy is subscription-only — $50/month for 400 credits. There is no free tier. Credits are a prepaid in-app unit (1 credit = ₹10 in value) that meters lead generation; they are an advance payment for future services and are non-refundable except as set out below. A search reserves an estimated number of credits and is charged only the actual cost when it finishes, never above the estimate you approve.
             </p>
           </section>
 
@@ -48,7 +48,7 @@ export default function RefundPage() {
               <li>Confirm cancellation</li>
             </ol>
             <p className="mt-4">
-              Your subscription will remain active until the end of your current paid billing period. After that, your account reverts to the Free tier automatically.
+              Your subscription will remain active until the end of your current paid billing period. After that, your account becomes inactive and lead generation pauses until you resubscribe. Your existing data is retained per our Privacy Policy.
             </p>
           </section>
 
@@ -102,22 +102,25 @@ export default function RefundPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">9. What happens to your data after cancellation</h2>
             <p>
-              When your account downgrades to Free or is fully closed:
+              When your subscription ends or your account is fully closed:
             </p>
             <ul className="list-disc list-inside space-y-2 text-zinc-400 mt-3">
-              <li>Your lead lists, outreach copy, and campaign data remain accessible on the Free tier (subject to Free tier limits)</li>
-              <li>Your connected API credentials (Apollo, Apify, Gmail) are retained but can be removed at any time from Settings → Integrations</li>
+              <li>Your lead lists, outreach copy, and campaign data are retained while your account exists, so they are available again if you resubscribe</li>
+              <li>Your connected Gmail account is retained but can be disconnected at any time from Settings → Integrations</li>
               <li>If you request full account deletion, all your data is permanently deleted within 30 days</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">10. Generation credits</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">10. Credits — consumption, expiry and refunds</h2>
             <p>
-              Lead generation credits are consumed when a pipeline job completes successfully. Credits are non-refundable once consumed, including jobs that produced fewer qualified leads than expected — AI research quality is not a basis for a refund.
+              Credits are charged when a search completes, based on the actual qualified leads delivered. Once consumed, credits are non-refundable — including searches that produced fewer qualified leads than the estimate suggested, since AI research quality is not a basis for a refund. A search that returns no qualified leads is never charged, and any reserved credits are released back to your balance automatically.
             </p>
             <p className="mt-3">
-              If a job fails due to a confirmed Flowfiy platform error (not a third-party API error), the credits consumed by that job will be restored to your account.
+              Plan credits roll over once into the next billing cycle and then expire 60 days after they were issued. Purchased top-up credits follow the same 60-day expiry. Expired credits are not refundable or reinstatable.
+            </p>
+            <p className="mt-3">
+              If a search fails due to a confirmed Flowfiy platform error (not a third-party provider outage), any credits it consumed will be restored to your account.
             </p>
           </section>
 

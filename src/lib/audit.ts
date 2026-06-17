@@ -9,6 +9,8 @@ type AuditAction =
   | "lead_list.created"
   | "lead_list.generation_started"
   | "lead_list.import_started"
+  | "lead_request.confirmed"
+  | "credits.topup"
   | "campaign.created"
   | "campaign.sent"
   | "billing.upgraded"

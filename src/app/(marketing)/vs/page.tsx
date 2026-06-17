@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Flowfiy Alternatives & Comparisons — vs Clay, Apollo (India 2026)",
   description:
-    "Compare Flowfiy with Clay and Apollo for AI-powered B2B lead generation and cold outreach in India. See features, pricing, and which AI sales tool fits your team. From ₹1,700/mo.",
+    "Compare Flowfiy with Clay and Apollo for AI-powered B2B lead generation and cold outreach in India. See features, pricing, and which AI sales tool fits your team. $50/mo for 400 credits — fully managed, no API keys.",
   keywords: [
     "Flowfiy alternatives",
     "Clay alternative India",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Flowfiy vs Clay vs Apollo — AI Sales Tool Comparisons",
     description:
-      "Side-by-side comparisons of Flowfiy against Clay and Apollo for B2B outbound in India. From ₹1,700/mo.",
+      "Side-by-side comparisons of Flowfiy against Clay and Apollo for B2B outbound in India. $50/mo for 400 credits.",
     url: "/vs",
   },
   alternates: { canonical: "/vs" },
@@ -35,7 +35,7 @@ const comparisons = [
   {
     href: "/vs/clay",
     title: "Flowfiy vs Clay",
-    desc: "Clay is an enrichment workflow builder that needs heavy setup. Flowfiy is a done-for-you 5-agent pipeline — discover, research, score, and write, with no configuration.",
+    desc: "Clay is an enrichment workflow builder that needs heavy setup. Flowfiy is a done-for-you, fully managed pipeline — discover, research, score, and write, with no configuration and no API keys.",
   },
   {
     href: "/vs/apollo",
@@ -104,7 +104,7 @@ export default function VsHubPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-500"
             >
-              Try Flowfiy free
+              Get started
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap, BookOpen } from "lucide-react";
-import { OPENROUTER_MODELS, DEFAULT_OPENROUTER_MODEL } from "@/ai/config";
+import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap, BookOpen, Sparkles } from "lucide-react";
 
 interface IntegrationStatus {
   status: string;
@@ -12,10 +11,6 @@ interface IntegrationStatus {
 interface IntegrationCenterProps {
   organizationId: string;
   statusMap: Record<string, IntegrationStatus>;
-  plan: string;
-  apiMode: string;
-  llmProvider: string;
-  openRouterModel: string | null;
 }
 
 interface IntegrationConfig {
@@ -23,7 +18,7 @@ interface IntegrationConfig {
   label: string;
   description: string;
   icon: string;
-  tier: "required" | "lead-source" | "recommended" | "optional";
+  tier: "required" | "optional";
   fields: Array<{ key: string; label: string; placeholder: string; type?: string }>;
   isOAuth?: boolean;
   docsUrl?: string;
@@ -35,75 +30,19 @@ interface IntegrationConfig {
 }
 
 const TIER_STYLE: Record<string, { label: string; class: string }> = {
-  required:     { label: "Required",     class: "bg-red-500/10 text-red-400 border border-red-500/20" },
-  "lead-source": { label: "Pick one",    class: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
-  recommended:  { label: "Recommended", class: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  optional:     { label: "Optional",    class: "bg-secondary text-muted-foreground border border-border" },
+  required: { label: "Required", class: "bg-red-500/10 text-red-400 border border-red-500/20" },
+  optional: { label: "Optional", class: "bg-secondary text-muted-foreground border border-border" },
 };
 
-const CLAUDE_INTEGRATION: IntegrationConfig = {
-  type: "CLAUDE",
-  label: "Anthropic API Key",
-  description: "Your own Claude API key — you control usage and costs",
-  tier: "required",
-  icon: "🔑",
-  fields: [{ key: "apiKey", label: "API Key", placeholder: "sk-ant-api03-...", type: "password" }],
-  docsUrl: "https://console.anthropic.com/settings/keys",
-  howToGet: {
-    title: "How to get your Anthropic API Key",
-    steps: [
-      "Go to console.anthropic.com and sign in (or create an account)",
-      "Navigate to Settings → API Keys",
-      'Click "Create Key", give it a name, and copy the key',
-      "Paste it above — it starts with sk-ant-api03-",
-    ],
-    note: "You'll be billed directly by Anthropic based on your usage. ~$1.05 per 100 leads with Claude Sonnet 4-5.",
-  },
-};
-
+// Under the new architecture the AI (Gemini), lead sources (Google Maps + a B2B
+// people database), and email verification are all fully managed by Flowfiy — no
+// API keys. The only things a user connects are Gmail (to send) and, optionally,
+// Calendly (to drop a booking link into outreach).
 const INTEGRATIONS: IntegrationConfig[] = [
-  {
-    type: "APOLLO",
-    label: "Apollo.io",
-    description: "Lead discovery (preferred) — finds verified contacts with emails matching your ICP",
-    tier: "lead-source",
-    icon: "🚀",
-    fields: [{ key: "apiKey", label: "API Key", placeholder: "Apollo API key", type: "password" }],
-    docsUrl: "https://app.apollo.io/#/settings/integrations/api",
-    howToGet: {
-      title: "How to get your Apollo.io API Key",
-      steps: [
-        "Log in to app.apollo.io (create a free account if needed)",
-        "Go to Settings → Integrations → API",
-        'Click "Create New Key" and copy the generated key',
-        "Paste it above",
-      ],
-      note: "Apollo is the preferred lead source — it provides the highest-quality emails and firmographic data. The free plan includes 50 credits/month.",
-    },
-  },
-  {
-    type: "APIFY",
-    label: "Apify",
-    description: "Lead discovery + web scraping — finds contacts with validated emails (no Apollo needed) and scrapes company websites for AI analysis",
-    tier: "lead-source",
-    icon: "🕷️",
-    fields: [{ key: "apiKey", label: "API Key", placeholder: "apify_api_...", type: "password" }],
-    docsUrl: "https://console.apify.com/account/integrations",
-    howToGet: {
-      title: "How to get your Apify API Token",
-      steps: [
-        "Sign up or log in at apify.com",
-        "Click your avatar (top-right) → Settings → Integrations",
-        'Under "Personal API tokens", click "Create token"',
-        "Copy the token — it starts with apify_api_",
-      ],
-      note: "Connect Apollo OR Apify — at least one is required for lead generation. Apify also scrapes company websites to enrich AI research. The free tier gives $5/month of compute.",
-    },
-  },
   {
     type: "GMAIL",
     label: "Gmail",
-    description: "Sends personalized outreach emails from your account",
+    description: "Sends your approved outreach from your own inbox",
     tier: "required",
     icon: "📧",
     fields: [],
@@ -113,7 +52,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
       steps: [
         'Click "Connect with Google" below',
         "Choose the Gmail account you want to send outreach from",
-        'Grant the requested permissions (send email on your behalf)',
+        "Grant the requested permission (send email on your behalf)",
         "You'll be redirected back here once connected",
       ],
       note: "Flowfiy only sends emails — it never reads your inbox or deletes messages.",
@@ -143,130 +82,27 @@ const INTEGRATIONS: IntegrationConfig[] = [
   },
 ];
 
-const BYOK_ONLY_PLANS = ["FREE", "INDIE"];
-const CHOICE_PLANS = ["STARTER", "GROWTH", "AGENCY"];
-
-export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: initialApiMode, llmProvider, openRouterModel }: IntegrationCenterProps) {
-  const [currentApiMode, setCurrentApiMode] = useState(initialApiMode);
-  const [modeLoading, setModeLoading] = useState(false);
-  const [modeError, setModeError] = useState("");
-
-  const isByokOnly = BYOK_ONLY_PLANS.includes(plan.toUpperCase());
-  const hasChoice = CHOICE_PLANS.includes(plan.toUpperCase());
-
-  async function handleModeSwitch(mode: "CENTRAL" | "BYOK") {
-    if (mode === currentApiMode) return;
-    setModeLoading(true);
-    setModeError("");
-    try {
-      const res = await fetch("/api/org/api-mode", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode }),
-      });
-      if (res.ok) {
-        setCurrentApiMode(mode);
-      } else {
-        const data = await res.json() as { error?: string };
-        setModeError(data.error ?? "Failed to update mode");
-      }
-    } catch {
-      setModeError("Network error");
-    } finally {
-      setModeLoading(false);
-    }
-  }
-
+export function IntegrationCenter({ organizationId, statusMap }: IntegrationCenterProps) {
   return (
     <div className="space-y-4">
-      {/* AI Engine section */}
-      {isByokOnly ? (
-        // FREE / INDIE: BYOK required — pick provider (Anthropic or OpenRouter)
-        <ByokProviderPicker
-          organizationId={organizationId}
-          statusMap={statusMap}
-          initialProvider={llmProvider}
-          initialModel={openRouterModel}
-        />
-      ) : hasChoice ? (
-        // STARTER / GROWTH / AGENCY: toggle between Managed and BYOK
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">🤖</span>
-            <p className="font-medium text-sm">AI Engine</p>
+      {/* Fully-managed banner — AI + data + email verification need no keys */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4.5 h-4.5 text-green-400" />
           </div>
-          {modeError && (
-            <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2 border border-destructive/20">
-              {modeError}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="font-medium text-sm">AI &amp; data — fully managed</p>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">No API keys</span>
             </div>
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleModeSwitch("CENTRAL")}
-              disabled={modeLoading}
-              className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-                currentApiMode === "CENTRAL"
-                  ? "border-green-500/40 bg-green-500/10"
-                  : "border-border bg-secondary/30 hover:border-border/60"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Flowfiy Managed</span>
-                {currentApiMode === "CENTRAL" && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400">Active</span>
-                )}
-              </div>
-              <span className="text-xs text-muted-foreground">Claude Sonnet — included in your plan</span>
-            </button>
-            <button
-              onClick={() => handleModeSwitch("BYOK")}
-              disabled={modeLoading}
-              className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-                currentApiMode === "BYOK"
-                  ? "border-amber-500/40 bg-amber-500/10"
-                  : "border-border bg-secondary/30 hover:border-border/60"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Bring Your Own Key</span>
-                {currentApiMode === "BYOK" && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">Active</span>
-                )}
-              </div>
-              <span className="text-xs text-muted-foreground">Use your own Anthropic API key</span>
-            </button>
-          </div>
-          {/* Show provider picker if BYOK mode is active */}
-          {currentApiMode === "BYOK" && (
-            <ByokProviderPicker
-              organizationId={organizationId}
-              statusMap={statusMap}
-              initialProvider={llmProvider}
-              initialModel={openRouterModel}
-            />
-          )}
-        </div>
-      ) : (
-        // Fallback: managed AI banner (shouldn't be needed but safe default)
-        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="font-medium text-sm">AI Engine — Claude Sonnet</p>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">Managed by Flowfiy</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Powering all AI research, qualification, and outreach generation. No setup required.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-            <span className="text-xs text-green-400">Active</span>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The AI engine, lead discovery (Google Maps + a B2B people database), and email verification are all run
+              and paid for by Flowfiy — metered by credits. There are no keys to connect. Just link your Gmail to send.
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="grid gap-4">
         {INTEGRATIONS.map((integration) => (
@@ -277,323 +113,6 @@ export function IntegrationCenter({ organizationId, statusMap, plan, apiMode: in
             organizationId={organizationId}
           />
         ))}
-      </div>
-    </div>
-  );
-}
-
-const OPENROUTER_HOWTO: NonNullable<IntegrationConfig["howToGet"]> = {
-  title: "How to get your OpenRouter API Key",
-  steps: [
-    "Go to openrouter.ai and sign in (or create a free account)",
-    "Open Keys (openrouter.ai/keys)",
-    'Click "Create Key", name it, and copy the key',
-    "Paste it below and pick a model — many models are free",
-  ],
-  note: "OpenRouter gives access to many models, including free ones — no Anthropic key needed. You're billed by OpenRouter (free models cost nothing).",
-};
-
-/**
- * BYOK provider picker: choose Anthropic (Claude) or OpenRouter, then configure
- * the chosen provider. Switching providers persists immediately via
- * /api/org/llm-provider so the pipeline uses it on the next run.
- */
-function ByokProviderPicker({
-  organizationId,
-  statusMap,
-  initialProvider,
-  initialModel,
-}: {
-  organizationId: string;
-  statusMap: Record<string, IntegrationStatus>;
-  initialProvider: string;
-  initialModel: string | null;
-}) {
-  const [provider, setProvider] = useState<"ANTHROPIC" | "OPENROUTER">(
-    initialProvider === "OPENROUTER" ? "OPENROUTER" : "ANTHROPIC"
-  );
-  const [switching, setSwitching] = useState(false);
-  const [error, setError] = useState("");
-
-  async function switchProvider(next: "ANTHROPIC" | "OPENROUTER") {
-    if (next === provider) return;
-    setSwitching(true);
-    setError("");
-    try {
-      const res = await fetch("/api/org/llm-provider", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: next }),
-      });
-      if (res.ok) {
-        setProvider(next);
-      } else {
-        const data = await res.json() as { error?: string };
-        setError(data.error ?? "Failed to switch provider");
-      }
-    } catch {
-      setError("Network error");
-    } finally {
-      setSwitching(false);
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-xs font-medium mb-1.5">LLM Provider</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => switchProvider("ANTHROPIC")}
-            disabled={switching}
-            className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-              provider === "ANTHROPIC"
-                ? "border-primary/40 bg-primary/10"
-                : "border-border bg-secondary/30 hover:border-border/60"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">🔑 Anthropic</span>
-              {provider === "ANTHROPIC" && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">Active</span>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground">Your own Claude API key</span>
-          </button>
-          <button
-            onClick={() => switchProvider("OPENROUTER")}
-            disabled={switching}
-            className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
-              provider === "OPENROUTER"
-                ? "border-primary/40 bg-primary/10"
-                : "border-border bg-secondary/30 hover:border-border/60"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">🌐 OpenRouter</span>
-              {provider === "OPENROUTER" && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">Active</span>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground">Free & open models, your key</span>
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2 border border-destructive/20">
-          {error}
-        </div>
-      )}
-
-      {provider === "ANTHROPIC" ? (
-        <IntegrationCard
-          config={CLAUDE_INTEGRATION}
-          status={statusMap["CLAUDE"]}
-          organizationId={organizationId}
-        />
-      ) : (
-        <OpenRouterCard
-          organizationId={organizationId}
-          status={statusMap["OPENROUTER"]}
-          initialModel={initialModel}
-        />
-      )}
-    </div>
-  );
-}
-
-const CUSTOM_MODEL = "__custom__";
-
-/**
- * OpenRouter integration card — API key (validated + saved like other keys)
- * plus a model selector (curated free models + custom slug). Saving persists
- * the key via /api/integrations and the model via /api/org/llm-provider.
- */
-function OpenRouterCard({
-  organizationId,
-  status,
-  initialModel,
-}: {
-  organizationId: string;
-  status?: IntegrationStatus;
-  initialModel: string | null;
-}) {
-  const isConnected = status?.status === "CONNECTED";
-  const knownSlugs = OPENROUTER_MODELS.map((m) => m.slug) as string[];
-  const startModel = initialModel || DEFAULT_OPENROUTER_MODEL;
-  const startIsCustom = !knownSlugs.includes(startModel);
-
-  const [apiKey, setApiKey] = useState("");
-  const [modelChoice, setModelChoice] = useState(startIsCustom ? CUSTOM_MODEL : startModel);
-  const [customModel, setCustomModel] = useState(startIsCustom ? startModel : "");
-  const [working, setWorking] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const effectiveModel = modelChoice === CUSTOM_MODEL ? customModel.trim() : modelChoice;
-
-  async function handleSave() {
-    setError("");
-    setSuccess("");
-    if (!effectiveModel) {
-      setError("Please choose or enter a model.");
-      return;
-    }
-    setWorking(true);
-    try {
-      // If a key was entered, validate + save it. If already connected and the
-      // field is left blank, keep the existing key and only update the model.
-      if (apiKey.trim()) {
-        const validateRes = await fetch("/api/integrations/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "OPENROUTER", credentials: { apiKey: apiKey.trim() } }),
-        });
-        const validateData = await validateRes.json() as { valid: boolean; message: string };
-        if (!validateData.valid) {
-          setError(validateData.message);
-          setWorking(false);
-          return;
-        }
-        const saveRes = await fetch("/api/integrations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ organizationId, type: "OPENROUTER", credentials: { apiKey: apiKey.trim() } }),
-        });
-        if (!saveRes.ok) {
-          setError("Failed to save OpenRouter key");
-          setWorking(false);
-          return;
-        }
-      } else if (!isConnected) {
-        setError("Enter your OpenRouter API key.");
-        setWorking(false);
-        return;
-      }
-
-      // Persist provider + model selection.
-      const provRes = await fetch("/api/org/llm-provider", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: "OPENROUTER", model: effectiveModel }),
-      });
-      if (!provRes.ok) {
-        setError("Failed to save model selection");
-        setWorking(false);
-        return;
-      }
-
-      setSuccess("OpenRouter connected");
-      window.location.reload();
-    } catch {
-      setError("Network error");
-      setWorking(false);
-    }
-  }
-
-  async function handleDisconnect() {
-    await fetch(`/api/integrations?organizationId=${organizationId}&type=OPENROUTER`, { method: "DELETE" });
-    window.location.reload();
-  }
-
-  return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🌐</span>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-sm">OpenRouter</p>
-              {isConnected && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Run the pipeline on free & open models with your own OpenRouter key
-            </p>
-          </div>
-        </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          isConnected ? "bg-green-500/10 text-green-400" : "bg-secondary text-muted-foreground"
-        }`}>
-          {isConnected ? "Connected" : "Not connected"}
-        </span>
-      </div>
-
-      <div className="px-4 pb-4 border-t border-border pt-4">
-        <HowToGetBox howToGet={OPENROUTER_HOWTO} docsUrl="https://openrouter.ai/keys" />
-
-        {error && (
-          <div className="mb-3 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-3 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs">
-            {success}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1.5">API Key</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={isConnected ? "•••••••• (leave blank to keep current key)" : "sk-or-v1-..."}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium mb-1.5">Model</label>
-            <select
-              value={modelChoice}
-              onChange={(e) => setModelChoice(e.target.value)}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              {OPENROUTER_MODELS.map((m) => (
-                <option key={m.slug} value={m.slug}>{m.label}</option>
-              ))}
-              <option value={CUSTOM_MODEL}>Custom model slug…</option>
-            </select>
-          </div>
-
-          {modelChoice === CUSTOM_MODEL && (
-            <div>
-              <label className="block text-xs font-medium mb-1.5">Custom model slug</label>
-              <input
-                type="text"
-                value={customModel}
-                onChange={(e) => setCustomModel(e.target.value)}
-                placeholder="e.g. mistralai/mistral-large"
-                className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-              />
-              <p className="text-[11px] text-muted-foreground/70 mt-1">
-                Any model slug from openrouter.ai/models.
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={handleSave}
-              disabled={working}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {working && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {working ? "Saving..." : "Save & Connect"}
-            </button>
-            {isConnected && (
-              <button
-                onClick={handleDisconnect}
-                className="px-4 py-2 border border-destructive/30 text-destructive rounded-lg text-sm hover:bg-destructive/10 transition-colors"
-              >
-                Disconnect
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -618,9 +137,7 @@ function HowToGetBox({ howToGet, docsUrl }: { howToGet: NonNullable<IntegrationC
       </ol>
       {(howToGet.note || docsUrl) && (
         <div className="mt-2.5 pt-2.5 border-t border-blue-500/10 flex items-start justify-between gap-3">
-          {howToGet.note && (
-            <p className="text-[11px] text-muted-foreground/70 italic">{howToGet.note}</p>
-          )}
+          {howToGet.note && <p className="text-[11px] text-muted-foreground/70 italic">{howToGet.note}</p>}
           {docsUrl && (
             <a
               href={docsUrl}
@@ -661,7 +178,6 @@ function IntegrationCard({
     setError("");
     setSuccess("");
 
-    // Validate first
     const validateRes = await fetch("/api/integrations/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -675,7 +191,6 @@ function IntegrationCard({
       return;
     }
 
-    // For Calendly, auto-populate schedulingLink from API if not provided
     const finalCredentials = { ...credentials };
     if (config.type === "CALENDLY" && validateData.schedulingUrl && !finalCredentials.schedulingLink) {
       finalCredentials.schedulingLink = validateData.schedulingUrl;
@@ -720,7 +235,6 @@ function IntegrationCard({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-medium text-sm">{config.label}</p>
-              {/* Tier badge */}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TIER_STYLE[config.tier].class}`}>
                 {TIER_STYLE[config.tier].label}
               </span>
@@ -733,9 +247,7 @@ function IntegrationCard({
 
         <div className="flex items-center gap-2">
           <span className={`text-xs px-2 py-0.5 rounded-full ${
-            isConnected
-              ? "bg-green-500/10 text-green-400"
-              : "bg-secondary text-muted-foreground"
+            isConnected ? "bg-green-500/10 text-green-400" : "bg-secondary text-muted-foreground"
           }`}>
             {isConnected ? "Connected" : "Not connected"}
           </span>
@@ -744,10 +256,7 @@ function IntegrationCard({
 
       {expanded && (
         <div className="px-4 pb-4 border-t border-border pt-4">
-          {/* How-to-get instructions */}
-          {config.howToGet && (
-            <HowToGetBox howToGet={config.howToGet} docsUrl={config.docsUrl} />
-          )}
+          {config.howToGet && <HowToGetBox howToGet={config.howToGet} docsUrl={config.docsUrl} />}
 
           {error && (
             <div className="mb-3 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">

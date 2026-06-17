@@ -41,6 +41,8 @@ function StatCard({
 
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700/60 text-zinc-300",
+  FLOWFIY: "bg-emerald-500/15 text-emerald-300",
+  // legacy tiers (existing subscribers) — kept for display
   INDIE:   "bg-teal-500/15 text-teal-300",
   STARTER: "bg-blue-500/15 text-blue-300",
   GROWTH:  "bg-violet-500/15 text-violet-300",
@@ -64,7 +66,7 @@ export default async function AdminOverviewPage() {
     paidOrgCount,
     failedListCount,
     stuckListCount,
-    byokOrgCount,
+    activeSubCount,
     { data: usersData },
   ] = await Promise.all([
     prisma.organization.count(),
@@ -77,7 +79,7 @@ export default async function AdminOverviewPage() {
     prisma.organization.count({ where: { plan: { not: "FREE" } } }),
     prisma.leadList.count({ where: { status: "FAILED" } }),
     prisma.leadList.count({ where: { status: "RESEARCHING", updatedAt: { lt: twoHoursAgo } } }),
-    prisma.organization.count({ where: { apiMode: "BYOK" } }),
+    prisma.organization.count({ where: { plan: { not: "FREE" }, subscriptionStatus: "active" } }),
     supabase.auth.admin.listUsers({ perPage: 1000 }),
   ]);
 
@@ -140,7 +142,7 @@ export default async function AdminOverviewPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard label="Replies"          value={replyCount.toLocaleString()} sub={`${replyRate}% reply rate`} color="emerald" />
         <StatCard label="Active Campaigns" value={activeCampaignCount}                                          color="amber" />
-        <StatCard label="BYOK Orgs"        value={byokOrgCount}                sub={`${orgCount - byokOrgCount} central`}         color="violet" />
+        <StatCard label="Active Subs"      value={activeSubCount}              sub={`${orgCount - paidOrgCount} on free`}         color="violet" />
         <StatCard label="Failed Jobs"      value={failedListCount}             sub={stuckListCount > 0 ? `${stuckListCount} stuck` : "No stuck jobs"} color={failedListCount > 0 ? "red" : "emerald"} />
       </div>
 
@@ -162,7 +164,7 @@ export default async function AdminOverviewPage() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-white group-hover:text-amber-300 transition-colors">AI Usage</p>
-            <p className="text-xs text-zinc-500">Token consumption, API modes, budgets</p>
+            <p className="text-xs text-zinc-500">Gemini usage, credit COGS &amp; margins</p>
           </div>
           <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400" />
         </Link>

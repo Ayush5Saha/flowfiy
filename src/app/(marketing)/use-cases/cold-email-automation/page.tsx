@@ -3,24 +3,24 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cold Email Automation Software India — AI-Personalized Outreach | Flowfiy",
+  title: "Cold Email Automation Software — AI-Personalized Outreach | Flowfiy",
   description:
-    "India's best cold email automation software. Flowfiy researches every prospect, qualifies them 0–100, and writes hyper-personalized subject lines, email bodies, and follow-ups. Send from Gmail. Start free. Plans from ₹1,700/mo.",
+    "AI cold email automation. Describe the leads you want — Flowfiy finds them, qualifies them 0–100, and writes hyper-personalized subject lines, bodies, and follow-ups. Send from Gmail. No API keys. One plan: $50/mo for 400 credits.",
   keywords: [
-    "cold email automation software India",
-    "automated cold outreach India",
-    "AI cold email tool India",
-    "personalized cold email automation India",
-    "B2B email automation India 2026",
+    "cold email automation software",
+    "automated cold outreach",
+    "AI cold email tool",
+    "personalized cold email automation",
+    "B2B email automation 2026",
     "Gmail cold email automation",
-    "cold email software India",
-    "AI-powered cold email India",
-    "best cold email tool India",
-    "cold outreach automation India",
+    "cold email software",
+    "AI-powered cold email",
+    "best cold email tool",
+    "cold outreach automation",
   ],
   openGraph: {
-    title: "Cold Email Automation India — AI-Personalized Outreach at Scale | Flowfiy",
-    description: "India's AI cold email platform. Research, qualify, write, and send — AI handles the entire cold email pipeline from your Gmail. Plans from ₹1,700/mo.",
+    title: "Cold Email Automation — AI-Personalized Outreach at Scale | Flowfiy",
+    description: "Describe the leads you want — Flowfiy finds, qualifies, writes, and sends the entire cold email pipeline from your Gmail. No API keys. $50/mo for 400 credits.",
     url: "/use-cases/cold-email-automation",
   },
   alternates: { canonical: "/use-cases/cold-email-automation" },
@@ -44,14 +44,14 @@ export default function ColdEmailAutomationPage() {
             </span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            Flowfiy researches every prospect, qualifies them before you see them, and writes emails so specific they read like a human spent an hour on each one — then sends them from your Gmail.
+            Describe the leads you want — Flowfiy finds them, qualifies them before you see them, and writes emails so specific they read like a human spent an hour on each one, then sends them from your Gmail.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
-              Start automating cold email free <ArrowRight className="w-4 h-4" />
+              Start automating cold email <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-xs text-zinc-600 mt-5">100 free generations · Gmail OAuth · BYOK Claude · No credit card</p>
+          <p className="text-xs text-zinc-600 mt-5">$50/mo · 400 credits · Gmail OAuth · No API keys, fully managed AI</p>
         </div>
       </section>
 
@@ -62,7 +62,7 @@ export default function ColdEmailAutomationPage() {
             ["18.7%", "Avg reply rate (4+ specific facts)"],
             ["4+", "Company-specific facts per email"],
             ["~25s", "Email generation time per lead"],
-            ["$0", "AI cost per email (BYOK)"],
+            ["~2", "Leads per credit (you only pay for qualified)"],
           ].map(([val, label]) => (
             <div key={label}>
               <p className="text-3xl font-bold font-mono text-white mb-1">{val}</p>
@@ -99,11 +99,11 @@ export default function ColdEmailAutomationPage() {
               <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-5">With Flowfiy</p>
               <div className="space-y-4">
                 {[
-                  "AI scrapes every company website in 10–15 seconds",
-                  "Claude writes emails with 4+ specific, researched facts",
+                  "AI researches every company in 10–15 seconds",
+                  "AI writes emails with 4+ specific, researched facts",
                   "Only qualified leads (score ≥ threshold) get an email",
                   "Reply rates of 12–20% from deeply personalized outreach",
-                  "Full pipeline runs at ~$0.015/lead in Claude API costs",
+                  "You only pay for qualified leads — an empty search costs nothing",
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3 text-sm text-zinc-300">
                     <Check className="mt-0.5 w-4 h-4 text-violet-400 shrink-0" />
@@ -179,10 +179,10 @@ export default function ColdEmailAutomationPage() {
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Send your first AI-personalized campaign</h2>
-          <p className="text-zinc-400 mb-8">Start free. 50 full pipeline runs. Your Claude key, your Gmail, your pipeline.</p>
+          <p className="text-zinc-400 mb-8">$50/mo for 400 credits — about 600–800 leads. No API keys, fully managed AI, sent from your Gmail.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-primary rounded-xl text-white font-semibold hover:bg-primary/90 transition-all hover:shadow-2xl hover:shadow-primary/30">
-              Get started free <ArrowRight className="w-5 h-5" />
+              Get started <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href="/blog/cold-email-personalization-2026" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-white/10 text-zinc-300 font-medium hover:border-white/20 hover:text-white transition-all">
               Read the cold email guide

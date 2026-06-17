@@ -12,16 +12,16 @@ import {
 
 // ── ProofStrip ─────────────────────────────────────────────────
 // Asymmetric stats band — NOT four equal centered cards.
-// Layout: oversized hero stat (275M+) left-anchored, three smaller
+// Layout: oversized hero stat (0-100) left-anchored, three smaller
 // stats right of it, hairline vertical dividers between all four.
 // ONE cyan signal dot on the 87 % stat only.
 // Scroll parallax on the row (subtle, reduced-motion safe).
 
 const STATS = [
   {
-    value: 275,
-    suffix: "M+",
-    label: "Companies you can target",
+    value: 100,
+    suffix: "",
+    label: "Fit score on every lead, 0 to 100",
     hero: true,
     cyan: false,
   },
@@ -198,7 +198,7 @@ export function ProofStrip() {
           viewport={{ once: true, margin: "-8%" }}
           transition={{ duration: 0.9, delay: 0.55, ease: EASE }}
         >
-          Based on Flowfiy production data &amp; Apollo coverage
+          Based on Flowfiy production data &amp; managed lead sources
         </motion.p>
       </div>
     </section>

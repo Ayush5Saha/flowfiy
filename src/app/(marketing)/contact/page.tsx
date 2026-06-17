@@ -16,12 +16,12 @@ const SUBJECTS = [
 
 const FAQS = [
   {
-    q: "How does the BYOK model work?",
-    a: "You bring your own Anthropic API key. Flowfiy uses it to run the AI pipeline on your behalf — we never pay for your AI usage and you're never charged per-token by us. Your key is stored encrypted (AES-256-GCM) and only used when you trigger a pipeline run.",
+    q: "How does pricing work?",
+    a: "One plan: $50/month gives you 400 credits (roughly 600–800 leads). You spend credits as Flowfiy delivers qualified leads — about 2 leads per credit, though it varies by how specific your search is. An empty search costs nothing, and you can buy more credits anytime.",
   },
   {
-    q: "Which plan should I start with?",
-    a: "Start with the Free tier — you get 100 generations/month at no cost. If you're generating leads regularly, the Starter plan (₹4,900/mo, 2,500 generations) fits most solo operators and consultants.",
+    q: "Do I need to connect any API keys?",
+    a: "No. The AI, the lead-data sources, and email verification are all fully managed by Flowfiy. The only thing you connect is your Gmail account, so we can send the outreach you approve from your own mailbox.",
   },
   {
     q: "Can I cancel anytime?",
@@ -32,8 +32,8 @@ const FAQS = [
     a: "Never. Flowfiy uses row-level security (Supabase RLS) to fully isolate each organization's data. Your leads, research, and outreach copy are only visible to your team.",
   },
   {
-    q: "What APIs do I need to connect?",
-    a: "The AI pipeline is fully managed by Flowfiy — no Claude API key needed. For lead discovery, connect Apollo.io (recommended, 275M+ contacts) or Apify (free alternative with validated emails). Gmail is required to send outreach, and Calendly is optional for booking links.",
+    q: "What kind of leads can Flowfiy find?",
+    a: "Describe them in plain English. Beyond category and location, Flowfiy supports condition-based targeting — \"cafés with no website,\" \"dentists with bad reviews,\" \"agencies with an outdated site.\" It searches Google Maps and a B2B people database, then researches, scores, and writes outreach for each match.",
   },
 ];
 

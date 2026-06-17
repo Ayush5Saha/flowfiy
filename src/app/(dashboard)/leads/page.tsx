@@ -1,15 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, ArrowRight, Plug, FileText, Upload } from "lucide-react";
-import { GenerateLeadsButton } from "@/components/leads/GenerateLeadsButton";
+import { Users, ArrowRight, Upload, FileText } from "lucide-react";
+import { LeadRequestComposer } from "@/components/leads/LeadRequestComposer";
 import { LeadListRowActions } from "@/components/leads/LeadListRowActions";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
 export default async function LeadsPage() {
-  // Cache hits — layout already fetched these this request
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const membership = await getOrgMembership(user.id);
@@ -17,60 +16,57 @@ export default async function LeadsPage() {
 
   const { organization } = membership;
 
-  const [leadLists, integrations, businessProfile, totalLeadsCount, qualifiedCount] = await Promise.all([
+  const [leadLists, businessProfile, totalLeadsCount, qualifiedCount] = await Promise.all([
     prisma.leadList.findMany({
       where: { organizationId: organization.id, status: { not: "ARCHIVED" } },
       orderBy: { createdAt: "desc" },
-    }),
-    prisma.integration.findMany({
-      where: { organizationId: organization.id, status: "CONNECTED" },
-      select: { type: true },
     }),
     prisma.businessProfile.findUnique({ where: { organizationId: organization.id } }),
     prisma.lead.count({ where: { organizationId: organization.id } }),
     prisma.lead.count({ where: { organizationId: organization.id, status: { in: ["QUALIFIED", "CONTACTED", "REPLIED", "MEETING_BOOKED"] } } }),
   ]);
 
-  const connectedTypes = new Set(integrations.map((i) => i.type));
-  const hasLeadSource = connectedTypes.has("APOLLO") || connectedTypes.has("APIFY");
   const hasBusinessProfile = !!businessProfile;
-
-  // Apollo OR Apify is required as a lead source
-  const blockers = [
-    !hasBusinessProfile && {
-      label: "Set up your business profile & ICP",
-      href: "/settings",
-      icon: FileText,
-    },
-    !hasLeadSource && {
-      label: "Connect Apollo or Apify for lead discovery",
-      href: "/integrations",
-      icon: Plug,
-    },
-  ].filter(Boolean) as { label: string; href: string; icon: React.ElementType }[];
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">Leads</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            AI-researched and qualified lead lists
+            Describe what you want — Flowfiy finds, qualifies &amp; writes outreach.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/leads/import"
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            Import CSV
-          </Link>
-          <GenerateLeadsButton organizationId={organization.id} />
-        </div>
+        <Link
+          href="/leads/import"
+          className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          Import CSV
+        </Link>
       </div>
 
-      {/* Quick stats — only show if we have data */}
+      {/* Composer (primary entry) or business-profile prompt */}
+      {hasBusinessProfile ? (
+        <div className="mb-8">
+          <LeadRequestComposer />
+        </div>
+      ) : (
+        <div className="mb-8 border border-dashed border-border rounded-xl p-8 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-6 h-6 text-primary" />
+          </div>
+          <h2 className="font-semibold mb-1">Set up your business profile</h2>
+          <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
+            Flowfiy uses it to know who to find and how to write your outreach.
+          </p>
+          <Link href="/settings" className="inline-flex items-center gap-1.5 text-sm text-primary font-medium underline underline-offset-2">
+            Set up business profile →
+          </Link>
+        </div>
+      )}
+
+      {/* Quick stats */}
       {leadLists.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
@@ -86,58 +82,11 @@ export default async function LeadsPage() {
         </div>
       )}
 
+      {/* Lead lists */}
       {leadLists.length === 0 ? (
-        <div className="border border-dashed border-border rounded-xl p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-            <Users className="w-7 h-7 text-primary" />
-          </div>
-
-          <h2 className="font-semibold text-lg mb-2">Generate your first lead list</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-            Flowfiy researches your ICP, finds matching contacts via Apollo or Apify, analyzes
-            each company, scores them 0–100, and writes personalized outreach — all automatically.
-          </p>
-
-          {blockers.length > 0 ? (
-            <div className="max-w-sm mx-auto mb-6">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Complete these steps first
-              </p>
-              <div className="space-y-2 text-left">
-                {blockers.map(({ label, href, icon: Icon }) => (
-                  <Link
-                    key={href + label}
-                    href={href}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors flex-1">
-                      {label}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <GenerateLeadsButton organizationId={organization.id} variant="primary" />
-          )}
-
-          <div className="mt-8 grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
-            {[
-              { stat: "~25s", label: "per lead researched" },
-              { stat: "0–100", label: "qualification score" },
-              { stat: "3-touch", label: "email sequence" },
-            ].map(({ stat, label }) => (
-              <div key={label} className="bg-secondary/50 rounded-xl p-3">
-                <p className="text-lg font-mono font-bold">{stat}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <p className="text-sm text-muted-foreground text-center py-10 border border-dashed border-border rounded-xl">
+          Your lead lists will appear here once you run a search above.
+        </p>
       ) : (
         <div className="space-y-2">
           {leadLists.map((list) => (
@@ -151,21 +100,15 @@ export default async function LeadsPage() {
                   <Users className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm group-hover:text-primary transition-colors">
-                    {list.name}
-                  </p>
+                  <p className="font-medium text-sm group-hover:text-primary transition-colors">{list.name}</p>
                   {list.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">
-                      {list.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">{list.description}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {list.totalLeads} leads · {list.qualifiedLeads} qualified ·{" "}
-                    {new Date(list.createdAt).toLocaleDateString()}
+                    {list.totalLeads} leads · {list.qualifiedLeads} qualified · {new Date(list.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-3">
                 <StatusBadge status={list.status} />
                 <LeadListRowActions listId={list.id} organizationId={organization.id} />

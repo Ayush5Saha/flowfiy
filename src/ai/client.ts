@@ -1,9 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { decryptCredentials } from "@/lib/encryption";
-import type { RunMode } from "@/ai/config";
-import { DEFAULT_OPENROUTER_MODEL } from "@/ai/config";
-import { AnthropicLLMClient, OpenRouterLLMClient, type LLMClient } from "@/ai/llm";
+import type { RunMode, AgentTask } from "@/ai/config";
+import { DEFAULT_OPENROUTER_MODEL, TASK_MODELS } from "@/ai/config";
+import { AnthropicLLMClient, OpenRouterLLMClient, GeminiLLMClient, type LLMClient } from "@/ai/llm";
 
 export type { RunMode };
 
@@ -17,6 +17,25 @@ function getCentralClient(): Anthropic {
     _centralClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   }
   return _centralClient;
+}
+
+/**
+ * Centralized LLM client for the pipeline — always platform-owned Gemini, keyed
+ * by task (per-task model from TASK_MODELS). This replaces the per-org BYOK
+ * resolver in the NL pipeline. The Anthropic client remains as a fallback seam
+ * (wired live in a later phase); launch is Gemini-only.
+ *
+ * Returns the same { client, mode } shape as getClaudeClientForOrg so the
+ * 4-stage processors swap with a one-line change.
+ */
+export function getCentralLLMClient(task: AgentTask): { client: LLMClient; mode: RunMode } {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "GEMINI_API_KEY is not configured. The pipeline now runs on centralized Gemini."
+    );
+  }
+  return { client: new GeminiLLMClient({ apiKey, model: TASK_MODELS[task] }), mode: "CENTRAL" };
 }
 
 /**

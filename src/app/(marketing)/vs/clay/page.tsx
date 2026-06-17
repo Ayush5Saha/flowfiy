@@ -3,22 +3,22 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Clay — AI Sales Outreach Comparison India 2026",
+  title: "Flowfiy vs Clay — AI Sales Outreach Comparison 2026",
   description:
-    "Flowfiy vs Clay for AI-powered B2B lead generation in India. Clay is enrichment-only; Flowfiy is a full outbound pipeline with 5 Claude AI agents, Gmail sending, and India pricing from ₹1,700/mo.",
+    "Flowfiy vs Clay for AI-powered B2B lead generation. Clay is enrichment-only and needs setup; Flowfiy is a fully managed outbound pipeline — describe your leads in plain English, get qualified prospects and written outreach. From $50/mo for 400 credits.",
   keywords: [
     "Flowfiy vs Clay",
-    "Clay alternative India",
+    "Clay alternative",
     "Clay competitor",
     "Clay vs Flowfiy",
     "AI sales tool comparison 2026",
-    "Clay alternative India pricing",
-    "best Clay alternative for Indian startups",
-    "AI outbound tool India",
+    "Clay alternative pricing",
+    "managed outbound tool",
+    "plain English lead generation",
   ],
   openGraph: {
-    title: "Flowfiy vs Clay — Which AI Sales Tool Is Right for India?",
-    description: "Full comparison of Flowfiy and Clay for B2B outreach automation. India pricing, features, and use cases. Flowfiy from ₹1,700/mo.",
+    title: "Flowfiy vs Clay — Which AI Sales Tool Should You Use?",
+    description: "Full comparison of Flowfiy and Clay for B2B outreach automation. Pricing, features, and use cases. Flowfiy from $50/mo for 400 credits.",
     url: "/vs/clay",
   },
   alternates: { canonical: "/vs/clay" },
@@ -27,24 +27,24 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "Flowfiy vs Clay — India Comparison 2026",
-  description: "Comparison of Flowfiy and Clay for AI-powered B2B sales outreach in India. Flowfiy offers full outbound pipeline from ₹1,700/mo vs Clay's enrichment-only model.",
-  inLanguage: "en-IN",
+  name: "Flowfiy vs Clay — Comparison 2026",
+  description: "Comparison of Flowfiy and Clay for AI-powered B2B sales outreach. Flowfiy offers a fully managed outbound pipeline from $50/mo for 400 credits vs Clay's enrichment-only, setup-heavy model.",
+  inLanguage: "en",
 };
 
 const rows = [
-  { feature: "AI lead research", outbound: true, clay: "Partial" },
-  { feature: "5-agent Claude pipeline", outbound: true, clay: false },
+  { feature: "Describe leads in plain English", outbound: true, clay: false },
+  { feature: "Condition-based targeting (e.g. \"no website\", \"bad reviews\")", outbound: true, clay: "Partial" },
+  { feature: "Smart clarifying questions", outbound: true, clay: false },
   { feature: "AI qualification scoring (0–100)", outbound: true, clay: false },
-  { feature: "AI-written personalized emails", outbound: true, clay: "Via integrations" },
-  { feature: "Gmail OAuth sending", outbound: true, clay: false },
-  { feature: "BYOK (Bring Your Own Claude Key)", outbound: true, clay: false },
-  { feature: "Per-lead AI cost to you", outbound: "$0", clay: "Credit-based" },
-  { feature: "Apollo API integration", outbound: true, clay: true },
-  { feature: "Apify web scraping", outbound: true, clay: "Via HTTP API" },
-  { feature: "Multi-tenant team workspaces", outbound: true, clay: true },
-  { feature: "AES-256 credential encryption", outbound: true, clay: "Unknown" },
-  { feature: "Starting price", outbound: "$0 free tier", clay: "$149/mo" },
+  { feature: "AI-written personalized emails + follow-ups", outbound: true, clay: "Via integrations" },
+  { feature: "Gmail sending after review", outbound: true, clay: false },
+  { feature: "Fully managed AI — no API keys", outbound: true, clay: false },
+  { feature: "Managed data sources + email verification", outbound: true, clay: "Setup required" },
+  { feature: "No per-tool setup or workflows", outbound: true, clay: false },
+  { feature: "Team workspaces", outbound: true, clay: true },
+  { feature: "Pay only for qualified leads", outbound: true, clay: false },
+  { feature: "Starting price", outbound: "$50/mo · 400 credits", clay: "$149/mo" },
 ];
 
 export default function VsClayPage() {
@@ -67,7 +67,7 @@ export default function VsClayPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-              Clay is a powerful data enrichment and workflow tool. Flowfiy is a complete outbound pipeline with 5 Claude AI agents, built-in Gmail sending, and a BYOK model that charges $0 per lead generation.
+              Clay is a powerful data enrichment and workflow tool that you configure yourself. Flowfiy is a fully managed outbound pipeline — describe the leads you want in plain English and it finds, qualifies, and writes the outreach. No API keys, no workflow setup.
               They solve different problems — here&apos;s how to choose.
             </p>
           </div>
@@ -98,9 +98,9 @@ export default function VsClayPage() {
                 <p className="font-semibold text-white mb-3">Choose Flowfiy if...</p>
                 <ul className="space-y-2">
                   {[
-                    "You want a full AI pipeline — research to sent email — in one tool",
-                    "You want $0 per-lead AI cost (BYOK)",
-                    "You want AI qualification scoring before any email is sent",
+                    "You want a full AI pipeline — describe to sent email — in one tool",
+                    "You want it fully managed with no API keys or workflow setup",
+                    "You want condition-based targeting and AI scoring before any email is sent",
                     "You want Gmail-native sending without a separate sequencer",
                   ].map(item => (
                     <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
@@ -163,19 +163,19 @@ export default function VsClayPage() {
             {[
               {
                 title: "Pricing model",
-                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits. Complex enrichment waterfalls consume multiple credits per row. At scale, Clay costs can grow substantially. Flowfiy charges a flat monthly platform fee (₹4,900–₹24,900/mo) with $0 per-generation AI cost because you use your own Claude API key — typically $0.008–$0.015 per full lead pipeline at Anthropic list rates.",
+                content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits, and complex enrichment waterfalls consume multiple credits per row — costs grow substantially at scale. Flowfiy is one simple plan: $50/mo for 400 credits (about 600–800 leads, varies by search), billed in your local currency. You only pay for qualified leads — an empty search costs nothing — and subscribers can top up extra credits anytime.",
               },
               {
-                title: "AI email writing",
-                content: "Clay can generate emails via AI integrations (typically via its Claude or OpenAI blocks), but you configure the workflow yourself. Flowfiy has a dedicated Personalization Agent (claude-sonnet-4-6) that automatically receives the company research and qualification outputs and writes a subject line, body, and two follow-ups per qualified lead — no workflow configuration required.",
+                title: "Plain-English targeting",
+                content: "With Clay you build the search yourself — pick sources, set filters, wire up the workflow. Flowfiy lets you describe the leads you want in plain English and asks smart clarifying questions when needed. It also handles qualitative conditions Clay can&apos;t express simply, like \"coffee shops with no website,\" \"dentists with bad reviews,\" or \"SaaS that recently raised.\"",
               },
               {
                 title: "Email sending",
-                content: "Clay does not send emails. It outputs a table of data that you push to a sequencer (Smartlead, Instantly, Outreach, etc.) — which means an additional tool, additional cost, and additional integration to manage. Flowfiy includes Gmail OAuth sending natively. Campaigns send from your own inbox. No additional sequencer needed.",
+                content: "Clay does not send emails. It outputs a table of data that you push to a sequencer (Smartlead, Instantly, Outreach, etc.) — which means an additional tool, additional cost, and additional integration to manage. Flowfiy writes personalized cold emails plus follow-ups and sends them from your own Gmail after you review. No additional sequencer needed.",
               },
               {
                 title: "AI qualification",
-                content: "Clay enriches data — it doesn&apos;t score it. You can build scoring formulas with Clay&apos;s column logic, but it requires manual setup per campaign. Flowfiy&apos;s Qualification Agent automatically scores every lead 0–100 against your ICP, includes written reasoning per lead, and gates outreach to only qualified contacts.",
+                content: "Clay enriches data — it doesn&apos;t score it. You can build scoring formulas with Clay&apos;s column logic, but it requires manual setup per campaign. Flowfiy automatically researches and scores every lead 0–100 against your criteria, includes written reasoning per lead, and gates outreach to only qualified contacts — all fully managed.",
               },
             ].map(({ title, content }) => (
               <div key={title}>
@@ -189,11 +189,11 @@ export default function VsClayPage() {
         {/* CTA */}
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Try Flowfiy free — no Clay credits needed</h2>
-            <p className="text-zinc-400 mb-8">100 free lead generations. No credit card required. Start building pipeline in under 30 minutes.</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Skip the setup — just describe your leads</h2>
+            <p className="text-zinc-400 mb-8">$50/mo for 400 credits (about 600–800 leads). No API keys, no workflows. You only pay for qualified leads.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
-                Get started free <ArrowRight className="w-4 h-4" />
+                Get started <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/vs/apollo" className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl border border-white/10 text-zinc-300 font-medium text-sm hover:border-white/20 hover:text-white transition-all">
                 Compare vs Apollo.io

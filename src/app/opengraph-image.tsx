@@ -119,16 +119,16 @@ export default function Image() {
             lineHeight: 1.5,
           }}
         >
-          AI-powered outbound sales platform. 100 free leads to start.
+          Describe the leads you want — AI finds, qualifies and writes the outreach.
         </div>
 
         {/* Feature pills */}
         <div style={{ display: "flex", gap: 14 }}>
           {[
-            "5 AI Agents",
-            "275M+ Contacts",
+            "Plain-English search",
+            "Condition-based targeting",
             "Sends from Gmail",
-            "Free to Start",
+            "$50/mo · 400 credits",
           ].map((text) => (
             <div
               key={text}

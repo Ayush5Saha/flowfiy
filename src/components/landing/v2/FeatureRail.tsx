@@ -38,7 +38,7 @@ const FEATURES: Feature[] = [
   {
     index: "01",
     title: "Works out of the box",
-    body: "No accounts to wire up, no API keys to babysit. Sign up, describe your customer, and your first leads are ready in minutes.",
+    body: "No API keys, no per-tool setup. The AI and data sources are fully managed — sign up, describe the leads you want, and your first leads are ready in minutes.",
     accent: "boot",
   },
   {
@@ -68,7 +68,7 @@ const FEATURES: Feature[] = [
   {
     index: "06",
     title: "Your data stays private",
-    body: "Credentials and API keys are encrypted before storage. We can't read them; they never appear in any log.",
+    body: "Your Gmail connection and account credentials are encrypted before storage. We can't read them; they never appear in any log.",
     accent: "lock",
   },
 ];
@@ -83,8 +83,8 @@ const N = FEATURES.length;
 function BootAccent({ active }: { active: boolean }) {
   const reduced = useReducedMotionSafe();
   const lines = [
-    { k: "$", v: "describe your customer", done: true },
-    { k: "→", v: "scanning 275M+ contacts", done: true },
+    { k: "$", v: "describe the leads you want", done: true },
+    { k: "→", v: "finding matching businesses", done: true },
     { k: "✓", v: "first leads ready", done: true },
   ];
   return (
@@ -511,7 +511,7 @@ function LockAccent({ active }: { active: boolean }) {
           stored credential
         </p>
         <p className="mt-1 text-[13px] tracking-wider text-zinc-300">
-          sk-•••• •••• •••• ••••
+          gmail · •••• •••• •••• ••••
         </p>
       </div>
       <p className="font-mono text-[10px] tracking-[0.1em] text-zinc-500">
