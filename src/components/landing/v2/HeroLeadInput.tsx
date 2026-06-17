@@ -92,7 +92,7 @@ export function HeroLeadInput() {
     >
       <form
         onSubmit={submit}
-        className="group flex flex-col gap-2 rounded-2xl border border-white/12 bg-white/[0.04] p-2 backdrop-blur-md transition-colors focus-within:border-violet-400/50 sm:flex-row sm:items-center sm:gap-0 sm:rounded-full sm:pr-2"
+        className="group flex flex-col gap-2 rounded-2xl border border-white/15 bg-[#0a0a14]/70 p-2 shadow-[0_24px_70px_-12px_rgba(0,0,0,0.9)] ring-1 ring-black/40 backdrop-blur-xl transition-colors focus-within:border-violet-400/50 sm:flex-row sm:items-center sm:gap-0 sm:rounded-full sm:pr-2"
       >
         <div className="flex flex-1 items-center gap-2.5 px-3 py-2.5">
           <Sparkles className="h-4 w-4 shrink-0 text-violet-400" />
