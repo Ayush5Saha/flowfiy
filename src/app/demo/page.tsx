@@ -15,6 +15,7 @@ const mockOrg = {
   subscriptionStatus: "active",
   generationCount: 847,
   generationLimit: 7500,
+  trialLeadsUsed: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   members: [],

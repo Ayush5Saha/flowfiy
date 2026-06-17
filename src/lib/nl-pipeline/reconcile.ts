@@ -37,6 +37,22 @@ export async function reconcileLeadRequest(leadListId: string, organizationId: s
     ref: { refType: "lead_request", refId: lr.id },
   });
 
+  // Count delivered leads against the no-subscription trial allowance — only
+  // while the org is unsubscribed (subscribers are metered by credits alone).
+  const savedLeads = meta.savedLeads ?? 0;
+  if (savedLeads > 0) {
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { plan: true, subscriptionStatus: true },
+    });
+    const subscribed = !!org && org.plan !== "FREE" && org.subscriptionStatus === "active";
+    if (!subscribed) {
+      await prisma.organization
+        .update({ where: { id: organizationId }, data: { trialLeadsUsed: { increment: savedLeads } } })
+        .catch(() => null);
+    }
+  }
+
   await prisma.leadRequest.update({
     where: { id: lr.id },
     data: { status: "READY_FOR_REVIEW", actualCredits: consumed },

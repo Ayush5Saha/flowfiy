@@ -17,7 +17,7 @@ const INTENT_KEY = "flowfiy_intent";
 type IntentStatus =
   | "unauthenticated"
   | "no_org"
-  | "no_subscription"
+  | "subscription_required"
   | "insufficient_credits"
   | "ready";
 
@@ -68,12 +68,12 @@ export function HeroLeadInput() {
       case "no_org":
         router.push("/onboarding");
         break;
-      case "no_subscription":
-        setHint("You'll need an active plan to run a search — taking you to billing.");
+      case "subscription_required":
+        setHint("You've used your 100 free leads — subscribe to keep generating.");
         router.push("/billing");
         break;
       case "insufficient_credits":
-        setHint("Not enough credits for that — taking you to top up.");
+        setHint("Top up credits to run your search — no subscription needed for your first 100 leads.");
         router.push("/billing#buy-credits");
         break;
       case "ready":

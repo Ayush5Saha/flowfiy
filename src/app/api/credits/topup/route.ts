@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { getRazorpay } from "@/lib/razorpay";
 import { getStripe, resolveGateway } from "@/lib/stripe";
-import { CREDIT_VALUE_INR, TOPUP_MIN_CREDITS, TOPUP_MAX_CREDITS } from "@/lib/credits/rates";
+import { CREDIT_VALUE_INR, TOPUP_MIN_CREDITS, TOPUP_MAX_CREDITS, TRIAL_LEADS, TRIAL_MIN_CREDITS } from "@/lib/credits/rates";
 import { CURRENCIES } from "@/lib/currency";
 
 const schema = z.object({
@@ -20,10 +20,13 @@ export async function POST(req: NextRequest) {
   if (!membership) return NextResponse.json({ error: "No organization" }, { status: 403 });
   const org = membership.organization;
 
-  // ── Subscription gate (server-side; never trust the client) ───────────────
-  if (org.plan === "FREE" || org.subscriptionStatus !== "active") {
+  // ── Trial gate ────────────────────────────────────────────────────────────
+  // Non-subscribers may top up to fund their first TRIAL_LEADS leads. Once that
+  // allowance is used, an active subscription is required to add more credits.
+  const subscribed = org.plan !== "FREE" && org.subscriptionStatus === "active";
+  if (!subscribed && org.trialLeadsUsed >= TRIAL_LEADS) {
     return NextResponse.json(
-      { error: "Subscribe to unlock credit top-ups.", requiresSubscription: true },
+      { error: `You've used your ${TRIAL_LEADS} free leads — subscribe to keep generating.`, requiresSubscription: true },
       { status: 403 }
     );
   }
@@ -32,9 +35,11 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const { credits, country } = parsed.data;
 
-  if (credits < TOPUP_MIN_CREDITS || credits > TOPUP_MAX_CREDITS) {
+  // Non-subscribers must deposit enough to fund the trial (covers high-condition leads).
+  const minCredits = subscribed ? TOPUP_MIN_CREDITS : TRIAL_MIN_CREDITS;
+  if (credits < minCredits || credits > TOPUP_MAX_CREDITS) {
     return NextResponse.json(
-      { error: `Choose between ${TOPUP_MIN_CREDITS} and ${TOPUP_MAX_CREDITS} credits.` },
+      { error: `Choose between ${minCredits} and ${TOPUP_MAX_CREDITS} credits.` },
       { status: 400 }
     );
   }

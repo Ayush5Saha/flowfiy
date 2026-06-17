@@ -7,7 +7,7 @@ import { runPlanner } from "@/ai/agents/planner";
 import { getCentralLLMClient } from "@/ai/client";
 import { reserveCredits } from "@/lib/credits/service";
 import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
-import { creditsForCostUsd, WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD } from "@/lib/credits/rates";
+import { creditsForCostUsd, WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD, TRIAL_LEADS } from "@/lib/credits/rates";
 import { ACTORS } from "@/ai/actors/registry";
 import { signalProvidersFor } from "@/ai/criteria/engine";
 import { getLeadDiscoveryQueue } from "@/workers/queues";
@@ -61,7 +61,13 @@ export function estimateForPlan(plan: ResolvedPlan): number {
 
 export type ConfirmResult =
   | { ok: true; leadListId: string }
-  | { ok: false; reason: "not_found" | "no_plan" | "insufficient_credits"; balance?: number; needed?: number };
+  | {
+      ok: false;
+      reason: "not_found" | "no_plan" | "insufficient_credits" | "subscription_required";
+      balance?: number;
+      needed?: number;
+      trialRemaining?: number;
+    };
 
 /** Reserve credits, create the LeadList, and enqueue criteria-aware discovery. */
 export async function confirmRequest(organizationId: string, leadRequestId: string): Promise<ConfirmResult> {
@@ -70,8 +76,32 @@ export async function confirmRequest(organizationId: string, leadRequestId: stri
   if (!lr.plan) return { ok: false, reason: "no_plan" };
   if (lr.leadListId) return { ok: true, leadListId: lr.leadListId }; // idempotent
 
-  const plan = lr.plan as unknown as ResolvedPlan;
-  const estimate = lr.estimatedCredits ?? estimateForPlan(plan);
+  let plan = lr.plan as unknown as ResolvedPlan;
+
+  // ── No-subscription trial gate ──────────────────────────────────────────────
+  // Non-subscribers can generate up to TRIAL_LEADS leads on credits alone; beyond
+  // that an active subscription is required. Cap this run to the trial remainder.
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { plan: true, subscriptionStatus: true, trialLeadsUsed: true },
+  });
+  const subscribed = !!org && org.plan !== "FREE" && org.subscriptionStatus === "active";
+  if (!subscribed) {
+    const remaining = TRIAL_LEADS - (org?.trialLeadsUsed ?? 0);
+    if (remaining <= 0) {
+      return { ok: false, reason: "subscription_required", trialRemaining: 0 };
+    }
+    if (plan.maxResults > remaining) {
+      plan = {
+        ...plan,
+        maxResults: remaining,
+        params: { ...plan.params, maxResults: remaining },
+        estimatedResults: Math.min(plan.estimatedResults, remaining),
+      };
+    }
+  }
+
+  const estimate = estimateForPlan(plan);
 
   const reserve = await reserveCredits(organizationId, estimate, { refType: "lead_request", refId: lr.id });
   if (!reserve.ok) {
@@ -91,7 +121,7 @@ export async function confirmRequest(organizationId: string, leadRequestId: stri
 
   await prisma.leadRequest.update({
     where: { id: lr.id },
-    data: { status: "CONFIRMED", leadListId: list.id, heldCredits: estimate, estimatedCredits: estimate },
+    data: { status: "CONFIRMED", leadListId: list.id, heldCredits: estimate, estimatedCredits: estimate, plan: plan as never },
   });
 
   await getLeadDiscoveryQueue().add(

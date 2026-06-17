@@ -38,6 +38,14 @@ export const TOPUP_MIN_CREDITS = 50;
 export const TOPUP_MAX_CREDITS = 5000;
 export const CREDIT_EXPIRY_DAYS = 60;            // roll over once / expire after 60 days
 
+// ─── No-subscription trial ───────────────────────────────────────────────────
+// A new org can generate up to TRIAL_LEADS leads by just topping up credits —
+// no subscription. Lead TRIAL_LEADS+1 requires an active subscription.
+export const TRIAL_LEADS = 100;
+export const TRIAL_BUFFER = 0.5;                 // 50% headroom for high-condition (audit-heavy) leads
+// Minimum deposit to fund the trial: 100 leads ÷ ~2 leads/credit = 50, ×1.5 buffer = 75.
+export const TRIAL_MIN_CREDITS = Math.ceil((TRIAL_LEADS / 2) * (1 + TRIAL_BUFFER));
+
 // ─── Estimate heuristic (NOT the charge) ─────────────────────────────────────────
 // Used only to size the pre-run HOLD. The real charge is reconciled from actual
 // COGS after the run. Tuned to the Starter-tier build-ups in the plan doc.

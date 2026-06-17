@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Coins, Loader2, Lock } from "lucide-react";
 
 interface Props {
-  active: boolean;       // org has an active subscription
+  subscribed: boolean;          // org has an active subscription
+  trialLeadsUsed: number;       // leads generated on the no-subscription trial
+  trialLeads: number;           // trial allowance (TRIAL_LEADS)
+  minCredits: number;           // effective min top-up (75 trial / 50 subscribed)
   balance: number;
   held: number;
 }
@@ -22,8 +25,9 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-export function BuyCreditsPanel({ active, balance, held }: Props) {
-  const [credits, setCredits] = useState(100);
+export function BuyCreditsPanel({ subscribed, trialLeadsUsed, trialLeads, minCredits, balance, held }: Props) {
+  const trialExhausted = !subscribed && trialLeadsUsed >= trialLeads;
+  const [credits, setCredits] = useState(Math.max(100, minCredits));
   const [cost, setCost] = useState<string>("…");
   const [country, setCountry] = useState("IN");
   const [loading, setLoading] = useState(false);
@@ -36,7 +40,7 @@ export function BuyCreditsPanel({ active, balance, held }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!active) return;
+    if (trialExhausted) return;
     if (debounce.current) clearTimeout(debounce.current);
     debounce.current = setTimeout(() => {
       fetch(`/api/credits/quote?credits=${credits}&country=${country}`)
@@ -44,9 +48,10 @@ export function BuyCreditsPanel({ active, balance, held }: Props) {
         .then((d) => { if (d?.formatted) setCost(d.formatted); })
         .catch(() => {});
     }, 250);
-  }, [credits, country, active]);
+  }, [credits, country, trialExhausted]);
 
-  if (!active) {
+  // Trial used up and still no subscription → top-ups are locked behind subscribing.
+  if (trialExhausted) {
     return (
       <div className="bg-card border border-border rounded-xl p-5">
         <div className="flex items-center gap-2 mb-2">
@@ -54,7 +59,7 @@ export function BuyCreditsPanel({ active, balance, held }: Props) {
           <h3 className="font-medium">Buy credits</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Subscribe to the plan to unlock credit top-ups. Credits power lead searches.
+          You&apos;ve used your {trialLeads} free leads. Subscribe to keep generating and to top up more credits.
         </p>
       </div>
     );
@@ -119,10 +124,16 @@ export function BuyCreditsPanel({ active, balance, held }: Props) {
       {error && <p className="text-sm text-destructive mb-3">{error}</p>}
       {notice && <p className="text-sm text-green-400 mb-3">{notice}</p>}
 
+      {!subscribed && (
+        <p className="text-xs text-violet-300 mb-3">
+          No subscription needed — fund your first {trialLeads} leads with credits ({trialLeadsUsed}/{trialLeads} used). Minimum {minCredits} credits.
+        </p>
+      )}
+
       <label className="block text-sm font-medium mb-1.5">How many credits?</label>
       <input
         type="number"
-        min={50}
+        min={minCredits}
         max={5000}
         step={10}
         value={credits}
@@ -136,13 +147,13 @@ export function BuyCreditsPanel({ active, balance, held }: Props) {
 
       <button
         onClick={pay}
-        disabled={loading || credits < 50 || credits > 5000}
+        disabled={loading || credits < minCredits || credits > 5000}
         className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay</>}
       </button>
-      {(credits < 50 || credits > 5000) && (
-        <p className="text-xs text-muted-foreground mt-2">Choose between 50 and 5,000 credits.</p>
+      {(credits < minCredits || credits > 5000) && (
+        <p className="text-xs text-muted-foreground mt-2">Choose between {minCredits.toLocaleString()} and 5,000 credits.</p>
       )}
     </div>
   );

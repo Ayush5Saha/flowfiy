@@ -23,6 +23,8 @@ model Organization {
   subscriptionStatus     String?   @map("subscription_status")
   generationCount      Int       @default(0) @map("generation_count")
   generationLimit      Int       @default(100) @map("generation_limit")
+  // Lifetime leads generated while NOT subscribed — capped at TRIAL_LEADS (100).
+  trialLeadsUsed       Int       @default(0) @map("trial_leads_used")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 

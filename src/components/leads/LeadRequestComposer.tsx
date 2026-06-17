@@ -145,6 +145,12 @@ export function LeadRequestComposer() {
             href: "/billing",
             hrefLabel: "Buy credits →",
           });
+        } else if (res.status === 403) {
+          setError({
+            message: data.error ?? "You've used your 100 free leads — subscribe to keep generating.",
+            href: "/billing",
+            hrefLabel: "Subscribe →",
+          });
         } else {
           setError({ message: data.error ?? "Couldn't start the run." });
         }

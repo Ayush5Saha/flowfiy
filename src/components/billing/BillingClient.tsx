@@ -36,6 +36,8 @@ interface BillingClientProps {
   wallet: { balance: number; held: number };
   creditsUsedThisCycle: number;
   subscriptionActive: boolean;
+  trialLeadsUsed: number;
+  trialLeads: number;
   ledger: LedgerEntry[];
 }
 
@@ -66,7 +68,7 @@ const LEDGER_LABELS: Record<string, string> = {
   ADJUST: "Adjusted",
 };
 
-export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle, subscriptionActive, ledger }: BillingClientProps) {
+export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle, subscriptionActive, trialLeadsUsed, trialLeads, ledger }: BillingClientProps) {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -266,6 +268,27 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
               ? "Your subscription was halted after repeated payment failures. Subscribe again to restore access."
               : "Your last payment failed. We'll retry automatically — please ensure your card is valid."}
           </span>
+        </div>
+      )}
+
+      {/* ── No-subscription trial progress ─────────────────────────────── */}
+      {!subscriptionActive && (
+        <div className="bg-card border border-violet-500/30 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-medium text-sm">Free trial — no subscription needed</p>
+            <span className="text-sm font-mono">{Math.min(trialLeadsUsed, trialLeads).toLocaleString()} / {trialLeads.toLocaleString()} leads</span>
+          </div>
+          <div className="w-full bg-secondary rounded-full h-2">
+            <div
+              className="h-2 rounded-full bg-violet-500 transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.round((trialLeadsUsed / trialLeads) * 100))}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {trialLeadsUsed >= trialLeads
+              ? `You've used your ${trialLeads} free leads — subscribe below to keep generating.`
+              : `Top up credits and generate up to ${trialLeads} leads with no subscription. Beyond ${trialLeads}, a plan is required.`}
+          </p>
         </div>
       )}
 

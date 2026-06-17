@@ -21,6 +21,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         { status: 402 }
       );
     }
+    if (result.reason === "subscription_required") {
+      return NextResponse.json(
+        { error: "You've used your 100 free leads — subscribe to keep generating.", subscriptionRequired: true },
+        { status: 403 }
+      );
+    }
     return NextResponse.json({ error: "Request not found or has no plan." }, { status: 404 });
   }
 

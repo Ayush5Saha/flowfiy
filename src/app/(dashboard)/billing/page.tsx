@@ -4,7 +4,7 @@ import { PLANS } from "@/lib/razorpay";
 import { BillingClient } from "@/components/billing/BillingClient";
 import { BuyCreditsPanel } from "@/components/billing/BuyCreditsPanel";
 import { getWallet, getLedger } from "@/lib/credits/service";
-import { PLAN_CREDITS } from "@/lib/credits/rates";
+import { PLAN_CREDITS, TRIAL_LEADS, TRIAL_MIN_CREDITS, TOPUP_MIN_CREDITS } from "@/lib/credits/rates";
 import { Suspense } from "react";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
@@ -75,12 +75,21 @@ export default async function BillingPage() {
           wallet={wallet}
           creditsUsedThisCycle={creditsUsedThisCycle}
           subscriptionActive={subscriptionActive}
+          trialLeadsUsed={organization.trialLeadsUsed}
+          trialLeads={TRIAL_LEADS}
           ledger={ledger}
         />
       </Suspense>
 
       <div id="buy-credits" className="mt-8 scroll-mt-24">
-        <BuyCreditsPanel active={subscriptionActive} balance={wallet.balance} held={wallet.held} />
+        <BuyCreditsPanel
+          subscribed={subscriptionActive}
+          trialLeadsUsed={organization.trialLeadsUsed}
+          trialLeads={TRIAL_LEADS}
+          minCredits={subscriptionActive ? TOPUP_MIN_CREDITS : TRIAL_MIN_CREDITS}
+          balance={wallet.balance}
+          held={wallet.held}
+        />
       </div>
     </div>
   );
