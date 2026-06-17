@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, ExternalLink, Key, Zap, BookOpen, Sparkles } from "lucide-react";
+import { useState, type ElementType } from "react";
+import { Loader2, ExternalLink, Key, Zap, BookOpen, Mail, Calendar } from "lucide-react";
 
 interface IntegrationStatus {
   status: string;
@@ -17,7 +17,7 @@ interface IntegrationConfig {
   type: string;
   label: string;
   description: string;
-  icon: string;
+  icon: ElementType;
   tier: "required" | "optional";
   fields: Array<{ key: string; label: string; placeholder: string; type?: string }>;
   isOAuth?: boolean;
@@ -29,11 +29,6 @@ interface IntegrationConfig {
   };
 }
 
-const TIER_STYLE: Record<string, { label: string; class: string }> = {
-  required: { label: "Required", class: "bg-red-500/10 text-red-400 border border-red-500/20" },
-  optional: { label: "Optional", class: "bg-secondary text-muted-foreground border border-border" },
-};
-
 // Under the new architecture the AI (Gemini), lead sources (Google Maps + a B2B
 // people database), and email verification are all fully managed by Flowfiy — no
 // API keys. The only things a user connects are Gmail (to send) and, optionally,
@@ -44,7 +39,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     label: "Gmail",
     description: "Sends your approved outreach from your own inbox",
     tier: "required",
-    icon: "📧",
+    icon: Mail,
     fields: [],
     isOAuth: true,
     howToGet: {
@@ -63,7 +58,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
     label: "Calendly",
     description: "Meeting booking — link auto-inserted into outreach emails",
     tier: "optional",
-    icon: "📅",
+    icon: Calendar,
     fields: [
       { key: "apiKey", label: "Personal Access Token", placeholder: "eyJraWQi...", type: "password" },
       { key: "schedulingLink", label: "Scheduling Link (optional)", placeholder: "https://calendly.com/you/30min" },
@@ -84,27 +79,18 @@ const INTEGRATIONS: IntegrationConfig[] = [
 
 export function IntegrationCenter({ organizationId, statusMap }: IntegrationCenterProps) {
   return (
-    <div className="space-y-4">
-      {/* Fully-managed banner — AI + data + email verification need no keys */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4.5 h-4.5 text-green-400" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="font-medium text-sm">AI &amp; data — fully managed</p>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400">No API keys</span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              The AI engine, lead discovery (Google Maps + a B2B people database), and email verification are all run
-              and paid for by Flowfiy — metered by credits. There are no keys to connect. Just link your Gmail to send.
-            </p>
-          </div>
-        </div>
+    <div>
+      {/* Fully-managed note — subtle, no card */}
+      <div className="rounded-lg bg-secondary/40 px-4 py-4 mb-10">
+        <p className="text-sm font-medium">AI &amp; data are fully managed — no API keys</p>
+        <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+          The AI engine, lead discovery (Google Maps + a B2B people database), and email verification are all run and
+          paid for by Flowfiy — metered by credits. There are no keys to connect. Just link your Gmail to send.
+        </p>
       </div>
 
-      <div className="grid gap-4">
+      <h2 className="text-sm font-semibold mb-1">Connections</h2>
+      <div className="border-t border-border divide-y divide-border">
         {INTEGRATIONS.map((integration) => (
           <IntegrationCard
             key={integration.type}
@@ -120,15 +106,15 @@ export function IntegrationCenter({ organizationId, statusMap }: IntegrationCent
 
 function HowToGetBox({ howToGet, docsUrl }: { howToGet: NonNullable<IntegrationConfig["howToGet"]>; docsUrl?: string }) {
   return (
-    <div className="mb-4 rounded-lg bg-blue-500/5 border border-blue-500/15 p-3.5">
+    <div className="mb-4 rounded-lg bg-secondary/40 p-3.5">
       <div className="flex items-center gap-1.5 mb-2">
-        <BookOpen className="w-3.5 h-3.5 text-blue-400" />
-        <p className="text-xs font-medium text-blue-400">{howToGet.title}</p>
+        <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+        <p className="text-xs font-medium text-foreground">{howToGet.title}</p>
       </div>
       <ol className="space-y-1">
         {howToGet.steps.map((step, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-            <span className="shrink-0 w-4 h-4 rounded-full bg-blue-500/15 text-blue-400 flex items-center justify-center text-[10px] font-bold mt-px">
+            <span className="shrink-0 w-4 h-4 rounded-full bg-secondary text-muted-foreground flex items-center justify-center text-[10px] font-bold mt-px">
               {i + 1}
             </span>
             <span>{step}</span>
@@ -136,14 +122,14 @@ function HowToGetBox({ howToGet, docsUrl }: { howToGet: NonNullable<IntegrationC
         ))}
       </ol>
       {(howToGet.note || docsUrl) && (
-        <div className="mt-2.5 pt-2.5 border-t border-blue-500/10 flex items-start justify-between gap-3">
+        <div className="mt-2.5 pt-2.5 border-t border-border flex items-start justify-between gap-3">
           {howToGet.note && <p className="text-[11px] text-muted-foreground/70 italic">{howToGet.note}</p>}
           {docsUrl && (
             <a
               href={docsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+              className="shrink-0 flex items-center gap-1 text-[11px] text-primary hover:underline transition-colors"
             >
               Open docs
               <ExternalLink className="w-2.5 h-2.5" />
@@ -224,38 +210,32 @@ function IntegrationCard({
     window.location.reload();
   }
 
+  const Icon = config.icon;
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div>
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
+        className="flex items-center justify-between gap-3 py-4 cursor-pointer group"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{config.icon}</span>
-          <div>
+        <div className="flex items-center gap-3 min-w-0">
+          <Icon className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-medium text-sm">{config.label}</p>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TIER_STYLE[config.tier].class}`}>
-                {TIER_STYLE[config.tier].label}
-              </span>
-              {isConnected && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
-              {status && !isConnected && <XCircle className="w-3.5 h-3.5 text-muted-foreground" />}
+              <span className="text-[11px] text-muted-foreground">{config.tier === "required" ? "Required" : "Optional"}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{config.description}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            isConnected ? "bg-green-500/10 text-green-400" : "bg-secondary text-muted-foreground"
-          }`}>
-            {isConnected ? "Connected" : "Not connected"}
-          </span>
-        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+          <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-muted-foreground/40"}`} />
+          {isConnected ? "Connected" : "Not connected"}
+        </span>
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-border pt-4">
+        <div className="pb-5">
           {config.howToGet && <HowToGetBox howToGet={config.howToGet} docsUrl={config.docsUrl} />}
 
           {error && (

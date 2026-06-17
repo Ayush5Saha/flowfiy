@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, ArrowRight, Upload, FileText } from "lucide-react";
+import { ArrowRight, Upload, FileText } from "lucide-react";
 import { LeadRequestComposer } from "@/components/leads/LeadRequestComposer";
 import { LeadListRowActions } from "@/components/leads/LeadListRowActions";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
@@ -29,17 +29,17 @@ export default async function LeadsPage() {
   const hasBusinessProfile = !!businessProfile;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold">Leads</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Describe what you want — Flowfiy finds, qualifies &amp; writes outreach.
           </p>
         </div>
         <Link
           href="/leads/import"
-          className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <Upload className="w-4 h-4" />
           Import CSV
@@ -48,89 +48,90 @@ export default async function LeadsPage() {
 
       {/* Composer (primary entry) or business-profile prompt */}
       {hasBusinessProfile ? (
-        <div className="mb-8">
+        <div className="mb-10">
           <LeadRequestComposer />
         </div>
       ) : (
-        <div className="mb-8 border border-dashed border-border rounded-xl p-8 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-6 h-6 text-primary" />
+        <div className="mb-10 rounded-lg bg-secondary/40 px-5 py-5 flex items-start gap-3">
+          <FileText className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" strokeWidth={1.75} />
+          <div>
+            <h2 className="text-sm font-medium">Set up your business profile first</h2>
+            <p className="text-muted-foreground text-sm mt-0.5">Flowfiy uses it to know who to find and how to write your outreach.</p>
+            <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2">
+              Set up business profile <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <h2 className="font-semibold mb-1">Set up your business profile</h2>
-          <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
-            Flowfiy uses it to know who to find and how to write your outreach.
-          </p>
-          <Link href="/settings" className="inline-flex items-center gap-1.5 text-sm text-primary font-medium underline underline-offset-2">
-            Set up business profile →
-          </Link>
         </div>
       )}
 
-      {/* Quick stats */}
+      {/* Quick stats — ruled strip */}
       {leadLists.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: "Lead Lists", value: leadLists.length, color: "text-foreground" },
-            { label: "Total Leads", value: totalLeadsCount, color: "text-blue-400" },
-            { label: "Qualified", value: qualifiedCount, color: "text-green-400" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className={`text-lg font-mono font-semibold ${color}`}>{value.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
+        <section className="border-y border-border py-6 mb-10">
+          <div className="grid grid-cols-3">
+            {[
+              { label: "Lead lists", value: leadLists.length },
+              { label: "Total leads", value: totalLeadsCount },
+              { label: "Qualified", value: qualifiedCount },
+            ].map(({ label, value }, i) => (
+              <div key={label} className={i === 0 ? "" : "border-l border-border pl-6"}>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{value.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Lead lists */}
-      {leadLists.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-10 border border-dashed border-border rounded-xl">
-          Your lead lists will appear here once you run a search above.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {leadLists.map((list) => (
-            <Link
-              key={list.id}
-              href={`/leads/${list.id}`}
-              className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm group-hover:text-primary transition-colors">{list.name}</p>
+      <section>
+        <h2 className="text-sm font-semibold mb-1">Your lists</h2>
+        {leadLists.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-10 text-center">
+            Your lead lists will appear here once you run a search above.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {leadLists.map((list) => (
+              <div key={list.id} className="flex items-center justify-between gap-4 py-4 group">
+                <Link href={`/leads/${list.id}`} className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{list.name}</p>
                   {list.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">{list.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{list.description}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-1 tabular-nums">
                     {list.totalLeads} leads · {list.qualifiedLeads} qualified · {new Date(list.createdAt).toLocaleDateString()}
                   </p>
+                </Link>
+                <div className="flex items-center gap-4 shrink-0">
+                  <StatusBadge status={list.status} />
+                  <LeadListRowActions listId={list.id} organizationId={organization.id} />
+                  <Link href={`/leads/${list.id}`} aria-label="Open list">
+                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={list.status} />
-                <LeadListRowActions listId={list.id} organizationId={organization.id} />
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: "Draft", class: "bg-secondary text-muted-foreground" },
-    QUEUED: { label: "Queued", class: "bg-yellow-500/10 text-yellow-400" },
-    RESEARCHING: { label: "Researching...", class: "bg-blue-500/10 text-blue-400" },
-    READY: { label: "Ready", class: "bg-green-500/10 text-green-400" },
-    FAILED: { label: "Failed", class: "bg-destructive/10 text-destructive" },
-    ARCHIVED: { label: "Archived", class: "bg-secondary text-muted-foreground" },
+  const config: Record<string, { label: string; dot: string }> = {
+    DRAFT: { label: "Draft", dot: "bg-muted-foreground/50" },
+    QUEUED: { label: "Queued", dot: "bg-muted-foreground/50" },
+    RESEARCHING: { label: "Researching", dot: "bg-primary" },
+    READY: { label: "Ready", dot: "bg-emerald-400" },
+    FAILED: { label: "Failed", dot: "bg-destructive" },
+    ARCHIVED: { label: "Archived", dot: "bg-muted-foreground/50" },
   };
-  const { label, class: cls } = config[status] ?? { label: status, class: "bg-secondary" };
-  return <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${cls}`}>{label}</span>;
+  const { label, dot } = config[status] ?? { label: status, dot: "bg-muted-foreground/50" };
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
 }

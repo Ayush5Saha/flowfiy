@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Mail, MessageSquare, CheckCircle2, ArrowRight, ArrowUpRight, Megaphone, Settings, BookOpen, Coins, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Mail, Megaphone, Settings, BookOpen, Coins, Sparkles } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { getWallet } from "@/lib/credits/service";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
@@ -67,7 +67,6 @@ export default async function DashboardPage() {
   const replyRate = totalSent > 0 ? Math.round((totalReplied / totalSent) * 100) : 0;
   const qualRate = totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0;
 
-  // ── Onboarding checklist (managed model — no API-key step) ──────────────────
   const checklistSteps = [
     { id: "workspace", label: "Create your workspace", description: "Name your organization and set it up", href: "/settings", done: true },
     { id: "business-profile", label: "Set your business profile & ICP", description: "Tell Flowfiy who your ideal customer is, so it can find and qualify the right leads", href: "/settings", done: !!businessProfile },
@@ -81,17 +80,24 @@ export default async function DashboardPage() {
     ((user.user_metadata?.full_name as string | undefined) ?? user.email?.split("@")[0] ?? "there").split(" ")[0];
 
   const stats = [
-    { label: "Total leads", value: totalLeads.toLocaleString(), icon: Users, sub: `${qualifiedLeads.toLocaleString()} qualified` },
-    { label: "Qualified", value: qualifiedLeads.toLocaleString(), icon: CheckCircle2, sub: totalLeads > 0 ? `${qualRate}% of total` : "No leads yet" },
-    { label: "Emails sent", value: totalSent.toLocaleString(), icon: Mail, sub: `${sentToday.toLocaleString()} today` },
-    { label: "Reply rate", value: `${replyRate}%`, icon: MessageSquare, sub: `${totalReplied.toLocaleString()} replies` },
+    { label: "Total leads", value: totalLeads.toLocaleString(), sub: `${qualifiedLeads.toLocaleString()} qualified` },
+    { label: "Qualified", value: qualifiedLeads.toLocaleString(), sub: totalLeads > 0 ? `${qualRate}% of total` : "No leads yet" },
+    { label: "Emails sent", value: totalSent.toLocaleString(), sub: `${sentToday.toLocaleString()} today` },
+    { label: "Reply rate", value: `${replyRate}%`, sub: `${totalReplied.toLocaleString()} replies` },
+  ];
+
+  const quickActions = [
+    { href: "/leads", label: "Describe new leads", icon: Sparkles },
+    { href: "/campaigns/new", label: "New campaign", icon: Megaphone, badge: activeCampaigns > 0 ? `${activeCampaigns} active` : undefined },
+    { href: "/settings", label: "Edit ICP & profile", icon: Settings },
+    { href: "/blog/how-to-set-up-flowfiy", label: "Setup guide", icon: BookOpen },
   ];
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-6xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────── */}
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {displayName}</h1>
           <p className="text-muted-foreground text-sm mt-1">Here&apos;s how your outbound is doing.</p>
@@ -107,34 +113,31 @@ export default async function DashboardPage() {
 
       {/* ── Onboarding (only until complete) ───────────── */}
       {!onboardingDone && (
-        <div className="mb-8">
+        <div className="mb-10">
           <OnboardingChecklist steps={checklistSteps} organizationId={organization.id} guideHref="/blog/how-to-set-up-flowfiy" />
         </div>
       )}
 
-      {/* ── Stats ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {stats.map(({ label, value, icon: Icon, sub }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-[13px] text-muted-foreground">{label}</span>
-              <Icon className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
+      {/* ── Stat strip (ruled, not boxed) ──────────────── */}
+      <section className="border-y border-border py-8 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8">
+          {stats.map((s, i) => (
+            <div key={s.label} className={i === 0 ? "lg:pr-8" : "lg:px-8 lg:border-l lg:border-border"}>
+              <p className="text-[13px] text-muted-foreground">{s.label}</p>
+              <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums">{s.value}</p>
+              <p className="mt-2.5 text-xs text-muted-foreground">{s.sub}</p>
             </div>
-            <p className="mt-3 text-[28px] leading-none font-semibold tracking-tight tabular-nums">{value}</p>
-            <p className="mt-2 text-xs text-muted-foreground">{sub}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
 
-      {/* ── Gmail nudge (only if not connected) ────────── */}
+      {/* ── Gmail nudge (subtle, only if not connected) ── */}
       {!gmailConnected && (
         <Link
           href="/integrations"
-          className="flex items-center gap-3 mb-6 p-4 bg-card border border-border rounded-xl hover:border-foreground/20 transition-colors group"
+          className="flex items-center gap-3 mb-10 rounded-lg bg-secondary/40 px-4 py-3 hover:bg-secondary/70 transition-colors group"
         >
-          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-            <Mail className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
-          </div>
+          <Mail className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
           <div className="min-w-0">
             <p className="text-sm font-medium">Connect Gmail to start sending</p>
             <p className="text-xs text-muted-foreground mt-0.5">Outreach sends from your own inbox after you review it.</p>
@@ -143,51 +146,55 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      {/* ── Main grid ──────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ── Main ───────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-        {/* Left — chart + recent lists */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Left */}
+        <div className="lg:col-span-2 space-y-10">
 
-          {/* Outreach chart */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-end justify-between mb-5">
+          {/* Outreach */}
+          <section>
+            <div className="flex items-end justify-between mb-6">
               <div>
                 <h2 className="text-sm font-semibold">Outreach</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Emails sent · last {CHART_DAYS} days</p>
+                <p className="text-xs text-muted-foreground mt-1">Emails sent · last {CHART_DAYS} days</p>
               </div>
               <span className="text-2xl font-semibold tracking-tight tabular-nums">{chartTotal.toLocaleString()}</span>
             </div>
 
             {chartTotal === 0 ? (
-              <div className="h-40 flex flex-col items-center justify-center text-center border border-dashed border-border rounded-lg">
+              <div className="h-40 flex flex-col items-center justify-center text-center border-t border-border">
                 <p className="text-sm text-muted-foreground">No emails sent in the last {CHART_DAYS} days</p>
                 <Link href="/campaigns" className="text-xs text-primary hover:underline mt-1">Launch a campaign →</Link>
               </div>
             ) : (
-              <div className="flex items-end gap-1.5 h-40">
-                {buckets.map((bar, i) => {
-                  const pct = Math.round((bar.count / maxCount) * 100);
-                  const isToday = i === CHART_DAYS - 1;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group" title={`${bar.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}: ${bar.count} sent`}>
-                      <div className="w-full flex-1 flex items-end">
+              <div>
+                <div className="flex items-end gap-1.5 h-44 border-b border-border">
+                  {buckets.map((bar, i) => {
+                    const pct = Math.round((bar.count / maxCount) * 100);
+                    const isToday = i === CHART_DAYS - 1;
+                    return (
+                      <div key={i} className="flex-1 h-full flex items-end group" title={`${bar.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}: ${bar.count} sent`}>
                         <div
-                          className={`w-full rounded-t-[3px] transition-colors ${isToday ? "bg-primary" : "bg-primary/30 group-hover:bg-primary/50"}`}
+                          className={`w-full rounded-t-[2px] transition-colors ${isToday ? "bg-primary" : "bg-primary/25 group-hover:bg-primary/45"}`}
                           style={{ height: `${Math.max(pct, bar.count > 0 ? 4 : 0)}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-muted-foreground/60 tabular-nums">{bar.date.getDate()}</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                <div className="flex gap-1.5 mt-2">
+                  {buckets.map((bar, i) => (
+                    <span key={i} className="flex-1 text-center text-[10px] text-muted-foreground/60 tabular-nums">{bar.date.getDate()}</span>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
+          </section>
 
           {/* Recent lead lists */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <section className="border-t border-border pt-8">
+            <div className="flex items-center justify-between mb-1">
               <h2 className="text-sm font-semibold">Recent lead lists</h2>
               <Link href="/leads" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
                 View all <ArrowRight className="w-3 h-3" />
@@ -195,10 +202,7 @@ export default async function DashboardPage() {
             </div>
 
             {recentLists.length === 0 ? (
-              <div className="text-center py-14 px-5">
-                <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                  <Users className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
-                </div>
+              <div className="py-12 text-center">
                 <p className="text-sm font-medium">No lead lists yet</p>
                 <p className="text-xs text-muted-foreground mt-1">Describe the leads you want and Flowfiy builds your first list.</p>
                 <Link href="/leads" className="text-primary text-sm hover:underline mt-3 inline-block">Generate your first leads →</Link>
@@ -206,12 +210,12 @@ export default async function DashboardPage() {
             ) : (
               <div className="divide-y divide-border">
                 {recentLists.map((list) => (
-                  <Link key={list.id} href={`/leads/${list.id}`} className="flex items-center justify-between px-5 py-3.5 hover:bg-secondary/40 transition-colors group">
+                  <Link key={list.id} href={`/leads/${list.id}`} className="flex items-center justify-between py-4 group">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate group-hover:text-foreground">{list.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">{list.totalLeads} leads · {list.qualifiedLeads} qualified</p>
+                      <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{list.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1 tabular-nums">{list.totalLeads} leads · {list.qualifiedLeads} qualified</p>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-5 shrink-0">
                       <StatusBadge status={list.status} />
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -219,74 +223,70 @@ export default async function DashboardPage() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
 
         {/* Right rail */}
-        <div className="space-y-6">
+        <aside className="space-y-8 lg:border-l lg:border-border lg:pl-10">
 
           {/* Credits */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
+          <section>
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold">Credits</h2>
               <Coins className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
             </div>
-            <p className="text-[28px] leading-none font-semibold tracking-tight tabular-nums">{wallet.balance.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-[34px] leading-none font-semibold tracking-tight tabular-nums">{wallet.balance.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-2.5">
               available{wallet.held > 0 ? ` · ${wallet.held.toLocaleString()} reserved` : ""}
             </p>
-            <Link href="/billing" className="mt-4 flex items-center justify-center gap-1.5 w-full py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors">
-              Buy credits
+            <Link href="/billing" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-3">
+              Buy credits <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
+          </section>
 
           {/* Quick actions */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border">
-              <h2 className="text-sm font-semibold">Quick actions</h2>
-            </div>
-            <div className="p-2">
-              {[
-                { href: "/leads", label: "Describe new leads", icon: Sparkles },
-                { href: "/campaigns/new", label: "New campaign", icon: Megaphone, badge: activeCampaigns > 0 ? `${activeCampaigns} active` : undefined },
-                { href: "/settings", label: "Edit ICP & profile", icon: Settings },
-                { href: "/blog/how-to-set-up-flowfiy", label: "Setup guide", icon: BookOpen },
-              ].map(({ href, label, icon: Icon, badge }) => (
-                <Link key={href} href={href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/60 transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
-                  </div>
+          <section className="border-t border-border pt-6">
+            <h2 className="text-sm font-semibold mb-1">Quick actions</h2>
+            <div className="divide-y divide-border">
+              {quickActions.map(({ href, label, icon: Icon, badge }) => (
+                <Link key={href} href={href} className="flex items-center gap-3 py-3 group">
+                  <Icon className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
                   <span className="text-sm flex-1">{label}</span>
                   {badge && <span className="text-[11px] text-muted-foreground tabular-nums">{badge}</span>}
                   <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* Managed AI note */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <section className="border-t border-border pt-6">
             <h2 className="text-sm font-semibold mb-1.5">Fully managed AI</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Discovery, research, scoring and copywriting run on managed AI — no API keys to set up. You only spend credits on qualified leads.
+              Discovery, research, scoring and copywriting run on managed AI — no API keys. You only spend credits on qualified leads.
             </p>
-          </div>
+          </section>
 
-        </div>
+        </aside>
       </div>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: "Draft", class: "bg-secondary text-muted-foreground" },
-    QUEUED: { label: "Queued", class: "bg-secondary text-muted-foreground" },
-    RESEARCHING: { label: "Running", class: "bg-primary/10 text-primary" },
-    READY: { label: "Ready", class: "bg-emerald-500/10 text-emerald-400" },
-    FAILED: { label: "Failed", class: "bg-destructive/10 text-destructive" },
-    ARCHIVED: { label: "Archived", class: "bg-secondary text-muted-foreground" },
+  const config: Record<string, { label: string; dot: string }> = {
+    DRAFT: { label: "Draft", dot: "bg-muted-foreground/50" },
+    QUEUED: { label: "Queued", dot: "bg-muted-foreground/50" },
+    RESEARCHING: { label: "Running", dot: "bg-primary" },
+    READY: { label: "Ready", dot: "bg-emerald-400" },
+    FAILED: { label: "Failed", dot: "bg-destructive" },
+    ARCHIVED: { label: "Archived", dot: "bg-muted-foreground/50" },
   };
-  const { label, class: cls } = config[status] ?? { label: status, class: "bg-secondary text-muted-foreground" };
-  return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>;
+  const { label, dot } = config[status] ?? { label: status, dot: "bg-muted-foreground/50" };
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
 }
