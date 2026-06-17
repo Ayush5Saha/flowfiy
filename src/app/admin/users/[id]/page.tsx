@@ -4,33 +4,25 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import AdminOrgPlanEditor from "@/components/admin/AdminOrgPlanEditor";
-import AdminOrgLimitEditor from "@/components/admin/AdminOrgLimitEditor";
-import AdminApiModeToggle from "@/components/admin/AdminApiModeToggle";
-import AdminGenerationResetButton from "@/components/admin/AdminGenerationResetButton";
-import AdminTokenResetButton from "@/components/admin/AdminTokenResetButton";
+import AdminCreditGrant from "@/components/admin/AdminCreditGrant";
 import AdminUserDetailActions from "@/components/admin/AdminUserDetailActions";
 
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700 text-zinc-300",
+  FLOWFIY: "bg-emerald-500/20 text-emerald-300",
   INDIE:   "bg-teal-500/20 text-teal-300",
   STARTER: "bg-blue-500/20 text-blue-300",
   GROWTH:  "bg-violet-500/20 text-violet-300",
   AGENCY:  "bg-amber-500/20 text-amber-300",
 };
 
-const PLAN_BUDGETS: Record<string, number> = {
-  FREE:    500_000,
-  INDIE:   2_000_000,
-  STARTER: 6_000_000,
-  GROWTH:  20_000_000,
-  AGENCY:  -1,
+const subColors: Record<string, string> = {
+  active:         "bg-emerald-500/15 text-emerald-300",
+  pending:        "bg-amber-500/15 text-amber-300",
+  payment_failed: "bg-red-500/15 text-red-300",
+  halted:         "bg-red-500/15 text-red-300",
+  cancelled:      "bg-zinc-700 text-zinc-400",
 };
-
-function formatTokens(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
-}
 
 function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
@@ -60,6 +52,31 @@ export default async function AdminUserDetailPage({
       },
     },
   });
+
+  // Credit balances/usage per org — guarded so the page renders pre-migration.
+  const orgIds = memberships.map((m) => m.organization.id);
+  const cycleStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const balanceById = new Map<string, number>();
+  const heldById = new Map<string, number>();
+  const consumedById = new Map<string, number>();
+  let creditsReady = true;
+  if (orgIds.length > 0) {
+    try {
+      const wallets = await prisma.creditWallet.findMany({
+        where: { organizationId: { in: orgIds } },
+        select: { organizationId: true, balance: true, held: true },
+      });
+      for (const w of wallets) { balanceById.set(w.organizationId, w.balance); heldById.set(w.organizationId, w.held); }
+      const consumed = await prisma.creditLedger.groupBy({
+        by: ["organizationId"],
+        where: { organizationId: { in: orgIds }, type: "CONSUME", createdAt: { gte: cycleStart } },
+        _sum: { amount: true },
+      });
+      for (const c of consumed) consumedById.set(c.organizationId, Math.abs(c._sum.amount ?? 0));
+    } catch {
+      creditsReady = false;
+    }
+  }
 
   const displayName =
     (user.user_metadata?.full_name as string | undefined) ??
@@ -160,11 +177,10 @@ export default async function AdminUserDetailPage({
       ) : (
         <div className="space-y-4">
           {memberships.map(({ role, organization: org }) => {
-            const tokensUsed = Number(org.monthlyTokensUsed);
-            const tokenBudget = PLAN_BUDGETS[org.plan] ?? 500_000;
-            const tokenUnlimited = tokenBudget === -1;
-            const tokenPct = tokenUnlimited ? 0 : Math.min(Math.round((tokensUsed / tokenBudget) * 100), 100);
-            const tokenAtLimit = !tokenUnlimited && tokensUsed >= tokenBudget;
+            const balance = balanceById.get(org.id) ?? 0;
+            const held = heldById.get(org.id) ?? 0;
+            const usedThisCycle = consumedById.get(org.id) ?? 0;
+            const subStatus = org.subscriptionStatus ?? "none";
             const connectedIntegrations = org.integrations
               .filter((i) => i.status === "CONNECTED")
               .map((i) => i.type);
@@ -205,56 +221,40 @@ export default async function AdminUserDetailPage({
                     <p className="text-[11px] text-zinc-600">Change without requiring payment</p>
                   </div>
 
-                  {/* API Mode */}
+                  {/* Subscription */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">API Mode</p>
-                    <AdminApiModeToggle orgId={org.id} currentMode={org.apiMode} />
-                    <p className="text-[11px] text-zinc-600">CENTRAL = uses Flowfiy key · BYOK = user&apos;s own key</p>
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Subscription</p>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${subColors[subStatus] ?? "bg-zinc-800 text-zinc-500"}`}>
+                      {subStatus === "none" ? "no subscription" : subStatus.replace("_", " ")}
+                    </span>
+                    <p className="text-[11px] text-zinc-600">Set by the billing gateway webhook</p>
                   </div>
 
-                  {/* Generation Usage */}
-                  <div className="space-y-2 sm:col-span-2 pt-4 border-t border-zinc-800">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Generation Limit & Usage</p>
-                      <AdminGenerationResetButton orgId={org.id} />
-                    </div>
-                    <AdminOrgLimitEditor
-                      orgId={org.id}
-                      generationCount={org.generationCount}
-                      generationLimit={org.generationLimit}
-                    />
-                    <p className="text-[11px] text-zinc-600">Click &quot;Edit&quot; to change limit · &quot;Reset Count&quot; to clear usage to 0</p>
-                  </div>
-
-                  {/* Token Budget */}
-                  <div className="space-y-2 sm:col-span-2 pt-4 border-t border-zinc-800">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Monthly Token Budget</p>
-                      <AdminTokenResetButton orgId={org.id} />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1">
-                        <p className={`text-sm font-mono ${tokenAtLimit ? "text-red-400" : "text-white"}`}>
-                          {formatTokens(tokensUsed)} used
-                          {!tokenUnlimited && ` / ${formatTokens(tokenBudget)} budget`}
-                          {tokenUnlimited && " / ∞ Unlimited"}
-                        </p>
-                        {!tokenUnlimited && (
-                          <div className="w-full h-1.5 bg-zinc-700 rounded-full mt-2 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${tokenPct > 90 ? "bg-red-500" : tokenPct > 70 ? "bg-amber-500" : "bg-blue-500"}`}
-                              style={{ width: `${tokenPct}%` }}
-                            />
+                  {/* Credits */}
+                  <div className="space-y-3 sm:col-span-2 pt-4 border-t border-zinc-800">
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Credits</p>
+                    {creditsReady ? (
+                      <>
+                        <div className="flex gap-6">
+                          <div>
+                            <p className="text-lg font-mono font-semibold text-white">{balance.toLocaleString()}</p>
+                            <p className="text-xs text-zinc-500">available</p>
                           </div>
-                        )}
-                        {tokenAtLimit && (
-                          <p className="text-xs text-red-400 mt-1">⚠ Budget reached — new AI jobs blocked</p>
-                        )}
-                      </div>
-                      <p className={`text-2xl font-bold font-mono ${tokenAtLimit ? "text-red-400" : "text-zinc-500"}`}>
-                        {tokenUnlimited ? "∞" : `${tokenPct}%`}
-                      </p>
-                    </div>
+                          <div>
+                            <p className="text-lg font-mono font-semibold text-amber-400">{held.toLocaleString()}</p>
+                            <p className="text-xs text-zinc-500">reserved</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-mono font-semibold text-white">{usedThisCycle.toLocaleString()}</p>
+                            <p className="text-xs text-zinc-500">used this cycle</p>
+                          </div>
+                        </div>
+                        <AdminCreditGrant orgId={org.id} />
+                        <p className="text-[11px] text-zinc-600">Grant comps credits to this org&apos;s wallet immediately (GRANT ledger entry).</p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-amber-400">Credit tables not migrated — run <span className="font-mono">npm run db:push</span>.</p>
+                    )}
                   </div>
 
                   {/* Stats & Integrations */}

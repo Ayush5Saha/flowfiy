@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyAdminToken, ADMIN_COOKIE_NAME } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { creditGrant } from "@/lib/credits/service";
 
 async function checkAdmin() {
   const cookieStore = await cookies();
@@ -19,6 +20,21 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
+
+  // ── Admin credit grant (additive — comps credits to the org wallet) ─────────
+  if (body.grantCredits !== undefined) {
+    const amount = Math.round(Number(body.grantCredits));
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 100_000) {
+      return NextResponse.json({ error: "Enter between 1 and 100,000 credits." }, { status: 400 });
+    }
+    try {
+      const balance = await creditGrant(id, amount, "GRANT", { refType: "admin_grant" });
+      return NextResponse.json({ ok: true, balance });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ error: "Grant failed", detail: msg }, { status: 500 });
+    }
+  }
 
   const allowed: Record<string, unknown> = {};
   if (body.plan !== undefined) allowed.plan = body.plan;
