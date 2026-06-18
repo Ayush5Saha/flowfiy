@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Flowfiy",
+  title: "Terms of Service",
   description: "Flowfiy Terms of Service. Rules governing your use of the Flowfiy AI sales outreach platform, subscriptions, data handling, and acceptable use.",
   alternates: { canonical: "/terms" },
   robots: { index: true, follow: true },

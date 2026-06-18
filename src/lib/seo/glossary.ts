@@ -132,6 +132,61 @@ export const GLOSSARY: GlossaryTerm[] = [
     ],
     related: ["condition-based-targeting", "lead-enrichment", "lead-scoring"],
   },
+  {
+    slug: "ai-sales-intelligence",
+    term: "AI Sales Intelligence",
+    short:
+      "AI sales intelligence is the use of AI to automatically gather, analyze, and score data about prospects and companies — so sales teams know who to contact, why they're a fit, and what to say, without manual research.",
+    body: [
+      "Where a traditional sales-intelligence tool hands you a database and filters, AI sales intelligence interprets the data for you: it researches each account, detects buying signals, and prioritizes who to pursue. The output is a ranked, context-rich pipeline rather than a raw list.",
+      "Flowfiy is an AI sales intelligence platform — it researches every lead, scores fit 0–100 with reasoning, and turns that intelligence into personalized outreach sent from your own Gmail.",
+    ],
+    related: ["lead-scoring", "lead-enrichment", "ai-sdr"],
+  },
+  {
+    slug: "ai-business-search",
+    term: "AI Business Search",
+    short:
+      "AI business search is finding companies by describing what you want in natural language — including qualitative conditions like \"coffee shops with no website\" — instead of filtering by fixed categories and locations alone.",
+    body: [
+      "Conventional business search is a filtered directory: pick an industry and a city, get a list. AI business search understands intent expressed in plain language, including conditions a directory can't model, and returns matches it has actually researched.",
+      "Flowfiy reads your description, asks a clarifying question when needed, then searches Google Maps and a B2B people database and scores each match 0–100 — so search ends in ready-to-send outreach.",
+    ],
+    related: ["condition-based-targeting", "ideal-customer-profile", "website-audit"],
+  },
+  {
+    slug: "ai-company-research",
+    term: "AI Company Research",
+    short:
+      "AI company research is the automated process of reading a company's website and public signals to build a profile — positioning, size, tech stack, and buying signals — that sales teams use to personalize outreach.",
+    body: [
+      "Manual company research is the slowest part of outbound: opening tabs, skimming sites, and copying notes. AI company research does this for every lead at once, extracting exactly the context that makes an email feel one-to-one.",
+      "Flowfiy researches each lead automatically, attaches the findings to the record, and uses them to both score the prospect 0–100 and write the personalized email.",
+    ],
+    related: ["lead-enrichment", "personalization-at-scale", "lead-scoring"],
+  },
+  {
+    slug: "natural-language-lead-generation",
+    term: "Natural Language Lead Generation",
+    short:
+      "Natural language lead generation lets you describe your ideal customers in plain English and have AI find, qualify, and contact matching leads — without boolean filters, query builders, or API setup.",
+    body: [
+      "Most lead tools force your intent through dropdowns and boolean strings, which only capture what fits a form field. Natural language lead generation takes a sentence as input, so qualitative conditions — \"no website,\" \"bad reviews,\" \"recently raised\" — become searchable.",
+      "Flowfiy is built around this: you type a description, it asks a clarifying question if needed, then finds, researches, scores, and writes outreach for matching leads.",
+    ],
+    related: ["condition-based-targeting", "ideal-customer-profile", "ai-sdr"],
+  },
+  {
+    slug: "ai-prospecting",
+    term: "AI Prospecting",
+    short:
+      "AI prospecting is automating the prospecting workflow — finding target accounts, researching them, qualifying fit, and drafting outreach — so reps spend their time on conversations instead of manual list-building.",
+    body: [
+      "Prospecting is the repetitive grind at the front of sales: build the list, research each account, find the contact, write the email. AI prospecting tools run that workflow end-to-end and keep it running in the background.",
+      "Flowfiy does all four steps from a plain-English brief and sends from your own Gmail after review, so you wake up to a researched, qualified, ready-to-send pipeline.",
+    ],
+    related: ["ai-sdr", "outbound-sales", "lead-scoring"],
+  },
 ];
 
 export const GLOSSARY_BY_SLUG = new Map(GLOSSARY.map((t) => [t.slug, t]));

@@ -16,12 +16,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!post) {
     return {
-      title: "Blog post not found | Flowfiy",
+      title: "Blog post not found",
     };
   }
 
   return {
-    title: post.seoTitle || `${post.title} | Flowfiy Blog`,
+    // Root layout's title.template appends " | Flowfiy", so don't repeat the
+    // brand here — otherwise the rendered <title> doubles it.
+    title: post.seoTitle || post.title,
     description: post.metaDescription || post.excerpt,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {

@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { GLOSSARY } from "@/lib/seo/glossary";
 import { COMPETITORS } from "@/lib/seo/competitors";
+import { SOLUTIONS } from "@/lib/seo/solutions";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
 
@@ -19,6 +20,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/use-cases`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/use-cases/ai-lead-generation`, lastModified: now, changeFrequency: "monthly", priority: 0.95 },
     { url: `${BASE_URL}/use-cases/cold-email-automation`, lastModified: now, changeFrequency: "monthly", priority: 0.95 },
+    { url: `${BASE_URL}/solutions`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    ...SOLUTIONS.map((s) => ({
+      url: `${BASE_URL}/solutions/${s.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.95,
+    })),
     { url: `${BASE_URL}/vs`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/vs/clay`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/vs/apollo`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },

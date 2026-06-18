@@ -13,7 +13,18 @@ import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
-  { label: "How it works", href: "/#how-it-works" },
+  {
+    label: "Solutions",
+    children: [
+      { label: "All solutions", href: "/solutions", desc: "The whole outbound motion" },
+      { label: "AI Sales Intelligence", href: "/solutions/ai-sales-intelligence", desc: "Research & score every lead" },
+      { label: "AI Business Search", href: "/solutions/ai-business-search", desc: "Find companies in plain English" },
+      { label: "AI Company Research", href: "/solutions/ai-company-research", desc: "Automated prospect dossiers" },
+      { label: "AI Prospecting Tool", href: "/solutions/ai-prospecting-tool", desc: "Automate research & outreach" },
+      { label: "Natural Language Lead Gen", href: "/solutions/natural-language-lead-generation", desc: "Describe leads, AI finds them" },
+      { label: "B2B Lead Generation", href: "/solutions/b2b-lead-generation-software", desc: "End-to-end, by AI" },
+    ],
+  },
   { label: "Pricing", href: "/pricing" },
   { label: "Affiliates", href: "/affiliates" },
   {

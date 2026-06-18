@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Flowfiy",
+  title: "Privacy Policy",
   description: "Flowfiy's privacy policy. How we collect, use, store, and protect your data — including your Gmail connection, lead data, and email content.",
   alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },

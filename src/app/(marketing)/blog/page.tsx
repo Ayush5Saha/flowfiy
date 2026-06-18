@@ -8,7 +8,7 @@ const SETUP_GUIDE_SLUG = "how-to-set-up-flowfiy";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Blog - AI Sales Outreach Tips & B2B Lead Generation Guides India | Flowfiy",
+  title: "Blog - AI Sales Outreach Tips & B2B Lead Generation Guides India",
   description:
     "Practical guides on AI-powered B2B sales outreach in India - cold email personalization, lead generation automation, AI SDR tools, and condition-based lead targeting for your sales pipeline.",
   keywords: [

@@ -8,9 +8,18 @@ export const metadata: Metadata = {
   keywords: [
     // Primary
     "AI outbound sales platform",
+    "AI lead generation",
     "AI lead generation software",
     "AI SDR",
     "B2B lead generation",
+    "B2B lead generation software",
+    "AI prospecting tool",
+    "AI sales intelligence",
+    "sales intelligence platform",
+    "AI business search",
+    "business search AI",
+    "AI company research",
+    "natural language lead generation",
     "AI sales automation",
     "cold email automation",
     "outbound sales tool",

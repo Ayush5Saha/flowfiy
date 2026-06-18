@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Refund & Cancellation Policy | Flowfiy",
+  title: "Refund & Cancellation Policy",
   description: "Flowfiy's refund and cancellation policy. Understand how to cancel your subscription, what happens to your data, and when refunds are issued.",
   alternates: { canonical: "/refund" },
   robots: { index: true, follow: true },

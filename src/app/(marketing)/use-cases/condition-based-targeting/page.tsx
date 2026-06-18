@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Condition-Based Lead Targeting — Find Businesses That Need You | Flowfiy",
+  title: "Condition-Based Lead Targeting — Find Businesses That Need You",
   description:
     "Go beyond category and location. Describe leads by qualitative conditions — “coffee shops with no website”, “dentists with bad reviews”, “agencies with an outdated site” — and Flowfiy finds, scores, and writes the outreach. No API keys. $50/mo for 400 credits.",
   keywords: [

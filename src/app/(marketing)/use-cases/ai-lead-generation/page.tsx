@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check, ArrowRight, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Lead Generation Software — Describe Your Ideal Leads | Flowfiy",
+  title: "AI Lead Generation Software — Describe Your Ideal Leads",
   description:
     "Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys. $50/mo for 400 credits.",
   keywords: [

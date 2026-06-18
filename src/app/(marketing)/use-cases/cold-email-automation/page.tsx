@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cold Email Automation Software — AI-Personalized Outreach | Flowfiy",
+  title: "Cold Email Automation Software — AI-Personalized Outreach",
   description:
     "AI cold email automation. Describe the leads you want — Flowfiy finds them, qualifies them 0–100, and writes hyper-personalized subject lines, bodies, and follow-ups. Send from Gmail. No API keys. One plan: $50/mo for 400 credits.",
   keywords: [
