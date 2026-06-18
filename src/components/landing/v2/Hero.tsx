@@ -87,7 +87,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.6, ease: EASE }}
           >
-            <GlowButton href="#story" variant="ghost">
+            <GlowButton href="#how-it-works" variant="ghost">
               See how it works ↓
             </GlowButton>
             <p className="font-mono text-[11px] text-zinc-500">
