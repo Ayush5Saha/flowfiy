@@ -23,6 +23,22 @@ import { appendLog } from "@/lib/job-logs";
 import { getLeadPersonalizationQueue } from "@/workers/queues";
 import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
 import { INPUT_LIMITS } from "@/ai/config";
+import type { ResolvedPlan, Predicate } from "@/ai/criteria/types";
+
+/** Render the planner's criteria as plain-English conditions for the scorer.
+ *  `source` predicates are applied at query time, so they're omitted here. */
+function describeConditions(plan: ResolvedPlan): string {
+  const fmt = (v: unknown): string =>
+    Array.isArray(v) ? v.map(String).join(", ") : v === undefined || v === null ? "" : String(v);
+  return (plan.criteria ?? [])
+    .filter((p: Predicate) => p.evaluator !== "source")
+    .map((p: Predicate) => {
+      const must = p.hard ? "MUST match" : "nice-to-have";
+      const label = (p.why && p.why.trim()) || `${p.field} ${p.op} ${fmt(p.value)}`.trim();
+      return `- ${label} (${must})`;
+    })
+    .join("\n");
+}
 
 export interface LeadQualificationJobData {
   organizationId: string;
@@ -92,8 +108,8 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
     return;
   }
 
-  // ── Load research + ICP context ───────────────────────────────────────────
-  const [research, businessProfile] = await Promise.all([
+  // ── Load research + ICP context + the NL request plan ─────────────────────
+  const [research, businessProfile, leadRequest] = await Promise.all([
     prisma.leadResearch.findUnique({
       where: { leadId },
       select: { companyAnalysis: true, researchMetadata: true },
@@ -110,7 +126,25 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
         businessDetails: true,
       },
     }),
+    // NL leads carry a LeadRequest whose plan holds the user's actual conditions
+    // ("under 1cr revenue", "premium vibe", …). Legacy/ICP leads have none.
+    prisma.leadRequest.findFirst({
+      where: { leadListId, organizationId },
+      select: { rawQuery: true, plan: true },
+    }),
   ]);
+
+  // ── Per-request conditions (NL pipeline) ──────────────────────────────────
+  // The whole point of an NL search: score each lead against what the USER asked
+  // for, judged by the LLM — not just the generic business-profile ICP.
+  let requestSummary: string | undefined;
+  let requestConditions: string | undefined;
+  if (leadRequest?.plan) {
+    const reqPlan = leadRequest.plan as unknown as ResolvedPlan;
+    requestSummary = (reqPlan.humanSummary || leadRequest.rawQuery || "").trim() || undefined;
+    const conds = describeConditions(reqPlan);
+    requestConditions = conds || undefined;
+  }
 
   const icpCache = businessProfile?.icpAnalysisCache as Record<string, unknown> | null;
 
@@ -155,6 +189,8 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       qualificationCriteria: qualificationCriteria.slice(0, INPUT_LIMITS.qualificationCriteria),
       serviceOffered: (businessProfile?.serviceOffered ?? "").slice(0, INPUT_LIMITS.serviceOffered) || undefined,
       painPointsSolved: (businessProfile?.painPointsSolved ?? "").slice(0, INPUT_LIMITS.painPointsSolved) || undefined,
+      requestSummary,
+      requestConditions,
     }, runMode);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

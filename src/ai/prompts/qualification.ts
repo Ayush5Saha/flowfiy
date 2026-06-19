@@ -16,6 +16,11 @@ export interface QualificationInput {
   serviceOffered?: string;
   /** Pain points the service solves (from BusinessProfile.painPointsSolved) */
   painPointsSolved?: string;
+  /** NL pipeline: one-line summary of what THIS search asked for (plan.humanSummary). */
+  requestSummary?: string;
+  /** NL pipeline: the conditions the planner derived from the user's request — the
+   *  PRIMARY thing to score against (each marked MUST match / nice-to-have). */
+  requestConditions?: string;
 }
 
 export interface SplitPrompt {
@@ -44,15 +49,31 @@ export function buildQualificationPrompt(input: QualificationInput, mode: RunMod
     ? `\n## Our Service\n${truncatedService}${truncatedPains ? `\n\n## Problems We Solve\n${truncatedPains}` : ""}\n`
     : "";
 
-  const systemPrompt = `You are a B2B sales qualification specialist. Score leads based on ICP fit using the criteria below.
+  // NL request block — the conditions the planner derived from THIS search. When
+  // present, these are the PRIMARY thing to score against (the user's intent),
+  // and the scoring guidance below switches to a condition-first rule.
+  const hasRequest = !!(input.requestConditions && input.requestConditions.trim());
+  const requestBlock = hasRequest
+    ? `## What this search asked for (PRIMARY — score against THIS)
+${input.requestSummary ? `Request: ${input.requestSummary}\n` : ""}Conditions the user wants:
+${input.requestConditions}
+`
+    : "";
 
-## ICP Summary
-${truncatedIcp}
-
-## Qualification Criteria
-${truncatedCriteria}
-${serviceContext}
-## How to score (IMPORTANT)
+  // Scoring guidance differs for NL (condition-first) vs legacy (ICP baseline).
+  const scoringGuidance = hasRequest
+    ? `## How to score (IMPORTANT)
+The "What this search asked for" conditions are the PRIMARY filter. Judge how well
+THIS lead matches each one using the Company Analysis + lead data:
+- If a "MUST match" condition clearly FAILS, score 30 or below (disqualify) — even
+  if the lead otherwise fits the ICP.
+- Each unmet "nice-to-have" condition should cost meaningful points.
+- A lead that clearly meets all MUST conditions starts around 75-90.
+- When a condition can't be confirmed from the data but is plausible, do NOT punish
+  it — lean toward meeting it (real sites often expose little). Thin/empty Company
+  Analysis is NOT itself a disqualifier.
+Use ICP fit (below) only as a secondary tie-breaker.`
+    : `## How to score (IMPORTANT)
 Every lead you see has ALREADY passed upstream filters: it matches the target
 industry and location and has a valid email and a working website. So treat it
 as a baseline fit and score it 65-80 by default. Only score below 60
@@ -60,7 +81,17 @@ as a baseline fit and score it 65-80 by default. Only score below 60
 plainly in the wrong industry, or obviously the wrong size for the ICP.
 Do NOT disqualify a lead just because the Company Analysis is sparse, generic,
 or empty — many real sites limit what can be scraped, and thin analysis is NOT
-a disqualifier. When in doubt, qualify.
+a disqualifier. When in doubt, qualify.`;
+
+  const systemPrompt = `You are a B2B sales qualification specialist. Score leads based on how well they match the search conditions and ICP below.
+
+${requestBlock}## ICP Summary
+${truncatedIcp}
+
+## Qualification Criteria
+${truncatedCriteria}
+${serviceContext}
+${scoringGuidance}
 
 ## Task
 Return a JSON object.${c ? " Stay within the character limits shown." : " Be specific and detailed in each field."}
