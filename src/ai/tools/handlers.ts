@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ApolloClient } from "@/integrations/apollo";
 import { ApifyClient } from "@/integrations/apify";
+import { scrapeWebsiteForProfile } from "@/lib/website-scraper";
 import { fireWebhookEvent } from "@/lib/webhooks";
 
 // ─── Context passed to every tool handler ────────────────────────────────────
@@ -491,29 +492,26 @@ export async function handleScrapeWebsite(
   input: ScrapeWebsiteInput,
   ctx: ToolContext
 ): Promise<unknown> {
-  if (!ctx.apifyClient) {
-    return {
-      content: "",
-      message: "Apify not connected. Skipping website scrape — qualify based on available data.",
-    };
-  }
-
-  await ctx.log?.(`Scraping website: ${input.url}`, "tool");
+  // Website reading is done in-house (plain fetch + HTML→text, SSRF-guarded) and
+  // fed to Gemini — no Apify actor. Apify is reserved solely for Google Maps
+  // discovery at launch.
+  await ctx.log?.(`Reading website: ${input.url}`, "tool");
 
   try {
-    const content = await ctx.apifyClient.scrapeWebsite(input.url);
-    await ctx.log?.(`Scraped ${content.length.toLocaleString()} chars from ${input.url}`, "info");
+    const { pages } = await scrapeWebsiteForProfile(input.url);
+    const content = pages.map((p) => p.text).join("\n\n").trim();
+    await ctx.log?.(`Read ${content.length.toLocaleString()} chars from ${input.url}`, "info");
     return {
       url: input.url,
       content: content || "No content extracted from website.",
       characters: content.length,
     };
   } catch (err) {
-    await ctx.log?.(`Scrape failed for ${input.url} — proceeding with available data`, "error");
+    await ctx.log?.(`Couldn't read ${input.url} — proceeding with available data`, "error");
     return {
       url: input.url,
       content: "",
-      error: `Scrape failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      error: `Website read failed: ${err instanceof Error ? err.message : "Unknown error"}`,
       message: "Proceed with qualification based on available lead data only.",
     };
   }

@@ -34,7 +34,11 @@ export interface Predicate {
   feasible: boolean;
 }
 
-export type ActorKey = "google_maps" | "leads_finder";
+// Launch is locked to a single Apify actor — Google Maps. Gemini does all
+// downstream research (website reading, analysis, list-building). The B2B
+// people-finder actor is intentionally retired for first launch; re-add its key
+// here when it returns.
+export type ActorKey = "google_maps";
 export type LeadType = "LOCAL" | "B2B";
 
 export interface ResolvedPlan {

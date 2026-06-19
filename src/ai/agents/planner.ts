@@ -34,8 +34,14 @@ function buildSystemPrompt(): string {
 plain English, the kind of leads they want. You decide whether the request is
 specific enough to run, and if so you produce a precise PLAN.
 
-You have these lead sources (pick exactly ONE):
+Your lead source is Google Maps (the only source at launch). Every plan uses it —
+it finds local/SMB businesses by category + location and returns name, website,
+public email/phone, rating, review count, category and city:
 ${actorCatalogForPlanner()}
+After discovery, Gemini reads each business's website (when one exists) and does
+all research, qualification, and list-building — so you do NOT need a separate
+people/B2B source. For people/role-based requests, target the businesses on Maps
+and let the research stage surface the right context.
 
 ## How to handle conditions
 The user often adds qualitative conditions ("no website", "bad reviews", "running
@@ -63,7 +69,7 @@ every question has a one-line "why". Each question:
 
 ## When ready (status "ready") produce a plan:
 { actorKey, leadType, params, criteria[], maxResults, estimatedResults, humanSummary, enrichments }
-- params: only the actor's own fields (search/location for google_maps; roles/industries/location for leads_finder; plus maxResults).
+- params: only the Google Maps fields — search (business category/keywords) and location (city/area), plus maxResults.
 - enrichments: { companyContacts, emailVerification, businessLeads, socialEnrichment } — turn on ONLY what the request needs. For email outreach keep companyContacts+emailVerification true.
 - maxResults: a sane cap (default 200, max ${MAX_RESULTS_CEILING}).
 - humanSummary: one plain sentence describing the search + key conditions.
@@ -122,8 +128,10 @@ function coerceQuestions(arr: unknown): ClarifyQuestion[] {
 }
 
 function coercePlan(obj: Record<string, unknown>): ResolvedPlan {
-  const actorKey = obj.actorKey === "leads_finder" ? "leads_finder" : "google_maps";
-  const leadType = actorKey === "leads_finder" ? "B2B" : "LOCAL";
+  // Launch is locked to a single actor — Google Maps. Ignore any actorKey the LLM
+  // emits and always route discovery through Maps.
+  const actorKey = "google_maps" as const;
+  const leadType = "LOCAL" as const;
   const params = (obj.params && typeof obj.params === "object" ? obj.params : {}) as Record<string, unknown>;
   const rawMax = Number(obj.maxResults ?? params.maxResults ?? 200);
   const maxResults = Math.max(5, Math.min(Number.isFinite(rawMax) ? rawMax : 200, MAX_RESULTS_CEILING));

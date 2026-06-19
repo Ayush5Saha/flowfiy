@@ -2,23 +2,23 @@
  * Queue: lead-research
  *
  * Stage 2 of the 4-queue pipeline. For each lead:
- *   1. Scrapes the company website (Apify, if connected)
- *   2. Runs the Company Analyzer agent (Claude Haiku) to extract structured intel
+ *   1. Reads the company website in-house (plain fetch + HTML→text — no Apify)
+ *   2. Runs the Company Analyzer agent (Gemini) to extract structured intel
  *   3. Saves a LeadResearch record
  *   4. Enqueues a lead-qualification job for this lead
+ *
+ * Apify is used ONLY for Google Maps discovery (stage 1). All research — website
+ * reading, analysis, qualification — is done by Gemini here.
  *
  * Runs at concurrency=10 — 10 leads researched simultaneously.
  * Idempotent: if LeadResearch already exists, skips to enqueueing qualification.
  */
 import type { Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
-import { decryptCredentials } from "@/lib/encryption";
 import { getCentralLLMClient } from "@/ai/client";
 import { incrementTokenUsage } from "@/lib/usage";
 import { runCompanyAnalyzer } from "@/ai/agents/company-analyzer";
-import { handleScrapeWebsite } from "@/ai/tools/handlers";
-import type { ToolContext } from "@/ai/tools/handlers";
-import { ApifyClient } from "@/integrations/apify";
+import { scrapeWebsiteForProfile } from "@/lib/website-scraper";
 import { appendLog } from "@/lib/job-logs";
 import { getLeadQualificationQueue } from "@/workers/queues";
 import { INPUT_LIMITS } from "@/ai/config";
@@ -75,41 +75,26 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
   // ── Client setup ──────────────────────────────────────────────────────────
   const { client, mode: runMode } = getCentralLLMClient("companyAnalyzer");
 
-  const apifyCreds = await prisma.integration.findUnique({
-    where: { organizationId_type: { organizationId, type: "APIFY" } },
-    select: { encryptedCredentials: true, status: true },
-  });
-
-  const org = await prisma.organization.findUniqueOrThrow({
-    where: { id: organizationId },
-    select: { plan: true },
-  });
-
-  const apifyClient =
-    org.plan !== "INDIE" && apifyCreds?.status === "CONNECTED" && apifyCreds.encryptedCredentials
-      ? new ApifyClient(
-          (decryptCredentials(apifyCreds.encryptedCredentials) as { apiKey: string }).apiKey
-        )
-      : null;
-
-  // ── Website scraping (optional) ───────────────────────────────────────────
+  // ── Website reading (in-house, no Apify) ──────────────────────────────────
+  // Plain fetch + HTML→text of the homepage and a few high-signal subpages,
+  // SSRF-guarded. The text is fed to Gemini below. Failures are non-fatal — the
+  // analyzer can still score on the basic lead data.
   let websiteContent = "";
 
   if (lead.companyWebsite) {
-    const ctx: ToolContext = {
-      organizationId,
-      leadListId,
-      apolloClient: null,
-      apifyClient,
-      geographies: [],
-      stats: { totalLeads: 0, qualifiedLeads: 0 },
-      log,
-    };
-
-    const scrapeResult = await handleScrapeWebsite({ url: lead.companyWebsite, leadId }, ctx) as {
-      content?: string;
-    };
-    websiteContent = (scrapeResult.content ?? "").slice(0, INPUT_LIMITS.websiteContent);
+    await log(`🌐 Reading ${lead.companyWebsite}`, "tool");
+    try {
+      const { pages } = await scrapeWebsiteForProfile(lead.companyWebsite);
+      websiteContent = pages
+        .map((p) => p.text)
+        .join("\n\n")
+        .slice(0, INPUT_LIMITS.websiteContent);
+    } catch (err) {
+      await log(
+        `Couldn't read ${lead.companyWebsite} (${err instanceof Error ? err.message : "unreachable"}) — analyzing with available data`,
+        "info"
+      );
+    }
   }
 
   // ── Load ICP summary ──────────────────────────────────────────────────────

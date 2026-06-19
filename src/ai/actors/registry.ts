@@ -1,10 +1,12 @@
 /**
  * Actor registry — the fixed set of Apify actors the Planner may choose from.
  *
- * Launch set (locked): google_maps (LOCAL) + leads_finder (B2B). Each entry owns
- * how to build the actor input from a plan and how to normalize raw rows into the
- * common lead shape, so the discovery stage stays uniform and adding an actor is
- * one entry. Discovery runs these via the PLATFORM Apify token.
+ * Launch set (locked): google_maps (LOCAL) ONLY. Apify is used solely to scrape
+ * businesses from Google Maps; Gemini does every downstream step (website reading,
+ * research, qualification, list-building). The entry owns how to build the actor
+ * input from a plan and how to normalize raw rows into the common lead shape, so
+ * adding an actor back later is one entry. Discovery runs this via the PLATFORM
+ * Apify token.
  */
 import type { ApifyClient } from "@/integrations/apify";
 import { ACTOR_RATES } from "@/lib/credits/rates";
@@ -123,80 +125,8 @@ const googleMaps: ActorDef = {
   },
 };
 
-// ─── leads_finder (code_crafter/leads-finder) — B2B people ──────────────────────
-
-const leadsFinder: ActorDef = {
-  key: "leads_finder",
-  apifyActorId: "code_crafter/leads-finder",
-  leadType: "B2B",
-  description:
-    "Find B2B people/companies by role, industry and geography. Returns name, " +
-    "title, validated work email, LinkedIn, company name/website/size/industry. " +
-    "Best for title-based B2B outreach.",
-  paramsSchema: {
-    roles: "string[]  // decision-maker titles, e.g. ['Head of Sales','Founder']",
-    industries: "string[]",
-    location: "string",
-    maxResults: "number",
-  },
-
-  buildInput(plan) {
-    const roles = Array.isArray(plan.params.roles) ? (plan.params.roles as unknown[]).map(String) : [];
-    const industries = Array.isArray(plan.params.industries)
-      ? (plan.params.industries as unknown[]).map(String)
-      : [];
-    const location = str(plan.params.location);
-    const input: Record<string, unknown> = {
-      contact_job_title: roles.slice(0, 10),
-      fetch_count: Math.min(plan.maxResults, 100),
-      email_status: ["validated"],
-      seniority_level: ["founder", "owner", "c_suite", "director", "vp", "head"],
-    };
-    if (industries.length) input.company_industry = industries.slice(0, 5);
-    if (location) input.contact_location = [location];
-    return input;
-  },
-
-  normalize(raw) {
-    const first = str(raw.first_name);
-    if (!first) return null;
-    const website =
-      str(raw.company_website) ?? (str(raw.company_domain) ? `https://${str(raw.company_domain)}` : null);
-    const size = numOrNull(raw.company_size);
-    return {
-      firstName: first,
-      lastName: str(raw.last_name),
-      email: str(raw.email) ?? str(raw.personal_email),
-      phone: str(raw.mobile_number),
-      title: str(raw.job_title),
-      companyName: str(raw.company_name),
-      companyWebsite: website,
-      companySize: size !== null ? String(size) : null,
-      industry: str(raw.industry),
-      city: str(raw.city),
-      linkedinUrl: str(raw.linkedin),
-      rating: null,
-      reviewsCount: null,
-      source: "leads_finder",
-      rawData: raw,
-    };
-  },
-
-  perResultCostUsd() {
-    return ACTOR_RATES.leads_finder.perResult;
-  },
-
-  async run(client, plan) {
-    const items = await client.runActor(this.apifyActorId, this.buildInput(plan), {
-      maxItems: Math.min(plan.maxResults, 100),
-    });
-    return items.map((it) => this.normalize(it)).filter((l): l is NormalizedLead => l !== null);
-  },
-};
-
 export const ACTORS: Record<ActorKey, ActorDef> = {
   google_maps: googleMaps,
-  leads_finder: leadsFinder,
 };
 
 /** Compact catalog for the Planner prompt (description + param schema per actor). */
