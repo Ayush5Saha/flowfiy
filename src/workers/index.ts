@@ -35,22 +35,26 @@ const leadDiscoveryWorker = new Worker(
   { connection, concurrency: 3 }
 );
 
+// Gemini-backed stages run at low concurrency: bursting all leads at once
+// blew past the Gemini per-minute rate limit (429 "exceeded your current
+// quota"). 3 concurrent per stage + the client's 429 backoff keeps runs under
+// modest tiers. Raise these once on a higher Gemini tier.
 const leadResearchWorker = new Worker(
   "lead-research",
   processLeadResearch,
-  { connection, concurrency: 10 }
+  { connection, concurrency: 3 }
 );
 
 const leadQualificationWorker = new Worker(
   "lead-qualification",
   processLeadQualification,
-  { connection, concurrency: 10 }
+  { connection, concurrency: 3 }
 );
 
 const leadPersonalizationWorker = new Worker(
   "lead-personalization",
   processLeadPersonalization,
-  { connection, concurrency: 10 }
+  { connection, concurrency: 3 }
 );
 
 // ─── Email send worker ────────────────────────────────────────────────────────

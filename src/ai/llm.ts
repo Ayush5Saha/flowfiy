@@ -375,9 +375,10 @@ export class GeminiLLMClient implements LLMClient {
 
       const url = `${GEMINI_BASE}/${this.model}:generateContent?key=${this.apiKey}`;
 
-      // Retry transient 429/503 (rate limit / model warmup) with backoff + jitter.
+      // Retry transient 429/503 (rate limit / model warmup). On 429 respect
+      // Gemini's suggested retryDelay when present; else exponential backoff + jitter.
       let res: Response | null = null;
-      const MAX_TRIES = 3;
+      const MAX_TRIES = 4;
       for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
         res = await fetch(url, {
           method: "POST",
@@ -386,7 +387,12 @@ export class GeminiLLMClient implements LLMClient {
           signal: AbortSignal.timeout(90_000),
         });
         if ((res.status === 429 || res.status === 503) && attempt < MAX_TRIES) {
-          await new Promise((r) => setTimeout(r, 1000 * attempt + Math.floor(Math.random() * 500)));
+          let waitMs = Math.min(2000 * 2 ** (attempt - 1), 16_000); // 2s, 4s, 8s, 16s
+          if (res.status === 429) {
+            const m = (await res.clone().text().catch(() => "")).match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/);
+            if (m) waitMs = Math.min(Math.max(waitMs, Math.ceil(Number(m[1]) * 1000) + 500), 20_000);
+          }
+          await new Promise((r) => setTimeout(r, waitMs + Math.floor(Math.random() * 500)));
           continue;
         }
         break;
