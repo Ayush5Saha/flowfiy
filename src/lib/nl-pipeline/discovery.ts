@@ -92,9 +92,13 @@ export async function runNlDiscovery(opts: {
     (c) => c.hard && c.field === "hasWebsite" && ((c.op === "eq" && !c.value) || c.op === "not_exists")
   );
   const scrapeContacts = !noWebsiteTarget && plan.enrichments?.companyContacts !== false;
+  // Cap the pool to what the actor's run-sync endpoint can finish in time (~300s
+  // hard limit): ~60 listing-only places take ~210s; scraping each site is ~10s/place
+  // so the scraping path must stay much smaller. Bigger requests degrade gracefully
+  // (deliver what's found) rather than timing out to zero.
   const candidateTarget = scrapeContacts
     ? Math.min(discoveryCandidateTarget(plan), 25)
-    : discoveryCandidateTarget(plan);
+    : Math.min(discoveryCandidateTarget(plan), 60);
   const crawlPlan: ResolvedPlan = {
     ...plan,
     maxResults: candidateTarget,
