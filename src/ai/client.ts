@@ -4,6 +4,7 @@ import { decryptCredentials } from "@/lib/encryption";
 import type { RunMode, AgentTask } from "@/ai/config";
 import { DEFAULT_OPENROUTER_MODEL, TASK_MODELS } from "@/ai/config";
 import { AnthropicLLMClient, OpenRouterLLMClient, GeminiLLMClient, type LLMClient } from "@/ai/llm";
+import { loadLocalEnv } from "@/lib/load-local-env";
 
 export type { RunMode };
 
@@ -29,7 +30,14 @@ function getCentralClient(): Anthropic {
  * 4-stage processors swap with a one-line change.
  */
 export function getCentralLLMClient(task: AgentTask): { client: LLMClient; mode: RunMode } {
-  const apiKey = process.env.GEMINI_API_KEY;
+  let apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    // Self-heal a dev server that was started before the key was added to
+    // .env.local (Next reads env only at process start, so a hot-reload won't
+    // pick it up). No-op in production, where the host provides env directly.
+    loadLocalEnv();
+    apiKey = process.env.GEMINI_API_KEY;
+  }
   if (!apiKey) {
     throw new Error(
       "GEMINI_API_KEY is not configured. The pipeline now runs on centralized Gemini."
