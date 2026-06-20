@@ -11,10 +11,7 @@ import AdminApiModeToggle from "@/components/admin/AdminApiModeToggle";
 
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700 text-zinc-300",
-  INDIE:   "bg-teal-500/20 text-teal-300",
-  STARTER: "bg-blue-500/20 text-blue-300",
-  GROWTH:  "bg-violet-500/20 text-violet-300",
-  AGENCY:  "bg-amber-500/20 text-amber-300",
+  FLOWFIY: "bg-emerald-500/20 text-emerald-300",
 };
 
 const statusColors: Record<string, string> = {
@@ -34,10 +31,7 @@ const listStatusColors: Record<string, string> = {
 
 const PLAN_BUDGETS: Record<string, number> = {
   FREE:    500_000,
-  INDIE:   2_000_000,
-  STARTER: 6_000_000,
-  GROWTH:  20_000_000,
-  AGENCY:  -1,
+  FLOWFIY: -1, // managed, credit-metered — no separate token cap
 };
 
 function formatTokens(n: number) {
@@ -99,7 +93,7 @@ export default async function AdminOrgDetailPage({
           <p className="text-zinc-500 text-sm">{org.slug} · Created {new Date(org.createdAt).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${planColors[org.plan]}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${planColors[org.plan] ?? "bg-zinc-700 text-zinc-300"}`}>
             {org.plan}
           </span>
           <AdminDeleteOrg orgId={org.id} orgName={org.name} />

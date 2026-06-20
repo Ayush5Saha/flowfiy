@@ -42,11 +42,6 @@ function StatCard({
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700/60 text-zinc-300",
   FLOWFIY: "bg-emerald-500/15 text-emerald-300",
-  // legacy tiers (existing subscribers) — kept for display
-  INDIE:   "bg-teal-500/15 text-teal-300",
-  STARTER: "bg-blue-500/15 text-blue-300",
-  GROWTH:  "bg-violet-500/15 text-violet-300",
-  AGENCY:  "bg-amber-500/15 text-amber-300",
 };
 
 export default async function AdminOverviewPage() {

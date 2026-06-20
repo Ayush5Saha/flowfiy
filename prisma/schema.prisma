@@ -62,6 +62,8 @@ model Organization {
 
 enum Plan {
   FREE
+  FLOWFIY // current managed plan ($50/mo → 400 credits) — the one paid subscription
+  // legacy tiers — retained for historical records; not offered to new subscribers
   INDIE
   STARTER
   GROWTH

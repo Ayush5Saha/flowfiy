@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 
-const PLANS = ["FREE", "INDIE", "STARTER", "GROWTH", "AGENCY"] as const;
+// The one paid subscription is FLOWFIY; FREE is the baseline. Legacy tiers are no
+// longer offered, so the admin can only assign FREE or FLOWFIY.
+const PLANS = ["FREE", "FLOWFIY"] as const;
 type Plan = (typeof PLANS)[number];
 
-const planColors: Record<Plan, string> = {
+// Colors for the selectable plans, plus legacy tiers so a historical org still
+// renders its current badge correctly until it's migrated to FREE/FLOWFIY.
+const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700 text-zinc-300",
+  FLOWFIY: "bg-emerald-500/20 text-emerald-300",
   INDIE:   "bg-teal-500/20 text-teal-300",
   STARTER: "bg-blue-500/20 text-blue-300",
   GROWTH:  "bg-violet-500/20 text-violet-300",

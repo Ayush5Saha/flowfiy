@@ -5,10 +5,6 @@ import { Coins, AlertTriangle } from "lucide-react";
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700 text-zinc-300",
   FLOWFIY: "bg-emerald-500/20 text-emerald-300",
-  INDIE:   "bg-teal-500/20 text-teal-300",
-  STARTER: "bg-blue-500/20 text-blue-300",
-  GROWTH:  "bg-violet-500/20 text-violet-300",
-  AGENCY:  "bg-amber-500/20 text-amber-300",
 };
 
 const subColors: Record<string, string> = {

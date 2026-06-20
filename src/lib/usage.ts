@@ -3,6 +3,8 @@ import { Plan } from "@prisma/client";
 
 export const PLAN_LIMITS: Record<Plan, number> = {
   FREE:    100,
+  FLOWFIY: -1, // credit-metered — generations are gated by the credit wallet, not a count
+  // legacy tiers — retained for historical orgs; not sold to new subscribers
   INDIE:   2500,
   STARTER: 2500,
   GROWTH:  7500,
@@ -103,6 +105,8 @@ export async function incrementGenerationCount(
 
 export const PLAN_TOKEN_BUDGETS: Record<Plan, number> = {
   FREE:    0,          // BYOK only — no central tokens
+  FLOWFIY: -1,         // managed central API — cost is bounded by the credit wallet
+  // legacy tiers — retained for historical orgs; not sold to new subscribers
   INDIE:   0,          // BYOK only — no central tokens
   STARTER: 6_000_000,
   GROWTH:  20_000_000,

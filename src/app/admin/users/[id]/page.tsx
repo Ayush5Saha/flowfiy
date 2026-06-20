@@ -6,6 +6,7 @@ import Link from "next/link";
 import AdminOrgPlanEditor from "@/components/admin/AdminOrgPlanEditor";
 import AdminCreditGrant from "@/components/admin/AdminCreditGrant";
 import AdminUserDetailActions from "@/components/admin/AdminUserDetailActions";
+import { Coins } from "lucide-react";
 
 const planColors: Record<string, string> = {
   FREE:    "bg-zinc-700 text-zinc-300",
@@ -230,12 +231,15 @@ export default async function AdminUserDetailPage({
                     <p className="text-[11px] text-zinc-600">Set by the billing gateway webhook</p>
                   </div>
 
-                  {/* Credits */}
-                  <div className="space-y-3 sm:col-span-2 pt-4 border-t border-zinc-800">
-                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Credits</p>
+                  {/* Credits — prominent: grant credits to this user immediately */}
+                  <div className="sm:col-span-2 mt-1 rounded-lg border border-amber-500/25 bg-amber-500/[0.04] p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Coins className="w-4 h-4 text-amber-400" />
+                      <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Give credits to this user</p>
+                    </div>
                     {creditsReady ? (
                       <>
-                        <div className="flex gap-6">
+                        <div className="flex gap-6 mb-3">
                           <div>
                             <p className="text-lg font-mono font-semibold text-white">{balance.toLocaleString()}</p>
                             <p className="text-xs text-zinc-500">available</p>
@@ -250,7 +254,7 @@ export default async function AdminUserDetailPage({
                           </div>
                         </div>
                         <AdminCreditGrant orgId={org.id} />
-                        <p className="text-[11px] text-zinc-600">Grant comps credits to this org&apos;s wallet immediately (GRANT ledger entry).</p>
+                        <p className="text-[11px] text-zinc-500 mt-2">Added to this user&apos;s wallet immediately (logged as a GRANT ledger entry). Credits are shared across the user&apos;s organization.</p>
                       </>
                     ) : (
                       <p className="text-xs text-amber-400">Credit tables not migrated — run <span className="font-mono">npm run db:push</span>.</p>
