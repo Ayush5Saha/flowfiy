@@ -13,6 +13,7 @@ import { getPlatformApifyClient } from "@/integrations/apify";
 import { getProspeoClient } from "@/integrations/prospeo";
 import { ACTORS, type NormalizedLead } from "@/ai/actors/registry";
 import { evaluateLead, signalProvidersFor, type LeadSignals } from "@/ai/criteria/engine";
+import { discoveryCandidateTarget } from "@/ai/config";
 import { auditWebsite } from "@/lib/website-audit";
 import type { ResolvedPlan } from "@/ai/criteria/types";
 import { appendLog, clearLogs } from "@/lib/job-logs";
@@ -79,7 +80,28 @@ export async function runNlDiscovery(opts: {
   const actor = ACTORS[plan.actorKey];
   await log(`Searching ${actor.leadType === "LOCAL" ? "Google Maps" : "the B2B database"} — ${plan.humanSummary}`, "tool");
 
-  const raw = await actor.run(apify, plan);
+  // Over-fetch: selective conditions (e.g. "no website") reject most candidates,
+  // so crawl a much larger pool than the requested count and filter down. Crawling
+  // exactly maxResults made highly-selective requests return nothing.
+  //
+  // A "no website" request doesn't need (slow) per-site contact scraping — Google
+  // Maps already returns the phone — so turn scraping OFF and over-fetch a big pool
+  // fast. Email-target searches keep scraping on but over-fetch more modestly to
+  // stay within the actor's sync time budget (each place visits a website).
+  const noWebsiteTarget = plan.criteria.some(
+    (c) => c.hard && c.field === "hasWebsite" && ((c.op === "eq" && !c.value) || c.op === "not_exists")
+  );
+  const scrapeContacts = !noWebsiteTarget && plan.enrichments?.companyContacts !== false;
+  const candidateTarget = scrapeContacts
+    ? Math.min(discoveryCandidateTarget(plan), 25)
+    : discoveryCandidateTarget(plan);
+  const crawlPlan: ResolvedPlan = {
+    ...plan,
+    maxResults: candidateTarget,
+    params: { ...plan.params, maxResults: candidateTarget },
+    enrichments: { ...plan.enrichments, companyContacts: scrapeContacts },
+  };
+  const raw = await actor.run(apify, crawlPlan);
   const candidatesExamined = raw.length;
   await log(`Found ${candidatesExamined} candidates. Checking them against your conditions…`, "info");
 
@@ -121,8 +143,14 @@ export async function runNlDiscovery(opts: {
     }
   }
 
-  // Keep only leads we can actually reach (email, phone, or LinkedIn).
-  const contactable = passed.filter(({ lead }) => lead.email || lead.phone || lead.linkedinUrl);
+  // Keep only leads we can actually reach (email, phone, or LinkedIn), then trim
+  // to the requested count. We over-fetched candidates, so cap delivery here —
+  // leaving a buffer when judge-tier conditions still cull leads in qualification.
+  const judgeHard = plan.criteria.some((c) => c.hard && (c.evaluator === "judge" || !c.feasible));
+  const deliverCap = judgeHard ? plan.maxResults * 2 + 3 : plan.maxResults;
+  const contactable = passed
+    .filter(({ lead }) => lead.email || lead.phone || lead.linkedinUrl)
+    .slice(0, deliverCap);
 
   const saved = await Promise.all(
     contactable.map(({ lead, signals }) =>
@@ -160,7 +188,7 @@ export async function runNlDiscovery(opts: {
         candidatesExamined,
         audited,
         enriched,
-        actorPerResultUsd: actor.perResultCostUsd(plan),
+        actorPerResultUsd: actor.perResultCostUsd(crawlPlan),
         savedLeads: saved.length,
       } as never,
     },

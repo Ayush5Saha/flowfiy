@@ -53,6 +53,29 @@ function numOrNull(v: unknown): number | null {
 
 // ─── google_maps (compass/crawler-google-places) — LOCAL businesses ─────────────
 
+// A single "<category> in <city>" query returns only ~20 Google Maps results
+// (the centroid's top listings), so selective filters (e.g. "no website") starve.
+// Fan the search across a metro's neighborhoods to surface the long tail. Unknown
+// locations fall back to a single query. Areas for the markets we target most.
+const CITY_AREAS: Record<string, string[]> = {
+  mumbai:      ["Bandra", "Andheri", "Lower Parel", "Colaba", "Powai", "Juhu", "Dadar", "Borivali", "Thane", "Navi Mumbai"],
+  "navi mumbai": ["Vashi", "Nerul", "Belapur", "Kharghar", "Airoli"],
+  delhi:       ["Connaught Place", "Hauz Khas", "Saket", "Dwarka", "Rohini", "Karol Bagh", "Lajpat Nagar", "Rajouri Garden"],
+  "new delhi": ["Connaught Place", "Hauz Khas", "Saket", "Dwarka", "Rohini", "Karol Bagh", "Lajpat Nagar"],
+  bengaluru:   ["Koramangala", "Indiranagar", "Whitefield", "HSR Layout", "Jayanagar", "MG Road", "Marathahalli"],
+  bangalore:   ["Koramangala", "Indiranagar", "Whitefield", "HSR Layout", "Jayanagar", "MG Road", "Marathahalli"],
+  hyderabad:   ["Banjara Hills", "Jubilee Hills", "Gachibowli", "Hitech City", "Madhapur", "Kondapur"],
+  pune:        ["Koregaon Park", "Viman Nagar", "Kothrud", "Hinjewadi", "Baner", "Aundh"],
+  chennai:     ["T Nagar", "Adyar", "Anna Nagar", "Velachery", "Nungambakkam", "OMR"],
+  kolkata:     ["Park Street", "Salt Lake", "Ballygunge", "New Town", "Gariahat"],
+  ahmedabad:   ["Navrangpura", "Satellite", "Bodakdev", "Prahlad Nagar", "Maninagar"],
+  gurgaon:     ["Cyber City", "DLF Phase 1", "Sohna Road", "MG Road", "Sector 29"],
+  gurugram:    ["Cyber City", "DLF Phase 1", "Sohna Road", "MG Road", "Sector 29"],
+  "new york":  ["Manhattan", "Brooklyn", "Queens", "Bronx", "SoHo", "Williamsburg"],
+  london:      ["Soho", "Shoreditch", "Camden", "Mayfair", "Islington", "Hackney"],
+  dubai:       ["Downtown Dubai", "Dubai Marina", "Business Bay", "Deira", "Jumeirah"],
+};
+
 const googleMaps: ActorDef = {
   key: "google_maps",
   apifyActorId: "compass/crawler-google-places",
@@ -70,10 +93,20 @@ const googleMaps: ActorDef = {
   buildInput(plan) {
     const search = String(plan.params.search ?? "").trim();
     const location = String(plan.params.location ?? "").trim();
-    const query = location ? `${search} in ${location}` : search;
+    const target = Math.min(plan.maxResults, 300);
+
+    // Fan a known metro into neighborhood queries so a big candidate pool surfaces;
+    // each query yields ~20, so pull enough neighborhoods to cover the target.
+    const PER_QUERY = 20;
+    const areas = CITY_AREAS[location.toLowerCase()] ?? [];
+    const numAreas = Math.min(areas.length, Math.max(1, Math.ceil(target / PER_QUERY)));
+    const queries = areas.length
+      ? areas.slice(0, numAreas).map((a) => `${search} in ${a}, ${location}`)
+      : [location ? `${search} in ${location}` : search].filter(Boolean);
+
     return {
-      searchStringsArray: [query].filter(Boolean),
-      maxCrawledPlacesPerSearch: Math.min(plan.maxResults, 300),
+      searchStringsArray: queries,
+      maxCrawledPlacesPerSearch: Math.min(Math.ceil(target / queries.length), 120) || PER_QUERY,
       // Scrape each place's site for email/phone unless explicitly disabled.
       scrapeContacts: plan.enrichments?.companyContacts !== false,
       skipClosedPlaces: true,

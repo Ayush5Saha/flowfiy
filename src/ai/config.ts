@@ -1,3 +1,5 @@
+import type { ResolvedPlan } from "@/ai/criteria/types";
+
 export type RunMode = "CENTRAL" | "BYOK";
 
 /**
@@ -111,6 +113,27 @@ export const MAX_DISCOVERY_CANDIDATES = 120;
  * this many rounds — a hard ceiling to bound cost/time.
  */
 export const MAX_DISCOVERY_ROUNDS = 5;
+
+/**
+ * How many raw candidates discovery should crawl to reliably deliver
+ * plan.maxResults AFTER the hard-criteria filter.
+ *
+ * Selective conditions (e.g. "no website", a rating floor, "B2B not B2C")
+ * reject most candidates, so crawling exactly maxResults returns almost nothing
+ * — a search for "coffee shops without a website" found 5 cafes, all of which
+ * had websites, and delivered 0. When the plan carries any hard filter we
+ * over-fetch a large pool (capped at MAX_DISCOVERY_CANDIDATES) so matches in the
+ * long tail surface; with no deterministic filter a small buffer is enough.
+ */
+export function discoveryCandidateTarget(plan: ResolvedPlan): number {
+  const hardFilters = plan.criteria.filter(
+    (c) => c.hard && c.evaluator !== "source"
+  ).length;
+  if (hardFilters === 0) {
+    return Math.min(MAX_DISCOVERY_CANDIDATES, Math.max(plan.maxResults, Math.ceil(plan.maxResults * 1.5)));
+  }
+  return Math.min(MAX_DISCOVERY_CANDIDATES, Math.max(60, plan.maxResults * 10));
+}
 
 /**
  * Hard output ceiling per agent (in tokens).

@@ -234,7 +234,7 @@ export class ApifyClient {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
-        signal: AbortSignal.timeout(opts.timeoutMs ?? 180_000),
+        signal: AbortSignal.timeout(opts.timeoutMs ?? 280_000),
       }
     );
     if (!res.ok) {

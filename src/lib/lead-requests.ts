@@ -10,6 +10,7 @@ import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
 import { creditsForCostUsd, WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD, TRIAL_LEADS } from "@/lib/credits/rates";
 import { ACTORS } from "@/ai/actors/registry";
 import { signalProvidersFor } from "@/ai/criteria/engine";
+import { discoveryCandidateTarget } from "@/ai/config";
 import { getLeadDiscoveryQueue } from "@/workers/queues";
 import type { ResolvedPlan, PlannerDecision } from "@/ai/criteria/types";
 
@@ -49,9 +50,10 @@ export async function planForRequest(args: {
  */
 export function estimateForPlan(plan: ResolvedPlan): number {
   const actor = ACTORS[plan.actorKey];
-  const candidates = plan.maxResults;
+  // Mirror discovery's over-fetch so the reserved hold covers the real crawl cost.
+  const candidates = discoveryCandidateTarget(plan);
   const audited = signalProvidersFor(plan.criteria).has("website-audit") ? candidates : 0;
-  const expectedSaved = Math.ceil(candidates * 0.5); // assume ~half pass criteria + are contactable
+  const expectedSaved = plan.maxResults; // we deliver up to the requested count
   const cogs =
     candidates * actor.perResultCostUsd(plan) +
     audited * WEBSITE_AUDIT_COST_USD +
