@@ -1,4 +1,4 @@
-import { FIELD_CHAR_LIMITS, type RunMode } from "@/ai/config";
+import { FIELD_CHAR_LIMITS, INPUT_LIMITS, type RunMode } from "@/ai/config";
 
 export interface PersonalizationInput {
   lead: {
@@ -13,10 +13,14 @@ export interface PersonalizationInput {
     serviceOffered: string;
     offerPositioning: string;
     outreachTone: string;
+    /** Problems the sender's service solves (ICP/offer context — drives the pitch). */
+    painPointsSolved?: string;
   };
   bestAngle: string;
   painPointMatch: string;
   personalizationHooks: string[];
+  /** Specific gaps THIS lead has that the sender's service solves (from qualification). */
+  serviceGaps?: string[];
   calendlyLink?: string;
 }
 
@@ -49,11 +53,11 @@ export function buildPersonalizationPrompt(input: PersonalizationInput, mode: Ru
 
   const systemPrompt = `You are an expert cold email copywriter. Write a complete, professional, personalized B2B outreach email for the lead provided. It must read like a thoughtful human wrote it — not a marketing blast.
 
-## About the Sender (you are writing AS this company)
+## About the Sender (you are writing AS this company — pitch THIS offer)
 Company: ${senderCompany}
 Service: ${input.businessProfile.serviceOffered}
 Positioning: ${input.businessProfile.offerPositioning}
-Tone: ${toneGuidance}
+${input.businessProfile.painPointsSolved ? `Problems we solve: ${input.businessProfile.painPointsSolved.slice(0, INPUT_LIMITS.painPointsSolved)}\n` : ""}Tone: ${toneGuidance}
 
 ## How to write the EMAIL BODY — write a COMPLETE email, not a paragraph
 Structure it with real line breaks (use \\n), exactly like this:
@@ -98,6 +102,7 @@ Return ONLY a JSON object (use \\n for line breaks inside the strings):
 \`\`\``;
 
   const hooks = input.personalizationHooks.join(", ");
+  const gaps = (input.serviceGaps ?? []).filter(Boolean).join("; ");
 
   const userContent = `## Lead Profile
 Name: ${input.lead.firstName ?? "there"}
@@ -108,7 +113,7 @@ Industry: ${input.lead.industry ?? ""}
 ## Outreach Strategy
 Best Angle: ${input.bestAngle}
 Pain Point: ${input.painPointMatch}
-Personalization Hooks: ${hooks}`;
+Personalization Hooks: ${hooks}${gaps ? `\nWhat our service can solve for them: ${gaps}` : ""}`;
 
   return { systemPrompt, userContent };
 }

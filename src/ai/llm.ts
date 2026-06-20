@@ -361,6 +361,11 @@ export class GeminiLLMClient implements LLMClient {
         generationConfig: {
           maxOutputTokens: params.max_tokens,
           ...(params.temperature !== undefined ? { temperature: params.temperature } : {}),
+          // Disable "thinking" on 2.5-flash models. These agents emit JSON to a
+          // fixed schema within a capped output budget; default thinking burns that
+          // budget and truncated long outputs (the personalization email returned
+          // ~100 chars before cutoff). 0 = no thinking → full budget for the answer.
+          ...(/2\.5-flash/.test(this.model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         },
       };
       const sys = flattenSystem(params.system);

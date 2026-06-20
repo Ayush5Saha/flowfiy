@@ -89,6 +89,7 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
         serviceOffered: true,
         offerPositioning: true,
         outreachTone: true,
+        painPointsSolved: true,
       },
     }),
     prisma.integration.findUnique({
@@ -113,6 +114,10 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
     ? (metadata!.hooks as string[])
     : research?.personalizationNotes
     ? research.personalizationNotes.split(" | ").filter(Boolean)
+    : [];
+
+  const serviceGaps: string[] = Array.isArray(metadata?.serviceGaps)
+    ? (metadata!.serviceGaps as string[])
     : [];
 
   const bestAngle = research?.opportunityAngle ?? "Streamline their operations and grow revenue";
@@ -140,10 +145,12 @@ export async function processLeadPersonalization(job: Job<LeadPersonalizationJob
           serviceOffered: businessProfile.serviceOffered,
           offerPositioning: businessProfile.offerPositioning,
           outreachTone: businessProfile.outreachTone,
+          painPointsSolved: businessProfile.painPointsSolved ?? undefined,
         },
         bestAngle,
         painPointMatch,
         personalizationHooks,
+        serviceGaps,
         calendlyLink,
       },
       runMode
