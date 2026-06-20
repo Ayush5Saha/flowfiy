@@ -25,13 +25,16 @@ import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
 import { INPUT_LIMITS } from "@/ai/config";
 import type { ResolvedPlan, Predicate } from "@/ai/criteria/types";
 
-/** Render the planner's criteria as plain-English conditions for the scorer.
- *  `source` predicates are applied at query time, so they're omitted here. */
+/** Render the planner's criteria as plain-English conditions for the LLM scorer.
+ *  Only JUDGE-tier predicates are returned: `source` is applied at query time and
+ *  `attribute`/`signal` predicates were already evaluated deterministically in
+ *  discovery, so re-judging them here is redundant and error-prone (the LLM lacks
+ *  the raw value and flips negatives like "must NOT have a website"). */
 function describeConditions(plan: ResolvedPlan): string {
   const fmt = (v: unknown): string =>
     Array.isArray(v) ? v.map(String).join(", ") : v === undefined || v === null ? "" : String(v);
   return (plan.criteria ?? [])
-    .filter((p: Predicate) => p.evaluator !== "source")
+    .filter((p: Predicate) => p.evaluator === "judge")
     .map((p: Predicate) => {
       const must = p.hard ? "MUST match" : "nice-to-have";
       const label = (p.why && p.why.trim()) || `${p.field} ${p.op} ${fmt(p.value)}`.trim();
@@ -151,7 +154,9 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
   // Structured MCQ ICP (when present): drives a precise scoring summary and the
   // user's chosen strictness threshold (Q12), replacing the fixed 60+ baseline.
   const icpAnswers = (businessProfile?.icp as IcpAnswers | null) ?? null;
-  const minScore = icpAnswers ? icpMinScore(icpAnswers) : 60;
+  // NL searches use a fixed 60 threshold — the user's request IS the targeting, so
+  // the org's ICP strictness must not gate explicit NL deliveries.
+  const minScore = leadRequest?.plan ? 60 : icpAnswers ? icpMinScore(icpAnswers) : 60;
   const avoidNote = icpAnswers?.avoidCompanies?.length
     ? ` AVOID (auto-disqualify): ${icpAnswers.avoidCompanies.join(", ")}.`
     : "";
