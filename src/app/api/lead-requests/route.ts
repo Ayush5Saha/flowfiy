@@ -36,11 +36,25 @@ export async function POST(req: NextRequest) {
   try {
     decision = await planForRequest({ organizationId, rawQuery: parsed.data.rawQuery, round: 0, desiredLeads });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : "planner error";
+    // Surface the real cause in the server log. A *thrown* planner error is almost
+    // always infrastructure/config (missing or invalid API key, provider down, bad
+    // model output) — genuinely ambiguous requests come back as needs_clarification,
+    // not an exception. So don't tell the user to "rephrase" a config error.
+    console.error("[lead-requests] planner failed:", msg);
     await prisma.leadRequest.update({
       where: { id: lr.id },
-      data: { status: "FAILED", error: err instanceof Error ? err.message : "planner error" },
+      data: { status: "FAILED", error: msg },
     });
-    return NextResponse.json({ error: "Couldn't plan that request — try rephrasing." }, { status: 502 });
+    const configError = /not configured|api[ _-]?key|unauthor|forbidden|quota|rate.?limit|\b(401|403|429|500|503)\b|timeout|fetch failed|econn|enotfound/i.test(msg);
+    return NextResponse.json(
+      {
+        error: configError
+          ? "The lead planner is temporarily unavailable — please try again in a moment."
+          : "Couldn't plan that request — try rephrasing.",
+      },
+      { status: 502 }
+    );
   }
 
   if (decision.status === "needs_clarification") {

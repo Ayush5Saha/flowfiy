@@ -1,4 +1,5 @@
-﻿import { Worker } from "bullmq";
+﻿import "./load-env"; // MUST be first — populates process.env for the standalone worker
+import { Worker } from "bullmq";
 import { getRedisConnection } from "./queues";
 import { processLeadGeneration } from "./processors/lead-generation.processor";
 import { processLeadDiscovery } from "./processors/lead-discovery.processor";
