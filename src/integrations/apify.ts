@@ -212,11 +212,26 @@ export class ApifyClient {
     return leads;
   }
 
+  // ─── HTTP with retry on transient gateway/rate errors ─────────────────────
+  // Apify's edge occasionally returns 429/5xx (incl. 502 Bad Gateway) — retry
+  // those a few times with backoff before giving up.
+  private async fetchRetry(url: string, init: RequestInit, tries = 4): Promise<Response> {
+    let res: Response | null = null;
+    for (let i = 1; i <= tries; i++) {
+      res = await fetch(url, { ...init, signal: AbortSignal.timeout(60_000) });
+      if (res.ok || ![429, 500, 502, 503, 504].includes(res.status) || i === tries) return res;
+      await new Promise((r) => setTimeout(r, 1500 * i + Math.floor(Math.random() * 400)));
+    }
+    return res as Response;
+  }
+
   // ─── Generic actor runner (centralized NL pipeline) ───────────────────────
   //
-  // Runs any actor synchronously and returns its raw dataset items. The actor
-  // registry uses this with the platform-owned token for the Google Maps actor,
-  // then normalizes the rows.
+  // Starts the actor ASYNC, polls until it finishes, then reads the dataset. We
+  // deliberately avoid run-sync-get-dataset-items: it holds one long HTTP
+  // connection through Apify's gateway, which returns 502/504 for multi-minute
+  // crawls. The async pattern survives long runs and transient gateway errors,
+  // and returns whatever the run produced (partial is fine for discovery).
 
   async runActor(
     actorId: string,
@@ -224,24 +239,47 @@ export class ApifyClient {
     opts: { maxItems?: number; maxTotalChargeUsd?: number; timeoutMs?: number } = {}
   ): Promise<Record<string, unknown>[]> {
     const slug = actorId.replace("/", "~");
-    const qs = new URLSearchParams({ token: this.apiKey });
-    if (opts.maxItems) qs.set("maxItems", String(opts.maxItems));
-    qs.set("maxTotalChargeUsd", String(opts.maxTotalChargeUsd ?? this.maxCharge(opts.maxItems ?? 100)));
+    const maxCharge = String(opts.maxTotalChargeUsd ?? this.maxCharge(opts.maxItems ?? 100));
+    const deadline = Date.now() + (opts.timeoutMs ?? 480_000);
 
-    const res = await fetch(
-      `${this.baseUrl}/acts/${slug}/run-sync-get-dataset-items?${qs.toString()}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-        signal: AbortSignal.timeout(opts.timeoutMs ?? 280_000),
-      }
+    // 1) Start the run (quick POST — no long-held connection to drop).
+    const startRes = await this.fetchRetry(
+      `${this.baseUrl}/acts/${slug}/runs?token=${this.apiKey}&maxTotalChargeUsd=${maxCharge}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }
     );
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Apify actor ${actorId} failed (${res.status}): ${body.slice(0, 200)}`);
+    if (!startRes.ok) {
+      const body = await startRes.text().catch(() => "");
+      throw new Error(`Apify actor ${actorId} start failed (${startRes.status}): ${body.slice(0, 200)}`);
     }
-    const items = (await res.json()) as unknown;
+    const startJson = (await startRes.json()) as {
+      data?: { id?: string; defaultDatasetId?: string; status?: string };
+    };
+    const runId = startJson.data?.id;
+    let datasetId = startJson.data?.defaultDatasetId;
+    let status = startJson.data?.status ?? "RUNNING";
+    if (!runId) throw new Error(`Apify actor ${actorId}: no run id returned`);
+
+    // 2) Poll run status until terminal or deadline.
+    const TERMINAL = ["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"];
+    while (!TERMINAL.includes(status) && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const pollRes = await this.fetchRetry(`${this.baseUrl}/actor-runs/${runId}?token=${this.apiKey}`, { method: "GET" });
+      if (!pollRes.ok) continue;
+      const pj = (await pollRes.json()) as { data?: { status?: string; defaultDatasetId?: string } };
+      status = pj.data?.status ?? status;
+      datasetId = pj.data?.defaultDatasetId ?? datasetId;
+    }
+
+    // 3) Read whatever the run produced (partial is acceptable for discovery).
+    if (!datasetId) throw new Error(`Apify actor ${actorId} produced no dataset (status: ${status})`);
+    const itemsQs = new URLSearchParams({ token: this.apiKey });
+    if (opts.maxItems) itemsQs.set("limit", String(opts.maxItems));
+    const itemsRes = await this.fetchRetry(`${this.baseUrl}/datasets/${datasetId}/items?${itemsQs.toString()}`, { method: "GET" });
+    if (!itemsRes.ok) {
+      const body = await itemsRes.text().catch(() => "");
+      throw new Error(`Apify dataset fetch failed (${itemsRes.status}): ${body.slice(0, 200)}`);
+    }
+    const items = (await itemsRes.json()) as unknown;
     return Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
   }
 
