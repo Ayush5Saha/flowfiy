@@ -10,6 +10,7 @@
  */
 import type { ApifyClient } from "@/integrations/apify";
 import { ACTOR_RATES } from "@/lib/credits/rates";
+import { googleMapsNativeFilters } from "@/ai/config";
 import type { ActorKey, LeadType, ResolvedPlan } from "@/ai/criteria/types";
 
 export interface NormalizedLead {
@@ -104,6 +105,11 @@ const googleMaps: ActorDef = {
       ? areas.slice(0, numAreas).map((a) => `${search} in ${a}, ${location}`)
       : [location ? `${search} in ${location}` : search].filter(Boolean);
 
+    // Native actor filters (website / minimum stars) derived from the plan's
+    // conditions — applied at the source so we get exact matches instead of
+    // crawling a big pool and discarding most in memory.
+    const { params: nativeFilters } = googleMapsNativeFilters(plan);
+
     return {
       searchStringsArray: queries,
       maxCrawledPlacesPerSearch: Math.min(Math.ceil(target / queries.length), 120) || PER_QUERY,
@@ -111,6 +117,7 @@ const googleMaps: ActorDef = {
       scrapeContacts: plan.enrichments?.companyContacts !== false,
       skipClosedPlaces: true,
       language: "en",
+      ...nativeFilters,
     };
   },
 
