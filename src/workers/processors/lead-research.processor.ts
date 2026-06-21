@@ -20,7 +20,7 @@ import { incrementTokenUsage } from "@/lib/usage";
 import { runCompanyAnalyzer } from "@/ai/agents/company-analyzer";
 import { scrapeWebsiteForProfile } from "@/lib/website-scraper";
 import { appendLog } from "@/lib/job-logs";
-import { getLeadQualificationQueue } from "@/workers/queues";
+import { getLeadQualificationQueue, getLeadPersonalizationQueue } from "@/workers/queues";
 import { INPUT_LIMITS } from "@/ai/config";
 
 export interface LeadResearchJobData {
@@ -35,6 +35,31 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
   const log = (msg: string, level: "info" | "success" | "error" | "tool" = "info") =>
     appendLog(leadListId, msg, level);
 
+  // NL leads (from a LeadRequest) skip the separate qualification gate — discovery
+  // already matched them to the user's search, and Gemini's research + email-writing
+  // do the judging. They go straight to personalization. Legacy/ICP leads still get
+  // scored by the qualification stage.
+  const nlRequest = await prisma.leadRequest.findFirst({
+    where: { leadListId, organizationId },
+    select: { id: true },
+  });
+  const routeOnward = async () => {
+    if (nlRequest) {
+      await prisma.lead.update({ where: { id: leadId }, data: { status: "QUALIFIED" } }).catch(() => null);
+      await getLeadPersonalizationQueue().add(
+        "lead-personalization",
+        { organizationId, leadListId, leadId },
+        { jobId: `personalize-${leadId}` }
+      );
+    } else {
+      await getLeadQualificationQueue().add(
+        "lead-qualification",
+        { organizationId, leadListId, leadId },
+        { jobId: `qualify-${leadId}` }
+      );
+    }
+  };
+
   // ── Idempotency: skip if already researched ───────────────────────────────
   const existingResearch = await prisma.leadResearch.findUnique({
     where: { leadId },
@@ -42,12 +67,7 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
   });
 
   if (existingResearch) {
-    // Already done — just ensure qualification job exists downstream
-    await getLeadQualificationQueue().add(
-      "lead-qualification",
-      { organizationId, leadListId, leadId },
-      { jobId: `qualify-${leadId}` }
-    );
+    await routeOnward();
     return;
   }
 
@@ -173,12 +193,8 @@ export async function processLeadResearch(job: Job<LeadResearchJobData>) {
     "success"
   );
 
-  // ── Enqueue qualification ─────────────────────────────────────────────────
-  await getLeadQualificationQueue().add(
-    "lead-qualification",
-    { organizationId, leadListId, leadId },
-    { jobId: `qualify-${leadId}` }
-  );
+  // ── Route onward: NL → email-writing directly; legacy → qualification ──────
+  await routeOnward();
 
   void runMode; // used above
   void incrementTokenUsage; // called in qualification stage where we have token counts
