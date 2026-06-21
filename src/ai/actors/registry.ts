@@ -75,6 +75,24 @@ const CITY_AREAS: Record<string, string[]> = {
   "new york":  ["Manhattan", "Brooklyn", "Queens", "Bronx", "SoHo", "Williamsburg"],
   london:      ["Soho", "Shoreditch", "Camden", "Mayfair", "Islington", "Hackney"],
   dubai:       ["Downtown Dubai", "Dubai Marina", "Business Bay", "Deira", "Jumeirah"],
+  // US states → major cities (a state-level search must fan across cities, not one centroid)
+  texas:           ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso", "Arlington", "Plano"],
+  california:      ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento", "Fresno", "Long Beach", "Oakland"],
+  florida:         ["Miami", "Orlando", "Tampa", "Jacksonville", "Fort Lauderdale", "Tallahassee", "St. Petersburg"],
+  illinois:        ["Chicago", "Aurora", "Naperville", "Springfield", "Rockford", "Peoria"],
+  georgia:         ["Atlanta", "Augusta", "Savannah", "Columbus", "Macon", "Athens"],
+  "new jersey":    ["Newark", "Jersey City", "Paterson", "Edison", "Trenton", "Princeton"],
+  pennsylvania:    ["Philadelphia", "Pittsburgh", "Allentown", "Harrisburg", "Erie"],
+  ohio:            ["Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton"],
+  arizona:         ["Phoenix", "Tucson", "Mesa", "Scottsdale", "Chandler", "Tempe"],
+  washington:      ["Seattle", "Spokane", "Tacoma", "Bellevue", "Vancouver"],
+  massachusetts:   ["Boston", "Worcester", "Springfield", "Cambridge", "Lowell"],
+  // Countries → major cities
+  india:           ["Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Pune", "Chennai", "Kolkata", "Ahmedabad"],
+  usa:             ["New York", "Los Angeles", "Chicago", "Houston", "Austin", "San Francisco", "Miami", "Atlanta"],
+  "united states": ["New York", "Los Angeles", "Chicago", "Houston", "Austin", "San Francisco", "Miami", "Atlanta"],
+  uk:              ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol"],
+  "united kingdom":["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol"],
 };
 
 const googleMaps: ActorDef = {
@@ -94,16 +112,28 @@ const googleMaps: ActorDef = {
   buildInput(plan) {
     const search = String(plan.params.search ?? "").trim();
     const location = String(plan.params.location ?? "").trim();
+    const round = Math.max(1, Number(plan.params.round ?? 1));
     const target = Math.min(plan.maxResults, 300);
-
-    // Fan a known metro into neighborhood queries so a big candidate pool surfaces;
-    // each query yields ~20, so pull enough neighborhoods to cover the target.
     const PER_QUERY = 20;
+
     const areas = CITY_AREAS[location.toLowerCase()] ?? [];
-    const numAreas = Math.min(areas.length, Math.max(1, Math.ceil(target / PER_QUERY)));
-    const queries = areas.length
-      ? areas.slice(0, numAreas).map((a) => `${search} in ${a}, ${location}`)
-      : [location ? `${search} in ${location}` : search].filter(Boolean);
+    let queries: string[];
+    let perQuery: number;
+    if (areas.length) {
+      // Fan across sub-areas; ROTATE the window each round so later rounds target
+      // NEW areas. The actor has no exclude param, so rotation + downstream dedup
+      // are how we avoid re-fetching the same places across the top-up loop.
+      const numAreas = Math.min(areas.length, Math.max(1, Math.ceil(target / PER_QUERY)));
+      const start = ((round - 1) * numAreas) % areas.length;
+      const window = [...areas, ...areas].slice(start, start + numAreas);
+      queries = window.map((a) => `${search} in ${a}, ${location}`);
+      perQuery = Math.min(Math.max(Math.ceil(target / queries.length), PER_QUERY), 120);
+    } else {
+      // No sub-areas mapped: one query, crawl DEEPER each round to reach new
+      // places further down the result set (dedup drops the ones already saved).
+      queries = [location ? `${search} in ${location}` : search].filter(Boolean);
+      perQuery = Math.min(target * round + PER_QUERY, 300);
+    }
 
     // Native actor filters (website / minimum stars) derived from the plan's
     // conditions — applied at the source so we get exact matches instead of
@@ -112,7 +142,7 @@ const googleMaps: ActorDef = {
 
     return {
       searchStringsArray: queries,
-      maxCrawledPlacesPerSearch: Math.min(Math.ceil(target / queries.length), 120) || PER_QUERY,
+      maxCrawledPlacesPerSearch: perQuery,
       // Scrape each place's site for email/phone unless explicitly disabled.
       scrapeContacts: plan.enrichments?.companyContacts !== false,
       skipClosedPlaces: true,

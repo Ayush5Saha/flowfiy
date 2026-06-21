@@ -78,7 +78,7 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
   if (job.data.mode === "nl" && job.data.leadRequestId) {
     const leadRequestId = job.data.leadRequestId;
     try {
-      await runNlDiscovery({ organizationId, leadListId, leadRequestId });
+      await runNlDiscovery({ organizationId, leadListId, leadRequestId, round });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Unknown error";
       await appendLog(leadListId, `Discovery failed: ${errMsg}`, "error").catch(() => null);

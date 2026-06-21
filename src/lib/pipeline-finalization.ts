@@ -40,18 +40,14 @@ export async function finalizeOrTopUp(
   const qualified = await prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } });
   const target = list.targetQualified ?? 0;
 
-  // ── NL runs: single criteria-aware actor pass, no top-up rounds. Finalize
-  // (which reconciles credits) as soon as all leads have cleared the pipeline.
   const nlRequest = await prisma.leadRequest.findUnique({
     where: { leadListId },
     select: { id: true },
   });
-  if (nlRequest) {
-    await markListReady(leadListId, organizationId, qualified, target, log);
-    return;
-  }
 
-  // ── Short of target → trigger another discovery round ─────────────────────
+  // ── Short of target → trigger another discovery round (top-up loop) ───────
+  // Applies to BOTH NL and legacy runs: keep going (one Apify call per round,
+  // rotating the search area each round) until the target is met or the round cap.
   if (target > 0 && qualified < target && list.discoveryRound < MAX_DISCOVERY_ROUNDS) {
     // Atomic round bump so only ONE concurrent finalizer triggers the next round.
     const bumped = await prisma.leadList.updateMany({
@@ -65,12 +61,14 @@ export async function finalizeOrTopUp(
     if (bumped.count === 1) {
       const nextRound = list.discoveryRound + 1;
       await log(
-        `Have ${qualified}/${target} qualified leads so far — searching for more (round ${nextRound})...`,
+        `Have ${qualified}/${target} leads so far — searching for more (round ${nextRound})...`,
         "info"
       );
       await getLeadDiscoveryQueue().add(
         "lead-discovery",
-        { organizationId, leadListId, leadsPerRun: target, round: nextRound },
+        nlRequest
+          ? { organizationId, leadListId, mode: "nl", leadRequestId: nlRequest.id, leadsPerRun: target, round: nextRound }
+          : { organizationId, leadListId, leadsPerRun: target, round: nextRound },
         { jobId: `discover-${leadListId}-r${nextRound}` }
       );
     }

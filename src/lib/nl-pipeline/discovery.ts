@@ -18,7 +18,7 @@ import { auditWebsite } from "@/lib/website-audit";
 import type { ResolvedPlan } from "@/ai/criteria/types";
 import { appendLog, clearLogs } from "@/lib/job-logs";
 import { getLeadResearchQueue } from "@/workers/queues";
-import { markListReady } from "@/lib/pipeline-finalization";
+import { markListReady, finalizeOrTopUp } from "@/lib/pipeline-finalization";
 
 type Log = (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>;
 
@@ -57,39 +57,48 @@ export async function runNlDiscovery(opts: {
   organizationId: string;
   leadListId: string;
   leadRequestId: string;
+  round?: number;
 }): Promise<void> {
   const { organizationId, leadListId, leadRequestId } = opts;
+  const round = Math.max(1, opts.round ?? 1);
   const log: Log = (m, l = "info") => appendLog(leadListId, m, l);
 
-  await clearLogs(leadListId);
-  await log("Starting your lead search…", "info");
+  if (round === 1) await clearLogs(leadListId);
+  await log(round === 1 ? "Starting your lead search…" : `Searching for more (round ${round})…`, "info");
 
   const lr = await prisma.leadRequest.findUnique({ where: { id: leadRequestId } });
   if (!lr || !lr.plan) throw new Error("Lead request or plan missing");
   const plan = lr.plan as unknown as ResolvedPlan;
+  const target = plan.maxResults;
 
   const apify = getPlatformApifyClient();
   if (!apify) throw new Error("APIFY_PLATFORM_TOKEN is not configured.");
 
   await prisma.leadList.update({
     where: { id: leadListId },
-    data: { status: "RESEARCHING", jobStatus: "discovering_leads" },
+    data: { status: "RESEARCHING", jobStatus: "discovering_leads", discoveryRound: round },
   });
   await prisma.leadRequest.update({ where: { id: leadRequestId }, data: { status: "RUNNING" } });
+
+  // Only fetch the REMAINING gap to target — earlier rounds already delivered some.
+  const alreadyQualified = await prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } });
+  const remaining = Math.max(target - alreadyQualified, 0);
+  if (remaining === 0) {
+    await markListReady(leadListId, organizationId, alreadyQualified, target, log);
+    return;
+  }
 
   const actor = ACTORS[plan.actorKey];
   await log(`Searching ${actor.leadType === "LOCAL" ? "Google Maps" : "the B2B database"} — ${plan.humanSummary}`, "tool");
 
-  // Over-fetch a candidate pool (selective conditions reject most) and decide
-  // whether to scrape each site for contacts. resolveCrawl is shared with the
-  // credit estimate so the reserved hold matches this exact crawl. A "no website"
-  // search skips scraping (Maps already has the phone) and pulls a bigger pool;
-  // a contact-scraping search stays smaller (each place visits a website).
-  const { candidateTarget, scrapeContacts } = resolveCrawl(plan);
+  // One Apify call per round. Size the crawl to the remaining gap, rotate the
+  // search window by round (so each call hits new places — the actor has no
+  // exclude param), and push "no website"/rating filters to the actor natively.
+  const { candidateTarget, scrapeContacts } = resolveCrawl({ ...plan, maxResults: remaining });
   const crawlPlan: ResolvedPlan = {
     ...plan,
     maxResults: candidateTarget,
-    params: { ...plan.params, maxResults: candidateTarget },
+    params: { ...plan.params, maxResults: candidateTarget, round },
     enrichments: { ...plan.enrichments, companyContacts: scrapeContacts },
   };
   const raw = await actor.run(apify, crawlPlan);
@@ -134,14 +143,11 @@ export async function runNlDiscovery(opts: {
     }
   }
 
-  // Keep only leads we can actually reach (email, phone, or LinkedIn), then trim
-  // to the requested count. We over-fetched candidates, so cap delivery here —
-  // leaving a buffer when judge-tier conditions still cull leads in qualification.
-  const judgeHard = plan.criteria.some((c) => c.hard && (c.evaluator === "judge" || !c.feasible));
-  const deliverCap = judgeHard ? plan.maxResults * 2 + 3 : plan.maxResults;
+  // Keep only leads we can actually reach (email, phone, or LinkedIn) and cap to
+  // the remaining gap — the top-up loop fetches another round if we're still short.
   const contactable = passed
     .filter(({ lead }) => lead.email || lead.phone || lead.linkedinUrl)
-    .slice(0, deliverCap);
+    .slice(0, remaining);
 
   const saved = await Promise.all(
     contactable.map(({ lead, signals }) =>
@@ -172,26 +178,29 @@ export async function runNlDiscovery(opts: {
     )
   );
 
+  // Accumulate COGS across rounds so the final reconcile charges for the whole loop.
+  const prevMeta = (lr.costMeta ?? {}) as { candidatesExamined?: number; audited?: number; enriched?: number; savedLeads?: number };
   await prisma.leadRequest.update({
     where: { id: leadRequestId },
     data: {
       costMeta: {
-        candidatesExamined,
-        audited,
-        enriched,
+        candidatesExamined: (prevMeta.candidatesExamined ?? 0) + candidatesExamined,
+        audited: (prevMeta.audited ?? 0) + audited,
+        enriched: (prevMeta.enriched ?? 0) + enriched,
         actorPerResultUsd: actor.perResultCostUsd(crawlPlan),
-        savedLeads: saved.length,
+        savedLeads: (prevMeta.savedLeads ?? 0) + saved.length,
       } as never,
     },
   });
   await prisma.leadList.update({
     where: { id: leadListId },
-    data: { totalLeads: saved.length, jobStatus: "researching_companies" },
+    data: { totalLeads: alreadyQualified + saved.length, jobStatus: "researching_companies" },
   });
 
   if (saved.length === 0) {
-    await log("No matching leads with a usable contact were found. Try broadening the request.", "error");
-    await markListReady(leadListId, organizationId, 0, plan.maxResults, log);
+    await log(`Round ${round}: no new matching leads in this area — trying another…`, "info");
+    // Let the finalizer top up with another round/area, or finalize at the round cap.
+    await finalizeOrTopUp(leadListId, organizationId, log);
     return;
   }
 
