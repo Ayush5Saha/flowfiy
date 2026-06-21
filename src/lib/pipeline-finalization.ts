@@ -3,6 +3,7 @@ import { getLeadDiscoveryQueue } from "@/workers/queues";
 import { fireWebhookEvent } from "@/lib/webhooks";
 import { MAX_DISCOVERY_ROUNDS } from "@/ai/config";
 import { reconcileLeadRequest } from "@/lib/nl-pipeline/reconcile";
+import { isPaused } from "@/lib/pipeline-pause";
 
 type Logger = (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>;
 
@@ -30,6 +31,13 @@ export async function finalizeOrTopUp(
     }),
   ]);
   if (researchingCount > 0 || pendingPersonalization > 0) return;
+
+  // Paused by the user — the run holds here: don't top up, don't finalize. Resume
+  // re-enqueues discovery; the credit hold stays reserved meanwhile.
+  if (await isPaused(leadListId)) {
+    await log("Paused — leads found so far are ready. Resume to search for more.", "info");
+    return;
+  }
 
   const list = await prisma.leadList.findUnique({
     where: { id: leadListId },

@@ -25,6 +25,7 @@ import { appendLog, clearLogs } from "@/lib/job-logs";
 import { getLeadResearchQueue, getLeadDiscoveryQueue } from "@/workers/queues";
 import { runNlDiscovery } from "@/lib/nl-pipeline/discovery";
 import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
+import { isPaused } from "@/lib/pipeline-pause";
 
 export interface LeadDiscoveryJobData {
   organizationId: string;
@@ -66,6 +67,13 @@ export async function processLeadDiscovery(job: Job<LeadDiscoveryJobData>) {
 
   const log = (msg: string, level: "info" | "success" | "error" | "tool" = "info") =>
     appendLog(leadListId, msg, level);
+
+  // User paused this run — skip discovery entirely (covers both the NL and legacy
+  // paths, including any round queued before the pause landed). Resume re-enqueues.
+  if (await isPaused(leadListId)) {
+    await log("Search is paused — resume to continue finding leads.", "info");
+    return;
+  }
 
   async function updateListStatus(status: string, extra?: Record<string, unknown>) {
     await prisma.leadList.update({

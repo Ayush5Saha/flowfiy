@@ -12,6 +12,7 @@ interface LogEntry {
 interface LiveLogsPanelProps {
   listId: string;
   initialStatus: string;
+  initialPaused?: boolean;
 }
 
 const POLL_INTERVAL_MS = 2000;
@@ -30,37 +31,43 @@ const levelText: Record<LogEntry["level"], string> = {
   tool: "text-violet-300",
 };
 
-export function LiveLogsPanel({ listId, initialStatus }: LiveLogsPanelProps) {
+export function LiveLogsPanel({ listId, initialStatus, initialPaused = false }: LiveLogsPanelProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [listStatus, setListStatus] = useState(initialStatus);
+  const [paused, setPaused] = useState(initialPaused);
   const [error, setError] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isActive = ["QUEUED", "RESEARCHING"].includes(listStatus);
+  // A paused run isn't actively producing logs — show it as paused, not "Live".
+  const isActive = ["QUEUED", "RESEARCHING"].includes(listStatus) && !paused;
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
     async function poll() {
+      let stillActive = false;
       try {
         const res = await fetch(`/api/leads/${listId}/logs`);
         if (!res.ok) { setError(true); return; }
-        const data = await res.json() as { logs: LogEntry[]; listStatus: string };
+        const data = await res.json() as { logs: LogEntry[]; listStatus: string; paused?: boolean };
         setLogs(data.logs);
         setListStatus(data.listStatus);
+        setPaused(!!data.paused);
         setError(false);
+        // Keep polling while the run is open (even if paused) so a resume/pause
+        // toggle is reflected live — only the header label changes when paused.
+        stillActive = ["QUEUED", "RESEARCHING"].includes(data.listStatus);
       } catch {
         setError(true);
       }
 
-      if (["QUEUED", "RESEARCHING"].includes(listStatus)) {
+      if (stillActive) {
         timer = setTimeout(poll, POLL_INTERVAL_MS);
       }
     }
 
     poll();
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listId, listStatus]);
+  }, [listId]);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
@@ -80,6 +87,9 @@ export function LiveLogsPanel({ listId, initialStatus }: LiveLogsPanelProps) {
             <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
             <span className="text-[10px] text-blue-400 font-sans">Live</span>
           </div>
+        )}
+        {paused && ["QUEUED", "RESEARCHING"].includes(listStatus) && (
+          <span className="ml-auto text-[10px] text-amber-400 font-sans">Paused</span>
         )}
         {!isActive && listStatus === "READY" && (
           <span className="ml-auto text-[10px] text-green-400 font-sans">Complete</span>

@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, CheckCircle, XCircle, Clock, Mail, TrendingUp, Pause } from "lucide-react";
 import { LeadTableClient } from "@/components/leads/LeadTableClient";
 import { LeadDataTable } from "@/components/leads/LeadDataTable";
 import { LeadListActions } from "@/components/leads/LeadListActions";
 import { RetryListButton } from "@/components/leads/RetryListButton";
 import { LiveLogsPanel } from "@/components/leads/LiveLogsPanel";
+import { PauseResumeButton } from "@/components/leads/PauseResumeButton";
+import { isPaused } from "@/lib/pipeline-pause";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
@@ -44,6 +46,7 @@ export default async function LeadListPage({ params }: PageProps) {
   if (!leadList) notFound();
 
   const isProcessing = ["QUEUED", "RESEARCHING"].includes(leadList.status);
+  const paused = isProcessing && (await isPaused(listId));
 
   // Score distribution buckets: 0-39, 40-59, 60-79, 80-100
   const scoredLeads = leadList.leads.filter((l) => l.qualificationScore !== null);
@@ -75,6 +78,14 @@ export default async function LeadListPage({ params }: PageProps) {
             )}
           </div>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+        {isProcessing && (
+          <PauseResumeButton
+            listId={listId}
+            organizationId={membership.organization.id}
+            paused={paused}
+          />
+        )}
         <LeadListActions
           listId={listId}
           listName={leadList.name}
@@ -92,6 +103,7 @@ export default async function LeadListPage({ params }: PageProps) {
             qualificationScore: l.qualificationScore,
           }))}
         />
+        </div>
       </div>
 
       {/* Stats bar */}
@@ -112,26 +124,40 @@ export default async function LeadListPage({ params }: PageProps) {
         ))}
       </div>
 
-      {/* Processing state */}
+      {/* Processing / paused state */}
       {isProcessing && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" />
-            <div>
-              <p className="text-sm font-medium text-blue-400">
-                {leadList.status === "QUEUED" ? "Queued for research..." : "AI research in progress..."}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {leadList.jobStatus?.replace(/_/g, " ")} — This takes 2–5 minutes.
-              </p>
+        paused ? (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <Pause className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-400">Search paused</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  No new searches will run. Leads already found keep processing. Resume any time to find more.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" />
+              <div>
+                <p className="text-sm font-medium text-blue-400">
+                  {leadList.status === "QUEUED" ? "Queued for research..." : "AI research in progress..."}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {leadList.jobStatus?.replace(/_/g, " ")} — This takes 2–5 minutes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {/* Live pipeline logs */}
       {(isProcessing || leadList.status === "READY" || leadList.status === "FAILED") && (
-        <LiveLogsPanel listId={listId} initialStatus={leadList.status} />
+        <LiveLogsPanel listId={listId} initialStatus={leadList.status} initialPaused={paused} />
       )}
 
       {/* Failed state */}

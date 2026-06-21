@@ -167,6 +167,121 @@ export function googleMapsNativeFilters(plan: ResolvedPlan): { params: Record<st
   return { params, covered };
 }
 
+// ─── Full Google Maps actor filter surface ───────────────────────────────────
+//
+// The actor exposes ~40 input fields (search filters, geolocation, place-detail
+// add-ons, reviews, images, alternative inputs). We let the Planner reach ANY of
+// them via `plan.params.actorFilters`, but every value passes through this strict
+// allowlist + validator first, so a malformed enum or a cost-exploding integer can
+// never reach a real run. The fields that drive the round loop (searchStringsArray,
+// locationQuery, maxCrawledPlacesPerSearch) and the paid people/email/social
+// add-ons are managed in buildInput + enrichmentParams and are intentionally NOT
+// settable here (so the loop and the cost estimate stay in lock-step).
+
+const FILTER_ENUMS = {
+  searchMatching: new Set(["all", "only_includes", "only_exact"]),
+  placeMinimumStars: new Set(["two", "twoAndHalf", "three", "threeAndHalf", "four", "fourAndHalf"]),
+  website: new Set(["allPlaces", "withWebsite", "withoutWebsite"]),
+  reviewsSort: new Set(["newest", "mostRelevant", "highestRanking", "lowestRanking"]),
+  reviewsOrigin: new Set(["all", "google"]),
+  allPlacesNoSearchAction: new Set(["all_places_no_search_ocr", "all_places_no_search_mouse"]),
+} as const;
+
+export const LEADS_DEPARTMENTS = new Set([
+  "c_suite", "product", "engineering_technical", "design", "education", "finance",
+  "human_resources", "information_technology", "legal", "marketing", "medical_health",
+  "operations", "sales", "consulting",
+]);
+
+function clampInt(v: unknown, min: number, max: number): number | undefined {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(min, Math.min(n, max));
+}
+function strArray(v: unknown): string[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out = v.map((x) => String(x).trim()).filter(Boolean);
+  return out.length ? out : undefined;
+}
+
+/**
+ * Validate + coerce a raw `actorFilters` object (whatever the Planner emitted) into
+ * a safe subset of real Google Maps actor params. Unknown keys, wrong types and
+ * invalid enum values are dropped silently — the run always gets clean input.
+ */
+export function sanitizeGoogleMapsFilters(raw: unknown): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (!raw || typeof raw !== "object") return out;
+  const f = raw as Record<string, unknown>;
+  const enumKey = (k: keyof typeof FILTER_ENUMS) => {
+    if (typeof f[k] === "string" && FILTER_ENUMS[k].has(f[k] as string)) out[k] = f[k];
+  };
+  const boolKey = (k: string) => { if (typeof f[k] === "boolean") out[k] = f[k]; };
+
+  // Search filters & categories
+  if (typeof f.language === "string" && f.language.length <= 6) out.language = f.language;
+  enumKey("searchMatching");
+  enumKey("placeMinimumStars");
+  enumKey("website");
+  boolKey("skipClosedPlaces");
+  { const cats = strArray(f.categoryFilterWords); if (cats) out.categoryFilterWords = cats.slice(0, 50); }
+
+  // Geolocation (structured area definition — more precise than free-text search)
+  if (typeof f.countryCode === "string" && /^[a-z]{2}$/i.test(f.countryCode)) out.countryCode = f.countryCode.toLowerCase();
+  for (const k of ["city", "state", "county", "postalCode"]) {
+    if (typeof f[k] === "string" && f[k]) out[k] = (f[k] as string).trim();
+  }
+  if (f.customGeolocation && typeof f.customGeolocation === "object") out.customGeolocation = f.customGeolocation;
+
+  // Place-detail add-ons
+  for (const k of ["scrapePlaceDetailPage", "scrapeTableReservationProvider", "scrapeOrderOnline", "includeWebResults", "scrapeDirectories"]) boolKey(k);
+  { const q = clampInt(f.maxQuestions, 0, 999); if (q !== undefined) out.maxQuestions = q; }
+
+  // Reviews
+  { const r = clampInt(f.maxReviews, 0, 99999); if (r !== undefined) out.maxReviews = r; }
+  enumKey("reviewsSort");
+  enumKey("reviewsOrigin");
+  if (typeof f.reviewsFilterString === "string") out.reviewsFilterString = f.reviewsFilterString.slice(0, 200);
+  if (typeof f.reviewsStartDate === "string") out.reviewsStartDate = f.reviewsStartDate.slice(0, 40);
+  boolKey("scrapeReviewsPersonalData");
+
+  // Images
+  { const im = clampInt(f.maxImages, 0, 99999); if (im !== undefined) out.maxImages = im; }
+  boolKey("scrapeImageAuthors");
+
+  // Alternative ways to seed the search
+  if (Array.isArray(f.startUrls)) out.startUrls = f.startUrls.slice(0, 300);
+  { const ids = strArray(f.placeIds); if (ids) out.placeIds = ids.slice(0, 300); }
+  enumKey("allPlacesNoSearchAction");
+
+  return out;
+}
+
+/**
+ * Map the plan's paid enrichment toggles onto the actor's add-on params. These are
+ * kept separate from sanitizeGoogleMapsFilters so behavior and the credit estimate
+ * read from the SAME place (plan.enrichments). The actor enforces a dependency:
+ * email verification only runs on top of business-leads enrichment.
+ */
+export function enrichmentParams(plan: ResolvedPlan): Record<string, unknown> {
+  const e = plan.enrichments ?? {};
+  const params: Record<string, unknown> = {
+    // Scrape each place's website for a public email/phone unless explicitly off.
+    scrapeContacts: e.companyContacts !== false,
+  };
+  if (e.businessLeads) {
+    const perPlace = clampInt((plan.params as Record<string, unknown>)?.leadsPerPlace, 1, 10) ?? 3;
+    params.maximumLeadsEnrichmentRecords = perPlace;
+    const depts = strArray((plan.params as Record<string, unknown>)?.leadsDepartments)?.filter((d) => LEADS_DEPARTMENTS.has(d));
+    if (depts?.length) params.leadsEnrichmentDepartments = depts;
+    if (e.emailVerification) params.verifyLeadsEnrichmentEmails = true;
+  }
+  if (e.socialEnrichment) {
+    params.scrapeSocialMediaProfiles = { facebooks: true, instagrams: true, youtubes: true, tiktoks: true, twitters: true };
+  }
+  return params;
+}
+
 /**
  * The crawl discovery will ACTUALLY perform for a plan: how many candidates to
  * pull and whether to scrape each site for contacts. When the actor's native

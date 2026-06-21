@@ -10,7 +10,7 @@
  */
 import type { ApifyClient } from "@/integrations/apify";
 import { ACTOR_RATES } from "@/lib/credits/rates";
-import { googleMapsNativeFilters } from "@/ai/config";
+import { googleMapsNativeFilters, sanitizeGoogleMapsFilters, enrichmentParams } from "@/ai/config";
 import type { ActorKey, LeadType, ResolvedPlan } from "@/ai/criteria/types";
 
 export interface NormalizedLead {
@@ -50,6 +50,53 @@ function str(v: unknown): string | null {
 }
 function numOrNull(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+interface EnrichedPerson {
+  firstName: string | null;
+  lastName: string | null;
+  title: string | null;
+  email: string | null;
+  linkedinUrl: string | null;
+  employeeCount: number | null;
+}
+
+/**
+ * Pull the first decision-maker from the actor's business-leads enrichment output.
+ * The enrichment is opt-in (maximumLeadsEnrichmentRecords > 0) and the array's
+ * field name has varied across actor versions, so we probe the known shapes and
+ * read each person's fields tolerantly. Returns null when no enrichment is present
+ * — callers then fall back to business-level data.
+ */
+function firstEnrichedPerson(raw: Record<string, unknown>): EnrichedPerson | null {
+  const candidates = ["leadsEnrichment", "leads", "contacts", "contactPersons", "decisionMakers", "people"];
+  let arr: Record<string, unknown>[] | null = null;
+  for (const key of candidates) {
+    const v = raw[key];
+    if (Array.isArray(v) && v.length && typeof v[0] === "object") {
+      arr = v as Record<string, unknown>[];
+      break;
+    }
+  }
+  if (!arr) return null;
+  const p = arr[0];
+  const full = str(p.name) ?? str(p.fullName);
+  let firstName = str(p.firstName) ?? str(p.first_name);
+  let lastName = str(p.lastName) ?? str(p.last_name);
+  if (!firstName && full) {
+    const parts = full.split(/\s+/);
+    firstName = parts[0] ?? null;
+    lastName = lastName ?? (parts.length > 1 ? parts.slice(1).join(" ") : null);
+  }
+  const linkedinUrl = str(p.linkedinUrl) ?? str(p.linkedin) ?? str(p.linkedInUrl) ?? str(p.linkedin_url);
+  return {
+    firstName,
+    lastName,
+    title: str(p.title) ?? str(p.jobTitle) ?? str(p.position),
+    email: str(p.email) ?? str(p.workEmail) ?? str(p.work_email),
+    linkedinUrl,
+    employeeCount: numOrNull(p.employeeCount) ?? numOrNull(p.employees) ?? numOrNull(p.numberOfEmployees),
+  };
 }
 
 // ─── google_maps (compass/crawler-google-places) — LOCAL businesses ─────────────
@@ -135,18 +182,25 @@ const googleMaps: ActorDef = {
       perQuery = Math.min(target * round + PER_QUERY, 300);
     }
 
-    // Native actor filters (website / minimum stars) derived from the plan's
-    // conditions — applied at the source so we get exact matches instead of
-    // crawling a big pool and discarding most in memory.
+    // Compose the actor input from three layers, lowest priority first:
+    //   1. passThrough — any of the actor's ~40 advanced filters the Planner chose
+    //      for this request (geolocation, categories, reviews, images, exact-name
+    //      matching, …), validated against a strict allowlist.
+    //   2. enrich — the paid add-ons (site contacts, decision-maker leads, social),
+    //      driven by plan.enrichments so behavior and cost stay in lock-step.
+    //   3. nativeFilters — source filters derived from HARD conditions (no-website,
+    //      rating floor); these win because they came from an explicit requirement.
+    const passThrough = sanitizeGoogleMapsFilters((plan.params as Record<string, unknown>)?.actorFilters);
+    const enrich = enrichmentParams(plan);
     const { params: nativeFilters } = googleMapsNativeFilters(plan);
 
     return {
       searchStringsArray: queries,
       maxCrawledPlacesPerSearch: perQuery,
-      // Scrape each place's site for email/phone unless explicitly disabled.
-      scrapeContacts: plan.enrichments?.companyContacts !== false,
       skipClosedPlaces: true,
-      language: "en",
+      language: typeof plan.params.language === "string" ? plan.params.language : "en",
+      ...passThrough,
+      ...enrich,
       ...nativeFilters,
     };
   },
@@ -157,18 +211,20 @@ const googleMaps: ActorDef = {
     const emails = Array.isArray(raw.emails) ? (raw.emails as unknown[]).map(String) : [];
     const website = str(raw.website) ?? (str(raw.domain) ? `https://${str(raw.domain)}` : null);
     const linkedIns = Array.isArray(raw.linkedIns) ? (raw.linkedIns as unknown[]).map(String) : [];
+    // Decision-maker, when the business-leads enrichment add-on was enabled.
+    const person = firstEnrichedPerson(raw);
     return {
-      firstName: null,
-      lastName: null,
-      email: emails.find((e) => e && e.includes("@")) ?? null,
+      firstName: person?.firstName ?? null,
+      lastName: person?.lastName ?? null,
+      email: person?.email ?? emails.find((e) => e && e.includes("@")) ?? null,
       phone: str(raw.phoneUnformatted) ?? str(raw.phone),
-      title: null,
+      title: person?.title ?? null,
       companyName: name,
       companyWebsite: website,
-      companySize: null,
+      companySize: person?.employeeCount != null ? String(person.employeeCount) : null,
       industry: str(raw.categoryName),
       city: str(raw.city),
-      linkedinUrl: linkedIns[0] ?? null,
+      linkedinUrl: person?.linkedinUrl ?? linkedIns[0] ?? null,
       rating: numOrNull(raw.totalScore),
       reviewsCount: numOrNull(raw.reviewsCount),
       source: "google_maps",
@@ -179,12 +235,20 @@ const googleMaps: ActorDef = {
   perResultCostUsd(plan) {
     const r = ACTOR_RATES.google_maps;
     const e = plan.enrichments ?? {};
-    // compass/crawler-google-places does the listing + place details and scrapes
-    // each site for a public email/phone when enabled. It does NOT do email
-    // verification, B2B decision-maker enrichment, or social enrichment — so don't
-    // charge for those: they'd inflate the estimate for work the actor never does.
+    const af = sanitizeGoogleMapsFilters((plan.params as Record<string, unknown>)?.actorFilters);
+    // Base = listing + place details + the applied source filter. Add a line item
+    // for every paid add-on the plan actually turns on, so the reserved hold
+    // tracks the real run instead of a fixed worst case.
     let c = r.scrapedPlace + r.filterApplied + r.placeDetails;
     if (e.companyContacts !== false) c += r.companyContacts;
+    if (e.businessLeads) c += r.businessLeads;
+    if (e.businessLeads && e.emailVerification) c += r.emailVerification;
+    if (e.socialEnrichment) c += r.socialEnrichment;
+    // Reviews / images / explicit detail-page scraping each open the place's detail
+    // page — bill one extra place-details unit so the hold isn't under-set.
+    if (Number(af.maxReviews) > 0 || Number(af.maxImages) > 0 || af.scrapePlaceDetailPage === true) {
+      c += r.placeDetails;
+    }
     return c;
   },
 

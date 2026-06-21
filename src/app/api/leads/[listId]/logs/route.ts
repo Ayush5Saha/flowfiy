@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getLogs } from "@/lib/job-logs";
+import { isPaused } from "@/lib/pipeline-pause";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,12 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const logs = await getLogs(listId);
+  const [logs, paused] = await Promise.all([getLogs(listId), isPaused(listId)]);
 
   return NextResponse.json({
     logs,
     listStatus: leadList.status,
     jobStatus: leadList.jobStatus,
+    paused,
   });
 }

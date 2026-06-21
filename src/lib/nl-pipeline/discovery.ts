@@ -19,6 +19,7 @@ import type { ResolvedPlan } from "@/ai/criteria/types";
 import { appendLog, clearLogs } from "@/lib/job-logs";
 import { getLeadResearchQueue } from "@/workers/queues";
 import { markListReady, finalizeOrTopUp } from "@/lib/pipeline-finalization";
+import { isPaused } from "@/lib/pipeline-pause";
 
 type Log = (msg: string, level?: "info" | "success" | "error" | "tool") => Promise<void>;
 
@@ -62,6 +63,13 @@ export async function runNlDiscovery(opts: {
   const { organizationId, leadListId, leadRequestId } = opts;
   const round = Math.max(1, opts.round ?? 1);
   const log: Log = (m, l = "info") => appendLog(leadListId, m, l);
+
+  // Paused by the user — don't start (or restart) the expensive Apify search. A
+  // round queued before the pause lands here and quietly no-ops; resume re-queues.
+  if (await isPaused(leadListId)) {
+    await log("Search is paused — resume to continue finding leads.", "info");
+    return;
+  }
 
   if (round === 1) await clearLogs(leadListId);
   await log(round === 1 ? "Starting your lead search…" : `Searching for more (round ${round})…`, "info");

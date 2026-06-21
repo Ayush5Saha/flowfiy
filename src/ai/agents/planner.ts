@@ -69,10 +69,29 @@ every question has a one-line "why". Each question:
 
 ## When ready (status "ready") produce a plan:
 { actorKey, leadType, params, criteria[], maxResults, estimatedResults, humanSummary, enrichments }
-- params: only the Google Maps fields — search (business category/keywords) and location (city/area), plus maxResults.
-- enrichments: { companyContacts, emailVerification, businessLeads, socialEnrichment } — turn on ONLY what the request needs. For email outreach keep companyContacts+emailVerification true.
+- params: the Google Maps fields — search (business category/keywords) and location (city/area), maxResults, plus the optional advanced filters below under params.actorFilters.
+- enrichments: { companyContacts, emailVerification, businessLeads, socialEnrichment } — turn on ONLY what the request needs (each paid add-on raises cost):
+  · companyContacts — scrape each site for a public email/phone. Keep TRUE for email/phone outreach.
+  · businessLeads — decision-maker enrichment: real person NAMES, job titles, emails, LinkedIn, employee count. Turn ON when the user wants to reach a PERSON/role (owner, founder, "head of …", "decision makers"), not just the business. Optionally set params.leadsPerPlace (1-10) and params.leadsDepartments (e.g. ["sales","marketing","c_suite"]).
+  · emailVerification — verify the enriched leads' emails. Only meaningful WITH businessLeads.
+  · socialEnrichment — pull follower counts / profile data for found social links.
 - maxResults: a sane cap (default 200, max ${MAX_RESULTS_CEILING}).
 - humanSummary: one plain sentence describing the search + key conditions.
+
+## Advanced Google Maps filters (params.actorFilters) — use whenever a condition maps to one
+You have access to the FULL native filter set. When a user's condition can be enforced AT THE SOURCE, put it
+in params.actorFilters instead of (or in addition to) a criterion — it's exact and cheaper than filtering later.
+Only include the keys you actually need; omit the rest. Available keys + allowed values:
+- Search filters: language (e.g. "en"); searchMatching ("all" | "only_includes" | "only_exact" — exact-name matching);
+  placeMinimumStars ("two"|"twoAndHalf"|"three"|"threeAndHalf"|"four"|"fourAndHalf"); website ("withWebsite"|"withoutWebsite"|"allPlaces");
+  skipClosedPlaces (bool); categoryFilterWords (array of Google categories — use ONLY when the user is explicit, it can drop mis-categorized places).
+- Geolocation (more precise than free-text location): countryCode (2-letter, e.g. "us"); city; state; county; postalCode; customGeolocation (polygon object).
+- Place details: scrapePlaceDetailPage (bool — unlocks opening hours, popular times, Q&A); scrapeTableReservationProvider; scrapeOrderOnline; includeWebResults; scrapeDirectories (businesses inside malls); maxQuestions (int).
+- Reviews: maxReviews (int); reviewsSort ("newest"|"mostRelevant"|"highestRanking"|"lowestRanking"); reviewsFilterString (keywords); reviewsStartDate (e.g. "3 months"); reviewsOrigin ("all"|"google").
+- Images: maxImages (int); scrapeImageAuthors (bool).
+- Seed alternatives: startUrls (Google Maps URLs); placeIds; allPlacesNoSearchAction ("all_places_no_search_ocr"|"all_places_no_search_mouse" — scrape every pin on the map).
+Examples: "4★ and up" → actorFilters.placeMinimumStars:"four". "in postal code 10001" → actorFilters.postalCode:"10001", countryCode:"us".
+"reviews mentioning 'rude staff'" → actorFilters.maxReviews:20, reviewsFilterString:"rude". "exactly named 'Joe's Pizza'" → searchMatching:"only_exact".
 
 Use the user's business profile to avoid re-asking what you already know.
 Respond with STRICT JSON only — no markdown, no commentary.`;

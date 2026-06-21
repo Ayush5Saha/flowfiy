@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Upload, FileText } from "lucide-react";
 import { LeadRequestComposer } from "@/components/leads/LeadRequestComposer";
 import { LeadListRowActions } from "@/components/leads/LeadListRowActions";
+import { pausedListIds } from "@/lib/pipeline-pause";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,11 @@ export default async function LeadsPage() {
   ]);
 
   const hasBusinessProfile = !!businessProfile;
+
+  // One batched lookup for the pause flags of any in-progress lists.
+  const pausedSet = await pausedListIds(
+    leadLists.filter((l) => ["QUEUED", "RESEARCHING"].includes(l.status)).map((l) => l.id)
+  );
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl mx-auto">
@@ -103,7 +109,7 @@ export default async function LeadsPage() {
                   </p>
                 </Link>
                 <div className="flex items-center gap-4 shrink-0">
-                  <StatusBadge status={list.status} />
+                  <StatusBadge status={list.status} paused={pausedSet.has(list.id)} />
                   <LeadListRowActions listId={list.id} organizationId={organization.id} />
                   <Link href={`/leads/${list.id}`} aria-label="Open list">
                     <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -118,7 +124,7 @@ export default async function LeadsPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, paused = false }: { status: string; paused?: boolean }) {
   const config: Record<string, { label: string; dot: string }> = {
     DRAFT: { label: "Draft", dot: "bg-muted-foreground/50" },
     QUEUED: { label: "Queued", dot: "bg-muted-foreground/50" },
@@ -127,7 +133,9 @@ function StatusBadge({ status }: { status: string }) {
     FAILED: { label: "Failed", dot: "bg-destructive" },
     ARCHIVED: { label: "Archived", dot: "bg-muted-foreground/50" },
   };
-  const { label, dot } = config[status] ?? { label: status, dot: "bg-muted-foreground/50" };
+  const { label, dot } = paused
+    ? { label: "Paused", dot: "bg-amber-400" }
+    : config[status] ?? { label: status, dot: "bg-muted-foreground/50" };
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
       <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
