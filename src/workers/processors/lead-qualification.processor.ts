@@ -178,6 +178,7 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
 
   const scoreLabel = (score: number) => score >= 80 ? "🟢" : score >= 60 ? "🟡" : "🔴";
 
+  let llmFailed = false;
   let result: Awaited<ReturnType<typeof runQualification>>;
   try {
     result = await runQualification(client, {
@@ -205,13 +206,15 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
       await log(`⚠️ Qualification failed for ${lead.companyName ?? "lead"} (will retry): ${msg}`, "error");
       throw err;
     }
-    // Final attempt — degrade to a terminal state so the list can finalize
-    // instead of hanging in RESEARCHING. Don't auto-qualify unvetted leads.
-    await log(`❌ Qualification failed for ${lead.companyName ?? "lead"} after ${maxAttempts} attempts: ${msg}. Marking disqualified.`, "error");
+    // Final attempt failed on an INFRA error (e.g. Gemini 429), NOT a real
+    // disqualification. The lead already passed discovery's hard filters, so KEEP
+    // it for manual review rather than discarding what the user paid to discover.
+    await log(`⚠️ ${lead.companyName ?? "Lead"} — AI scoring unavailable after ${maxAttempts} tries (${msg.slice(0, 50)}); keeping for manual review.`, "info");
+    llmFailed = true;
     result = {
-      score: 0,
-      qualified: false,
-      primaryReason: "AI scoring unavailable (LLM error)",
+      score: minScore,
+      qualified: true,
+      primaryReason: "Kept for review — AI scoring was unavailable (rate limit). Verify fit before sending.",
       bestAngle: "",
       painPointMatch: "",
       personalizationHooks: [],
@@ -239,7 +242,9 @@ export async function processLeadQualification(job: Job<LeadQualificationJobData
 
   // ── Qualified → persist + enrich research, then personalize ───────────────
   await log(
-    `${scoreLabel(result.score)} ${lead.companyName ?? "Lead"} — score ${result.score}/100 → QUALIFIED`,
+    llmFailed
+      ? `🟡 ${lead.companyName ?? "Lead"} — kept for manual review (AI scoring unavailable).`
+      : `${scoreLabel(result.score)} ${lead.companyName ?? "Lead"} — score ${result.score}/100 → QUALIFIED`,
     "success"
   );
 
