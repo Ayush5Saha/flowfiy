@@ -40,6 +40,21 @@ export function isComputableField(field: string): boolean {
   return field in FIELD_GETTERS;
 }
 
+/**
+ * Attribute fields the Google Maps source can't populate on its own — they only
+ * arrive via opt-in leads enrichment, and are frequently empty (employee count,
+ * decision-maker name/title). A HARD predicate on one of these must NOT reject the
+ * whole candidate pool at discovery when the value is missing (that's the "0 of 25
+ * match" starvation); it's deferred to the LLM judge, which assesses it from the
+ * researched company data. When enrichment DID supply the value, it's still
+ * evaluated deterministically (free + strict).
+ */
+export const ENRICHMENT_ONLY_FIELDS = new Set(["companySize", "employeeCount", "title", "firstName", "lastName"]);
+
+function isMissing(value: unknown): boolean {
+  return value === null || value === undefined || value === "";
+}
+
 function toNum(v: unknown): number {
   if (typeof v === "number") return v;
   if (typeof v === "string") return Number(v.replace(/,/g, ""));
@@ -113,6 +128,14 @@ export function evaluateLead(
     }
 
     const value = (FIELD_GETTERS[p.field] ?? (() => undefined))(lead, signals);
+
+    // Hard condition on a field the source couldn't fill (e.g. employee count from
+    // Google Maps): don't fail the whole pool — defer it to the LLM judge.
+    if (p.hard && isMissing(value) && ENRICHMENT_ONLY_FIELDS.has(p.field)) {
+      judgeFields.push(p.field);
+      continue;
+    }
+
     const ok = evalPredicate(p, value);
     matched.push({ field: p.field, ok, detail: String(value ?? "—") });
 

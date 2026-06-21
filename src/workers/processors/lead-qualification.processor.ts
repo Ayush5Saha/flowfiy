@@ -23,18 +23,21 @@ import { appendLog } from "@/lib/job-logs";
 import { getLeadPersonalizationQueue } from "@/workers/queues";
 import { finalizeOrTopUp } from "@/lib/pipeline-finalization";
 import { INPUT_LIMITS } from "@/ai/config";
+import { ENRICHMENT_ONLY_FIELDS } from "@/ai/criteria/engine";
 import type { ResolvedPlan, Predicate } from "@/ai/criteria/types";
 
 /** Render the planner's criteria as plain-English conditions for the LLM scorer.
- *  Only JUDGE-tier predicates are returned: `source` is applied at query time and
- *  `attribute`/`signal` predicates were already evaluated deterministically in
- *  discovery, so re-judging them here is redundant and error-prone (the LLM lacks
- *  the raw value and flips negatives like "must NOT have a website"). */
+ *  Includes JUDGE-tier predicates plus any HARD condition on an enrichment-only
+ *  field (e.g. employee count / role) that discovery had to defer because the
+ *  source couldn't supply the value — those must still be honored here. Other
+ *  `attribute`/`signal` predicates were evaluated deterministically in discovery,
+ *  so re-judging them is redundant and error-prone (the LLM lacks the raw value
+ *  and flips negatives like "must NOT have a website"). */
 function describeConditions(plan: ResolvedPlan): string {
   const fmt = (v: unknown): string =>
     Array.isArray(v) ? v.map(String).join(", ") : v === undefined || v === null ? "" : String(v);
   return (plan.criteria ?? [])
-    .filter((p: Predicate) => p.evaluator === "judge")
+    .filter((p: Predicate) => p.evaluator === "judge" || (p.hard && ENRICHMENT_ONLY_FIELDS.has(p.field)))
     .map((p: Predicate) => {
       const must = p.hard ? "MUST match" : "nice-to-have";
       const label = (p.why && p.why.trim()) || `${p.field} ${p.op} ${fmt(p.value)}`.trim();

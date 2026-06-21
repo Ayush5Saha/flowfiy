@@ -48,9 +48,11 @@ The user often adds qualitative conditions ("no website", "bad reviews", "runnin
 ads", "looks premium"). Express EACH condition as a predicate and route it to the
 cheapest evaluator that can decide it:
 - "source"        → put it in the actor params instead (category, location, roles, industries). Do NOT also list these as criteria.
-- "attribute"     → computable from actor output: rating, reviewsCount, hasEmail, hasPhone, hasWebsite, companySize, industry, city.
+- "attribute"     → computable from EVERY Google Maps listing: rating, reviewsCount, hasEmail, hasPhone, hasWebsite, industry, city. ONLY these — nothing else is guaranteed in a listing.
 - "signal:website-audit" → website condition. field "websiteStatus", values: none | broken | slow | outdated | ok.
-- "judge"         → fuzzy/novel things an AI must judge ("premium vibe", "B2B not B2C"). Use for ANYTHING not covered above.
+- "judge"         → fuzzy/novel things an AI must judge ("premium vibe", "B2B not B2C"), AND anything Google Maps doesn't return per-listing. Use for ANYTHING not covered above.
+
+CRITICAL — company size / employee count / headcount and a person's ROLE or TITLE (founder, CEO, "head of …") are NOT in a Google Maps listing. NEVER make them a hard "attribute" criterion — that would reject every candidate and return zero leads. Express "11–50 employees" or "founders" as evaluator "judge" (the research stage reads each company's site and the AI judges it), and turn on enrichments.businessLeads to pull real decision-maker names/titles. Use field "companySize" (op between/lt/gt) or a role label, evaluator "judge".
 
 Each predicate: { field, op, value, evaluator, hard, weight, why, feasible }.
 - op ∈ eq,neq,lt,lte,gt,gte,between,in,exists,not_exists,contains,matches
