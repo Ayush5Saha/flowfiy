@@ -136,6 +136,22 @@ export function discoveryCandidateTarget(plan: ResolvedPlan): number {
 }
 
 /**
+ * The crawl discovery will ACTUALLY perform for a plan: how many candidates to
+ * pull and whether to scrape each site for contacts. A "no website" search skips
+ * (slow) site scraping and can over-fetch a big pool (cap 60); a contact-scraping
+ * search visits each site, so it stays small (cap 25). Shared by discovery AND the
+ * credit estimate so the reserved hold matches what the run really costs.
+ */
+export function resolveCrawl(plan: ResolvedPlan): { candidateTarget: number; scrapeContacts: boolean } {
+  const noWebsiteTarget = plan.criteria.some(
+    (c) => c.hard && c.field === "hasWebsite" && ((c.op === "eq" && !c.value) || c.op === "not_exists")
+  );
+  const scrapeContacts = !noWebsiteTarget && plan.enrichments?.companyContacts !== false;
+  const pool = discoveryCandidateTarget(plan);
+  return { candidateTarget: scrapeContacts ? Math.min(pool, 25) : Math.min(pool, 60), scrapeContacts };
+}
+
+/**
  * Hard output ceiling per agent (in tokens).
  * Each value is sized to the MAXIMUM plausible JSON output for that schema,
  * not a generous round number. Shrinking this is the primary lever for

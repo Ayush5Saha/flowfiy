@@ -13,7 +13,7 @@ import { getPlatformApifyClient } from "@/integrations/apify";
 import { getProspeoClient } from "@/integrations/prospeo";
 import { ACTORS, type NormalizedLead } from "@/ai/actors/registry";
 import { evaluateLead, signalProvidersFor, type LeadSignals } from "@/ai/criteria/engine";
-import { discoveryCandidateTarget } from "@/ai/config";
+import { resolveCrawl } from "@/ai/config";
 import { auditWebsite } from "@/lib/website-audit";
 import type { ResolvedPlan } from "@/ai/criteria/types";
 import { appendLog, clearLogs } from "@/lib/job-logs";
@@ -80,25 +80,12 @@ export async function runNlDiscovery(opts: {
   const actor = ACTORS[plan.actorKey];
   await log(`Searching ${actor.leadType === "LOCAL" ? "Google Maps" : "the B2B database"} — ${plan.humanSummary}`, "tool");
 
-  // Over-fetch: selective conditions (e.g. "no website") reject most candidates,
-  // so crawl a much larger pool than the requested count and filter down. Crawling
-  // exactly maxResults made highly-selective requests return nothing.
-  //
-  // A "no website" request doesn't need (slow) per-site contact scraping — Google
-  // Maps already returns the phone — so turn scraping OFF and over-fetch a big pool
-  // fast. Email-target searches keep scraping on but over-fetch more modestly to
-  // stay within the actor's sync time budget (each place visits a website).
-  const noWebsiteTarget = plan.criteria.some(
-    (c) => c.hard && c.field === "hasWebsite" && ((c.op === "eq" && !c.value) || c.op === "not_exists")
-  );
-  const scrapeContacts = !noWebsiteTarget && plan.enrichments?.companyContacts !== false;
-  // Cap the pool to what the actor's run-sync endpoint can finish in time (~300s
-  // hard limit): ~60 listing-only places take ~210s; scraping each site is ~10s/place
-  // so the scraping path must stay much smaller. Bigger requests degrade gracefully
-  // (deliver what's found) rather than timing out to zero.
-  const candidateTarget = scrapeContacts
-    ? Math.min(discoveryCandidateTarget(plan), 25)
-    : Math.min(discoveryCandidateTarget(plan), 60);
+  // Over-fetch a candidate pool (selective conditions reject most) and decide
+  // whether to scrape each site for contacts. resolveCrawl is shared with the
+  // credit estimate so the reserved hold matches this exact crawl. A "no website"
+  // search skips scraping (Maps already has the phone) and pulls a bigger pool;
+  // a contact-scraping search stays smaller (each place visits a website).
+  const { candidateTarget, scrapeContacts } = resolveCrawl(plan);
   const crawlPlan: ResolvedPlan = {
     ...plan,
     maxResults: candidateTarget,

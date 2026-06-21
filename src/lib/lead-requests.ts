@@ -10,7 +10,7 @@ import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
 import { creditsForCostUsd, WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD, TRIAL_LEADS } from "@/lib/credits/rates";
 import { ACTORS } from "@/ai/actors/registry";
 import { signalProvidersFor } from "@/ai/criteria/engine";
-import { discoveryCandidateTarget } from "@/ai/config";
+import { resolveCrawl } from "@/ai/config";
 import { getLeadDiscoveryQueue } from "@/workers/queues";
 import type { ResolvedPlan, PlannerDecision } from "@/ai/criteria/types";
 
@@ -50,12 +50,15 @@ export async function planForRequest(args: {
  */
 export function estimateForPlan(plan: ResolvedPlan): number {
   const actor = ACTORS[plan.actorKey];
-  // Mirror discovery's over-fetch so the reserved hold covers the real crawl cost.
-  const candidates = discoveryCandidateTarget(plan);
-  const audited = signalProvidersFor(plan.criteria).has("website-audit") ? candidates : 0;
+  // Mirror the ACTUAL crawl discovery will run (candidate count + whether sites
+  // are scraped) so the reserved hold matches what the run really costs — not an
+  // inflated worst case.
+  const { candidateTarget, scrapeContacts } = resolveCrawl(plan);
+  const effectivePlan = { ...plan, enrichments: { ...plan.enrichments, companyContacts: scrapeContacts } };
+  const audited = signalProvidersFor(plan.criteria).has("website-audit") ? candidateTarget : 0;
   const expectedSaved = plan.maxResults; // we deliver up to the requested count
   const cogs =
-    candidates * actor.perResultCostUsd(plan) +
+    candidateTarget * actor.perResultCostUsd(effectivePlan) +
     audited * WEBSITE_AUDIT_COST_USD +
     expectedSaved * GEMINI_PER_LEAD_USD;
   return Math.max(1, creditsForCostUsd(cogs));

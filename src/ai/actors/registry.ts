@@ -142,11 +142,12 @@ const googleMaps: ActorDef = {
   perResultCostUsd(plan) {
     const r = ACTOR_RATES.google_maps;
     const e = plan.enrichments ?? {};
+    // compass/crawler-google-places does the listing + place details and scrapes
+    // each site for a public email/phone when enabled. It does NOT do email
+    // verification, B2B decision-maker enrichment, or social enrichment — so don't
+    // charge for those: they'd inflate the estimate for work the actor never does.
     let c = r.scrapedPlace + r.filterApplied + r.placeDetails;
     if (e.companyContacts !== false) c += r.companyContacts;
-    if (e.emailVerification) c += r.emailVerification;
-    if (e.businessLeads) c += r.businessLeads;
-    if (e.socialEnrichment) c += r.socialEnrichment;
     return c;
   },
 
