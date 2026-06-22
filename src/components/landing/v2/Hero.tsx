@@ -49,7 +49,7 @@ export function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <Eyebrow>Autonomous Outbound Engine</Eyebrow>
+            <Eyebrow>AI Lead Generation and Outbound Engine</Eyebrow>
           </motion.div>
 
           <h1 className="mt-7 font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(3rem,9vw,7.5rem)]">
