@@ -5,14 +5,17 @@ import { usePathname } from "next/navigation";
 import { CONSENT_CHANGE_EVENT, getStoredConsent } from "./cookie-consent-events";
 import { resolveConsent, type ConsentValue } from "@/lib/consent";
 
-declare global {
-  interface Window {
-    fbq?: (...args: unknown[]) => void;
-    _fbq?: unknown;
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-  }
-}
+// Access the injected globals (fbq/gtag/dataLayer) through this cast rather than
+// augmenting the global Window interface — keeps this component self-contained
+// and immune to clashes with other global declarations.
+type TrackingFn = (...args: unknown[]) => void;
+type TrackingWindow = {
+  fbq?: TrackingFn;
+  _fbq?: unknown;
+  dataLayer?: unknown[];
+  gtag?: TrackingFn;
+};
+const trackingWindow = () => window as unknown as TrackingWindow;
 
 interface Props {
   metaPixelId: string;
@@ -54,8 +57,8 @@ export function ConsentAnalytics({ metaPixelId, gaId }: Props) {
         setGranted(resolveConsent(null, d.country) === "granted");
       })
       .catch(() => {
-        // Geo unknown — be conservative-but-pragmatic: default to granted only
-        // for the non-EU baseline (resolveConsent(null, null) === "granted").
+        // Geo unknown — fall back to the non-EU baseline
+        // (resolveConsent(null, null) === "granted").
         if (!cancelled && getStoredConsent() === null) setGranted(true);
       });
     return () => { cancelled = true; };
@@ -77,7 +80,7 @@ export function ConsentAnalytics({ metaPixelId, gaId }: Props) {
     loadedRef.current = true;
 
     // ── Meta Pixel ──────────────────────────────────────────────────────────
-    if (metaPixelId && typeof window.fbq !== "function") {
+    if (metaPixelId && typeof trackingWindow().fbq !== "function") {
       /* eslint-disable */
       (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
         if (f.fbq) return;
@@ -96,23 +99,27 @@ export function ConsentAnalytics({ metaPixelId, gaId }: Props) {
         s.parentNode.insertBefore(t, s);
       })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
       /* eslint-enable */
-      window.fbq?.("init", metaPixelId);
-      window.fbq?.("track", "PageView");
+      // Fresh read after the IIFE installs fbq.
+      const fbq = trackingWindow().fbq;
+      fbq?.("init", metaPixelId);
+      fbq?.("track", "PageView");
     }
 
     // ── Google Analytics (gtag) ─────────────────────────────────────────────
-    if (gaId && typeof window.gtag !== "function") {
+    if (gaId && typeof trackingWindow().gtag !== "function") {
       const s = document.createElement("script");
       s.async = true;
       s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
       document.head.appendChild(s);
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function gtag() {
+      const w = trackingWindow();
+      w.dataLayer = w.dataLayer || [];
+      const gtag: TrackingFn = function () {
         // eslint-disable-next-line prefer-rest-params
-        window.dataLayer!.push(arguments);
+        w.dataLayer!.push(arguments);
       };
-      window.gtag("js", new Date());
-      window.gtag("config", gaId);
+      w.gtag = gtag;
+      gtag("js", new Date());
+      gtag("config", gaId);
     }
   }, [granted, metaPixelId, gaId]);
 
@@ -124,9 +131,10 @@ export function ConsentAnalytics({ metaPixelId, gaId }: Props) {
       return;
     }
     if (!granted) return;
-    if (typeof window.fbq === "function") window.fbq("track", "PageView");
-    if (gaId && typeof window.gtag === "function") {
-      window.gtag("event", "page_view", { page_path: pathname });
+    const w = trackingWindow();
+    if (typeof w.fbq === "function") w.fbq("track", "PageView");
+    if (gaId && typeof w.gtag === "function") {
+      w.gtag("event", "page_view", { page_path: pathname });
     }
   }, [pathname, granted, gaId]);
 
