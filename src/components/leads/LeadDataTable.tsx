@@ -212,14 +212,14 @@ export function LeadDataTable({ leads, isProcessing, organizationId, listId }: L
 
   if (leads.length === 0 && !isProcessing) {
     return (
-      <div className="bg-card border border-border rounded-xl p-12 text-center">
-        <p className="text-muted-foreground text-sm">No leads yet.</p>
+      <div className="border-t border-border pt-12 text-center">
+        <p className="text-sm font-medium">No leads yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+    <div className="border border-border rounded-lg overflow-hidden flex flex-col">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-secondary/30 flex-wrap">
         {/* Filter tabs */}
@@ -256,7 +256,7 @@ export function LeadDataTable({ leads, isProcessing, organizationId, listId }: L
               Columns <ChevronDown className="w-3 h-3" />
             </button>
             {showColPicker && (
-              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-xl z-30 p-3 min-w-[200px] grid grid-cols-2 gap-1">
+              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg z-30 p-3 min-w-[200px] grid grid-cols-2 gap-1">
                 {COLUMNS.map((col) => (
                   <label key={col.key} className="flex items-center gap-1.5 text-xs cursor-pointer hover:text-foreground text-muted-foreground">
                     <input
@@ -388,7 +388,7 @@ export function LeadDataTable({ leads, isProcessing, organizationId, listId }: L
                         return (
                           <td key={col.key} className={cellClass}>
                             {lead.qualificationScore != null ? (
-                              <span className={`font-mono font-bold ${scoreColor(lead.qualificationScore)}`}>{lead.qualificationScore}</span>
+                              <span className={`tabular-nums font-bold ${scoreColor(lead.qualificationScore)}`}>{lead.qualificationScore}</span>
                             ) : <span className="text-muted-foreground">—</span>}
                           </td>
                         );

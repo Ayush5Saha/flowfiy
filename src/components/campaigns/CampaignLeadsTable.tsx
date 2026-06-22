@@ -176,17 +176,17 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
   ];
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <h2 className="text-sm font-medium">Leads ({stats.total})</h2>
+        <h2 className="text-sm font-semibold">Leads ({stats.total})</h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
             <span>{stats.pending} pending</span>
             <span>·</span>
             <span>{stats.sent} sent</span>
             <span>·</span>
-            <span className="text-green-400">{stats.replied} replied</span>
+            <span className="text-emerald-400">{stats.replied} replied</span>
           </div>
           {campaignLeads.length > 0 && (
             <button
@@ -263,7 +263,7 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
                       </span>
                     )}
                     {cl.sentAt && (
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
                         {new Date(cl.sentAt).toLocaleDateString()}
                       </span>
                     )}

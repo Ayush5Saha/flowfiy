@@ -168,22 +168,22 @@ export function LeadRequestComposer() {
   const balanceAfter = balance - estimate;
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h2 className="font-semibold">Describe the leads you want</h2>
+          <Sparkles className="w-4 h-4 text-primary" strokeWidth={1.75} />
+          <h2 className="text-sm font-semibold">Describe the leads you want</h2>
         </div>
         <CreditBalancePill />
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+        <div className="mb-4 px-4 py-3 rounded-lg bg-secondary/40 text-sm flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-destructive" strokeWidth={1.75} />
           <div>
-            <p>{error.message}</p>
+            <p className="text-destructive">{error.message}</p>
             {error.href && (
-              <Link href={error.href} className="underline underline-offset-2 font-medium">{error.hrefLabel}</Link>
+              <Link href={error.href} className="text-primary hover:underline font-medium mt-1 inline-block">{error.hrefLabel}</Link>
             )}
           </div>
         </div>
@@ -197,7 +197,7 @@ export function LeadRequestComposer() {
             onChange={(e) => setRawQuery(e.target.value)}
             rows={3}
             placeholder="e.g. Find owners of coffee shops in Mumbai that don't have a website"
-            className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
           />
           <div className="flex flex-wrap gap-2 mt-3">
             {EXAMPLES.map((ex) => (
@@ -222,14 +222,14 @@ export function LeadRequestComposer() {
                 step={5}
                 value={leadCount}
                 onChange={(e) => setLeadCount(Math.max(5, Math.min(Math.round(Number(e.target.value) || 0), 500)))}
-                className="w-20 px-2.5 py-1.5 bg-secondary border border-border rounded-lg text-sm text-center focus:outline-none focus:ring-1 focus:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-20 rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5 text-sm text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
               />
               <span className="text-xs text-muted-foreground">max 500</span>
             </div>
             <button
               type="submit"
               disabled={phase === "submitting" || rawQuery.trim().length < 3}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {phase === "submitting" ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4" /></>}
             </button>
@@ -278,7 +278,7 @@ export function LeadRequestComposer() {
                 <input
                   value={(answers[q.id] as string) ?? ""}
                   onChange={(e) => setAnswers((p) => ({ ...p, [q.id]: e.target.value }))}
-                  className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
                 />
               )}
               {q.type === "number" && (
@@ -286,17 +286,17 @@ export function LeadRequestComposer() {
                   type="number"
                   value={(answers[q.id] as string) ?? ""}
                   onChange={(e) => setAnswers((p) => ({ ...p, [q.id]: e.target.value }))}
-                  className="w-32 px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-32 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
                 />
               )}
             </div>
           ))}
           <div className="flex items-center gap-3">
-            <button onClick={() => reset(true)} className="text-sm text-muted-foreground hover:text-foreground">Back</button>
+            <button onClick={() => reset(true)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Back</button>
             <button
               onClick={submitAnswers}
               disabled={!answeredAll}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               Continue <ArrowRight className="w-4 h-4" />
             </button>
@@ -332,36 +332,36 @@ export function LeadRequestComposer() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-secondary/60 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Estimated cost</p>
-              <p className="text-xl font-semibold flex items-center gap-1.5"><Coins className="w-4 h-4 text-primary" />{estimate} credits</p>
+          <div className="grid grid-cols-2 border-y border-border py-5">
+            <div className="pr-6">
+              <p className="text-[13px] text-muted-foreground">Estimated cost</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums flex items-center gap-1.5"><Coins className="w-4 h-4 text-primary" strokeWidth={1.75} />{estimate} credits</p>
             </div>
-            <div className="bg-secondary/60 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Balance after</p>
-              <p className={`text-xl font-semibold ${balanceAfter < 0 ? "text-destructive" : "text-green-400"}`}>
+            <div className="pl-6 border-l border-border">
+              <p className="text-[13px] text-muted-foreground">Balance after</p>
+              <p className={`mt-2 text-2xl font-semibold tracking-tight tabular-nums ${balanceAfter < 0 ? "text-destructive" : "text-emerald-400"}`}>
                 {balanceAfter < 0 ? `Short ${Math.abs(balanceAfter)}` : `${balanceAfter} left`}
               </p>
             </div>
           </div>
 
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Coins className="w-3 h-3" /> Credits are held now and reconciled to actual cost — you only pay for qualified leads.
+            <Coins className="w-3 h-3" strokeWidth={1.75} /> Credits are held now and reconciled to actual cost — you only pay for qualified leads.
           </p>
 
           <div className="flex items-center gap-3">
             <button
               onClick={confirmRun}
               disabled={phase === "submitting" || balanceAfter < 0}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {phase === "submitting" ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-4 h-4" /> Run · reserve {estimate}</>}
+              {phase === "submitting" ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-4 h-4" strokeWidth={1.75} /> Run · reserve {estimate}</>}
             </button>
-            <button onClick={() => reset(true)} className="inline-flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm hover:bg-secondary transition-colors">
-              <Pencil className="w-3.5 h-3.5" /> Edit
+            <button onClick={() => reset(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <Pencil className="w-3.5 h-3.5" strokeWidth={1.75} /> Edit
             </button>
             {balanceAfter < 0 && (
-              <Link href="/billing" className="ml-auto text-sm text-primary underline underline-offset-2">Buy credits →</Link>
+              <Link href="/billing" className="ml-auto text-sm text-primary hover:underline">Buy credits →</Link>
             )}
           </div>
         </div>

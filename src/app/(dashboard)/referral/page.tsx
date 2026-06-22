@@ -40,9 +40,9 @@ export default async function ReferralPage() {
   const paidConversions = referrals.filter((r) => r.rewardApplied).length;
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-3xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Referral Program</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Referral Program</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Earn 1 free month for every friend who upgrades to a paid plan using your link.
         </p>

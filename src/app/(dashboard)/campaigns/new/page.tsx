@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Megaphone, Users, Mail, Clock, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, Mail, Clock, ChevronRight, Loader2 } from "lucide-react";
 
 interface LeadList {
   id: string;
@@ -122,14 +122,14 @@ function NewCampaignInner() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
+      <div className="p-6 lg:p-10 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -139,23 +139,20 @@ function NewCampaignInner() {
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Campaigns
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Megaphone className="w-5 h-5 text-primary" />
-          </div>
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold">New Campaign</h1>
-            <p className="text-muted-foreground text-sm">Set up your outreach sequence</p>
+            <h1 className="text-2xl font-semibold tracking-tight">New Campaign</h1>
+            <p className="text-muted-foreground text-sm mt-1">Set up your outreach sequence</p>
           </div>
         </div>
       </div>
 
       {/* Gmail warning */}
       {orgData && !orgData.gmailConnected && (
-        <div className="mb-6 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 flex items-start gap-3">
-          <Mail className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
+        <div className="mb-6 rounded-lg bg-secondary/40 px-4 py-3 flex items-start gap-3">
+          <Mail className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" strokeWidth={1.75} />
           <div>
-            <p className="text-sm font-medium text-yellow-300">Gmail not connected</p>
+            <p className="text-sm font-medium">Gmail not connected</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               You can create this campaign now, but you&apos;ll need to{" "}
               <Link href="/integrations" className="text-primary hover:underline">connect Gmail</Link>{" "}
@@ -167,8 +164,8 @@ function NewCampaignInner() {
 
       {/* No qualified leads warning */}
       {orgData && orgData.leadLists.length === 0 && (
-        <div className="mb-6 p-4 rounded-xl border border-border bg-secondary/30 flex items-start gap-3">
-          <Users className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+        <div className="mb-6 rounded-lg bg-secondary/40 px-4 py-3 flex items-start gap-3">
+          <Users className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" strokeWidth={1.75} />
           <div>
             <p className="text-sm font-medium">No qualified leads yet</p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -179,71 +176,67 @@ function NewCampaignInner() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-0">
         {/* Campaign name */}
-        <div className="bg-card border border-border rounded-xl p-5">
-          <label className="block text-sm font-medium mb-3">Campaign Name</label>
+        <section className="pt-8">
+          <label className="block text-sm font-semibold mb-3">Campaign Name</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="e.g. Q3 SaaS Founders Outreach"
-            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+            className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
           />
-        </div>
+        </section>
 
         {/* Lead list selection */}
-        <div className="bg-card border border-border rounded-xl p-5">
-          <label className="block text-sm font-medium mb-1">Lead List</label>
-          <p className="text-xs text-muted-foreground mb-3">
+        <section className="border-t border-border pt-8 mt-8">
+          <label className="block text-sm font-semibold mb-1">Lead List</label>
+          <p className="text-xs text-muted-foreground mb-4">
             Only lists with qualified leads are shown
           </p>
 
           {orgData?.leadLists.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">No eligible lead lists found</p>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-border">
               {orgData?.leadLists.map((list) => (
                 <button
                   key={list.id}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, leadListId: list.id }))}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-lg border text-left transition-all ${
-                    form.leadListId === list.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40 hover:bg-secondary/30"
-                  }`}
+                  className="w-full flex items-center justify-between gap-4 py-4 text-left group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${form.leadListId === list.id ? "bg-primary" : "bg-secondary"}`} />
-                    <div>
-                      <p className="text-sm font-medium">{list.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${form.leadListId === list.id ? "bg-primary" : "bg-muted-foreground/50"}`} />
+                    <div className="min-w-0">
+                      <p className={`text-sm font-medium truncate transition-colors ${form.leadListId === list.id ? "text-primary" : "group-hover:text-primary"}`}>{list.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1 tabular-nums">
                         {list.qualifiedLeads} qualified leads
                       </p>
                     </div>
                   </div>
                   {form.leadListId === list.id && (
-                    <ChevronRight className="w-4 h-4 text-primary" />
+                    <ChevronRight className="w-4 h-4 text-primary shrink-0" strokeWidth={1.75} />
                   )}
                 </button>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Follow-up timing */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <section className="border-t border-border pt-8 mt-8">
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <label className="text-sm font-medium">Follow-up Timing</label>
+            <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+            <label className="text-sm font-semibold">Follow-up Timing</label>
           </div>
 
           <div className="space-y-5">
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Follow-up 1</span>
-                <span className="text-sm font-mono font-medium">
+                <span className="text-sm font-medium tabular-nums">
                   Day {form.followUp1DelayDays}
                 </span>
               </div>
@@ -270,7 +263,7 @@ function NewCampaignInner() {
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Follow-up 2</span>
-                <span className="text-sm font-mono font-medium">
+                <span className="text-sm font-medium tabular-nums">
                   Day {form.followUp2DelayDays}
                 </span>
               </div>
@@ -310,13 +303,13 @@ function NewCampaignInner() {
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Daily send limit */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <section className="border-t border-border pt-8 mt-8">
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium">Daily Send Limit</label>
-            <span className="text-sm font-mono font-medium">{form.dailySendLimit} / day</span>
+            <label className="text-sm font-semibold">Daily Send Limit</label>
+            <span className="text-sm font-medium tabular-nums">{form.dailySendLimit} / day</span>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
             Keep it under 100/day for new domains to protect deliverability
@@ -330,38 +323,38 @@ function NewCampaignInner() {
             onChange={(e) => setForm((f) => ({ ...f, dailySendLimit: Number(e.target.value) }))}
             className="w-full accent-primary"
           />
-          <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
-            <span>10</span><span className="text-green-400">100 (safe)</span><span>200</span>
+          <div className="flex justify-between text-[11px] text-muted-foreground mt-1 tabular-nums">
+            <span>10</span><span className="text-emerald-400">100 (safe)</span><span>200</span>
           </div>
-        </div>
+        </section>
 
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-lg">{error}</p>
+          <p className="text-sm text-destructive bg-secondary/40 px-4 py-3 rounded-lg mt-8">{error}</p>
         )}
 
         {/* Summary + Submit */}
         {selectedList && (
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm">
+          <div className="rounded-lg bg-secondary/40 px-4 py-3 text-sm mt-8">
             <p className="font-medium mb-2 text-primary">Campaign Summary</p>
             <ul className="space-y-1 text-muted-foreground text-xs">
-              <li>• <strong className="text-foreground">{selectedList.qualifiedLeads}</strong> qualified leads from &quot;{selectedList.name}&quot;</li>
+              <li>• <strong className="text-foreground tabular-nums">{selectedList.qualifiedLeads}</strong> qualified leads from &quot;{selectedList.name}&quot;</li>
               <li>• Initial email → Follow-up on day {form.followUp1DelayDays} → Follow-up on day {form.followUp2DelayDays}</li>
               <li>• Max {form.dailySendLimit} emails per day</li>
             </ul>
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 border-t border-border pt-8 mt-8">
           <Link
             href="/campaigns"
-            className="flex-1 text-center px-4 py-2.5 rounded-lg border border-border text-sm hover:bg-secondary transition-colors"
+            className="flex-1 inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={submitting || !form.leadListId || !form.name.trim()}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</>
@@ -378,7 +371,7 @@ function NewCampaignInner() {
 export default function NewCampaignPage() {
   return (
     <Suspense fallback={
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
+      <div className="p-6 lg:p-10 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     }>

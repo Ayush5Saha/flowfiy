@@ -33,15 +33,11 @@ function getInitials(name: string, email: string) {
 
 function Toast({ message, type }: { message: string; type: "success" | "error" }) {
   return (
-    <div className={`flex items-start gap-2.5 p-3 rounded-lg text-sm border ${
-      type === "success"
-        ? "bg-green-500/10 border-green-500/20 text-green-400"
-        : "bg-destructive/10 border-destructive/20 text-destructive"
-    }`}>
+    <div className="flex items-start gap-2.5 rounded-lg bg-secondary/40 px-4 py-3 text-sm">
       {type === "success"
-        ? <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
-        : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
-      {message}
+        ? <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" strokeWidth={1.75} />
+        : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-destructive" strokeWidth={1.75} />}
+      <span className={type === "error" ? "text-destructive" : "text-foreground"}>{message}</span>
     </div>
   );
 }
@@ -67,15 +63,17 @@ export function ProfileClient({ user, membership }: ProfileClientProps) {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-6 lg:p-10 max-w-3xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account details and security</p>
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage your account details and security</p>
+        </div>
       </div>
 
-      {/* Avatar + overview card */}
-      <div className="bg-card border border-border rounded-xl p-6 flex items-center gap-5">
+      {/* Avatar + overview */}
+      <div className="flex items-center gap-5">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shrink-0 select-none">
           {initials}
         </div>
@@ -108,15 +106,15 @@ export function ProfileClient({ user, membership }: ProfileClientProps) {
       {!user.isOAuthUser ? (
         <PasswordSection />
       ) : (
-        <div className="bg-card border border-border rounded-xl p-5">
+        <section className="border-t border-border pt-8 mt-8">
           <div className="flex items-center gap-3 mb-1">
-            <Lock className="w-4 h-4 text-muted-foreground" />
+            <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
             <h2 className="text-sm font-semibold">Password</h2>
           </div>
           <p className="text-xs text-muted-foreground ml-7">
             You signed in with Google. Password management is handled by your Google account.
           </p>
-        </div>
+        </section>
       )}
 
       {/* Account info */}
@@ -153,30 +151,30 @@ function NameSection({ currentName }: { currentName: string }) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+    <section className="border-t border-border pt-8 mt-8 space-y-4">
       <div className="flex items-center gap-3">
-        <User className="w-4 h-4 text-muted-foreground" />
+        <User className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
         <h2 className="text-sm font-semibold">Personal Information</h2>
       </div>
       {toast && <Toast message={toast.msg} type={toast.type} />}
       <div className="space-y-1.5">
-        <label className="block text-xs font-medium text-muted-foreground">Full Name</label>
+        <label className="block text-sm font-medium">Full Name</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your full name"
-          className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
         />
       </div>
       <button
         onClick={handleSave}
         disabled={loading || !name.trim() || name.trim() === currentName}
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
         {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         Save Changes
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -206,24 +204,24 @@ function EmailSection({ currentEmail }: { currentEmail: string }) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+    <section className="border-t border-border pt-8 mt-8 space-y-4">
       <div className="flex items-center gap-3">
-        <Mail className="w-4 h-4 text-muted-foreground" />
+        <Mail className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
         <h2 className="text-sm font-semibold">Email Address</h2>
       </div>
       {toast && <Toast message={toast.msg} type={toast.type} />}
-      <div className="p-3 bg-secondary/50 rounded-lg">
+      <div className="rounded-lg bg-secondary/40 px-4 py-3">
         <p className="text-xs text-muted-foreground mb-0.5">Current email</p>
         <p className="text-sm font-medium">{currentEmail}</p>
       </div>
       <div className="space-y-1.5">
-        <label className="block text-xs font-medium text-muted-foreground">New Email Address</label>
+        <label className="block text-sm font-medium">New Email Address</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="new@email.com"
-          className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground">
           A confirmation link will be sent to your new email address.
@@ -232,12 +230,12 @@ function EmailSection({ currentEmail }: { currentEmail: string }) {
       <button
         onClick={handleChange}
         disabled={loading || !email.trim()}
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
         {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         Send Confirmation
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -290,23 +288,23 @@ function PasswordSection() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+    <section className="border-t border-border pt-8 mt-8 space-y-4">
       <div className="flex items-center gap-3">
-        <Lock className="w-4 h-4 text-muted-foreground" />
+        <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
         <h2 className="text-sm font-semibold">Change Password</h2>
       </div>
       {toast && <Toast message={toast.msg} type={toast.type} />}
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-muted-foreground">New Password</label>
+          <label className="block text-sm font-medium">New Password</label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min. 8 characters"
-              className="w-full px-3 py-2 pr-10 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
             />
             <button
               type="button"
@@ -333,14 +331,14 @@ function PasswordSection() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-muted-foreground">Confirm New Password</label>
+          <label className="block text-sm font-medium">Confirm New Password</label>
           <div className="relative">
             <input
               type={showCf ? "text" : "password"}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repeat new password"
-              className="w-full px-3 py-2 pr-10 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
             />
             <button
               type="button"
@@ -359,12 +357,12 @@ function PasswordSection() {
       <button
         onClick={handleChange}
         disabled={loading || !password || !confirm || password !== confirm || password.length < 8}
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
         {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         Update Password
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -379,33 +377,33 @@ function AccountInfoSection({ userId, createdAt }: { userId: string; createdAt: 
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+    <section className="border-t border-border pt-8 mt-8 space-y-4">
       <div className="flex items-center gap-3">
-        <Shield className="w-4 h-4 text-muted-foreground" />
+        <Shield className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
         <h2 className="text-sm font-semibold">Account Information</h2>
       </div>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
+      <div className="divide-y divide-border">
+        <div className="flex items-center justify-between py-3">
           <span className="text-xs text-muted-foreground">User ID</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-foreground/70">{userId.slice(0, 8)}...{userId.slice(-4)}</span>
+            <span className="text-xs tabular-nums text-foreground/70">{userId.slice(0, 8)}...{userId.slice(-4)}</span>
             <button onClick={copyId} className="text-muted-foreground hover:text-foreground transition-colors">
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
+        <div className="flex items-center justify-between py-3">
           <span className="text-xs text-muted-foreground">Account created</span>
-          <span className="text-xs font-medium">
+          <span className="text-xs font-medium tabular-nums">
             {new Date(createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         </div>
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between py-3">
           <span className="text-xs text-muted-foreground">Auth provider</span>
           <span className="text-xs font-medium">Email / Password</span>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -415,9 +413,9 @@ function DangerZone() {
   const [input, setInput] = useState("");
 
   return (
-    <div className="bg-card border border-destructive/30 rounded-xl p-5 space-y-4">
+    <section className="border-t border-border pt-8 mt-8 space-y-4">
       <div className="flex items-center gap-3">
-        <Trash2 className="w-4 h-4 text-destructive" />
+        <Trash2 className="w-4 h-4 text-destructive" strokeWidth={1.75} />
         <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
       </div>
 
@@ -441,30 +439,30 @@ function DangerZone() {
           <p className="text-sm text-destructive font-medium">Are you absolutely sure?</p>
           <p className="text-xs text-muted-foreground">
             This will permanently delete your account, all leads, campaigns, and integrations.
-            Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm.
+            Type <span className="font-semibold text-foreground tabular-nums">DELETE</span> to confirm.
           </p>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type DELETE to confirm"
-            className="w-full px-3 py-2 bg-secondary border border-destructive/30 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-destructive"
+            className="w-full rounded-lg border border-destructive/30 bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-destructive placeholder:text-muted-foreground"
           />
           <div className="flex gap-2">
             <button
               disabled={input !== "DELETE"}
-              className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-40"
+              className="px-4 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-40"
             >
               Permanently Delete
             </button>
             <button
               onClick={() => { setConfirming(false); setInput(""); }}
-              className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-secondary transition-colors"
+              className="px-4 py-2.5 border border-border rounded-lg text-sm hover:bg-secondary transition-colors"
             >
               Cancel
             </button>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

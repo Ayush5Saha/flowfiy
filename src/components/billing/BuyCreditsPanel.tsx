@@ -53,15 +53,15 @@ export function BuyCreditsPanel({ subscribed, trialLeadsUsed, trialLeads, minCre
   // Trial used up and still no subscription → top-ups are locked behind subscribing.
   if (trialExhausted) {
     return (
-      <div className="bg-card border border-border rounded-xl p-5">
+      <section className="border-t border-border pt-8">
         <div className="flex items-center gap-2 mb-2">
-          <Lock className="w-4 h-4 text-muted-foreground" />
-          <h3 className="font-medium">Buy credits</h3>
+          <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+          <h2 className="text-sm font-semibold">Buy credits</h2>
         </div>
         <p className="text-sm text-muted-foreground">
           You&apos;ve used your {trialLeads} free leads. Subscribe to keep generating and to top up more credits.
         </p>
-      </div>
+      </section>
     );
   }
 

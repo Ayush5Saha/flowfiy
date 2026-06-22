@@ -140,8 +140,8 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
 
   if (leads.length === 0 && !isProcessing) {
     return (
-      <div className="bg-card border border-border rounded-xl p-12 text-center">
-        <p className="text-muted-foreground text-sm">No leads yet.</p>
+      <div className="border-t border-border pt-12 text-center">
+        <p className="text-sm font-medium">No leads yet.</p>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
   return (
     <div className={`flex gap-5 ${selectedLead ? "h-[calc(100vh-280px)]" : ""}`}>
       {/* Lead list */}
-      <div className={`flex flex-col ${selectedLead ? "w-1/2" : "w-full"} bg-card border border-border rounded-xl overflow-hidden`}>
+      <div className={`flex flex-col ${selectedLead ? "w-1/2" : "w-full"} border border-border rounded-lg overflow-hidden`}>
         {/* Filter tabs */}
         <div className="flex items-center gap-1 px-4 py-3 border-b border-border bg-secondary/30">
           {(["ALL", "QUALIFIED", "DISQUALIFIED"] as const).map((f) => (
@@ -179,7 +179,7 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
                 {sortAsc ? " ↑" : " ↓"}
               </button>
               {showSort && (
-                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-20 py-1 min-w-[120px]">
+                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg z-20 py-1 min-w-[120px]">
                   {(["score", "name", "company"] as SortKey[]).map((key) => (
                     <button
                       key={key}
@@ -239,7 +239,7 @@ export function LeadTableClient({ leads, isProcessing, organizationId, listId }:
 
               <div className="flex items-center gap-2 shrink-0">
                 {lead.qualificationScore !== null && lead.qualificationScore !== undefined && (
-                  <span className={`text-xs font-mono font-medium ${
+                  <span className={`text-xs tabular-nums font-medium ${
                     lead.qualificationScore >= 70 ? "text-green-400" : "text-muted-foreground"
                   }`}>
                     {lead.qualificationScore}
@@ -333,7 +333,7 @@ function StatusIcon({ status, score }: { status: string; score?: number | null }
   if (status === "CONTACTED") return <Mail className="w-5 h-5 text-blue-400 shrink-0" />;
   return (
     <div className="w-5 h-5 rounded-full border border-border shrink-0 flex items-center justify-center">
-      <span className="text-[8px] text-muted-foreground font-mono">{score ?? "?"}</span>
+      <span className="text-[8px] text-muted-foreground tabular-nums">{score ?? "?"}</span>
     </div>
   );
 }

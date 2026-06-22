@@ -53,14 +53,16 @@ export default async function BillingPage() {
   const subscriptionActive = organization.plan !== "FREE" && organization.subscriptionStatus === "active";
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Billing</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your subscription, credits and usage</p>
+    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage your subscription, credits and usage</p>
+        </div>
       </div>
 
       {/* Suspense needed because BillingClient uses useSearchParams */}
-      <Suspense fallback={<div className="h-96 bg-card border border-border rounded-xl animate-pulse" />}>
+      <Suspense fallback={<div className="border-t border-border pt-8 space-y-4"><div className="h-8 w-48 bg-secondary/60 rounded animate-pulse" /><div className="h-24 bg-secondary/40 rounded animate-pulse" /></div>}>
         <BillingClient
           organization={{
             id: organization.id,

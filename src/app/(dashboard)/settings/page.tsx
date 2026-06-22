@@ -21,9 +21,9 @@ export default async function SettingsPage() {
   });
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-3xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your workspace and business profile</p>
       </div>
 

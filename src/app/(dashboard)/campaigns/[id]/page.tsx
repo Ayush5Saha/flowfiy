@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Users, Send, MessageSquare, Clock } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { CampaignActions } from "@/components/campaigns/CampaignActions";
 import { CampaignTimingEditor } from "@/components/campaigns/CampaignTimingEditor";
@@ -67,17 +67,17 @@ export default async function CampaignDetailPage({
 
   const replyRate = stats.sent > 0 ? Math.round((stats.replied / stats.sent) * 100) : 0;
 
-  const statusColor: Record<string, string> = {
-    ACTIVE: "bg-green-500/10 text-green-400",
-    PAUSED: "bg-yellow-500/10 text-yellow-400",
-    DRAFT: "bg-secondary text-muted-foreground",
-    COMPLETED: "bg-secondary text-muted-foreground",
+  const statusDot: Record<string, string> = {
+    ACTIVE: "bg-emerald-400",
+    PAUSED: "bg-amber-400",
+    DRAFT: "bg-muted-foreground/50",
+    COMPLETED: "bg-muted-foreground/50",
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-8">
         <Link
           href="/campaigns"
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors w-fit"
@@ -86,22 +86,18 @@ export default async function CampaignDetailPage({
           All Campaigns
         </Link>
 
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Mail className="w-5 h-5 text-primary" />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold tracking-tight">{campaign.name}</h1>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                <span className={`w-1.5 h-1.5 rounded-full ${statusDot[campaign.status] ?? "bg-muted-foreground/50"}`} />
+                {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold">{campaign.name}</h1>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColor[campaign.status] ?? "bg-secondary text-muted-foreground"}`}>
-                  {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
-                </span>
-              </div>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                {stats.total} leads · Created {new Date(campaign.createdAt).toLocaleDateString()}
-              </p>
-            </div>
+            <p className="text-muted-foreground text-sm mt-1">
+              {stats.total} leads · Created {new Date(campaign.createdAt).toLocaleDateString()}
+            </p>
           </div>
 
           {/* Action buttons — client component */}
@@ -115,33 +111,32 @@ export default async function CampaignDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
-        {[
-          { label: "Total Leads", value: stats.total, icon: Users, color: "text-muted-foreground" },
-          { label: "Emails Sent", value: stats.sent, icon: Send, color: "text-blue-400" },
-          { label: "Replies", value: stats.replied, icon: MessageSquare, color: "text-green-400" },
-          { label: "Reply Rate", value: `${replyRate}%`, icon: null, color: replyRate >= 10 ? "text-green-400" : "text-purple-400" },
-          { label: "Meetings", value: stats.meetings, icon: null, color: stats.meetings > 0 ? "text-yellow-400" : "text-muted-foreground" },
-          { label: "Bounced", value: stats.bounced, icon: null, color: stats.bounced > 0 ? "text-destructive" : "text-muted-foreground" },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              {Icon && <Icon className={`w-3.5 h-3.5 ${color}`} />}
+      <section className="border-y border-border py-8 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-y-8">
+          {[
+            { label: "Total Leads", value: stats.total },
+            { label: "Emails Sent", value: stats.sent },
+            { label: "Replies", value: stats.replied },
+            { label: "Reply Rate", value: `${replyRate}%` },
+            { label: "Meetings", value: stats.meetings },
+            { label: "Bounced", value: stats.bounced },
+          ].map(({ label, value }, i) => (
+            <div key={label} className={i === 0 ? "lg:pr-8" : "lg:px-8 lg:border-l lg:border-border"}>
+              <p className="text-[13px] text-muted-foreground">{label}</p>
+              <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums">{value}</p>
             </div>
-            <p className={`text-2xl font-semibold font-mono ${color}`}>{value}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
 
       {/* Timing settings */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-6">
+      <section className="border-t border-border pt-8 mb-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-medium">Follow-up Sequence</h2>
+            <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+            <h2 className="text-sm font-semibold">Follow-up Sequence</h2>
           </div>
-          <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+          <span className="text-xs text-muted-foreground tabular-nums">
             {campaign.dailySendLimit} emails / day limit
           </span>
         </div>
@@ -154,7 +149,7 @@ export default async function CampaignDetailPage({
         <p className="text-xs text-muted-foreground mt-3">
           Follow-ups stop automatically when a lead replies. Timing changes apply to upcoming follow-ups only.
         </p>
-      </div>
+      </section>
 
       {/* Leads table — client component with preview modal */}
       <CampaignLeadsTable

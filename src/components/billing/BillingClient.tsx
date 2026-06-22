@@ -243,26 +243,26 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
 
       {/* Success banner */}
       {successBanner && (
-        <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
-          <CheckCircle className="w-5 h-5 shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-secondary/40 px-4 py-3 text-emerald-400 text-sm">
+          <CheckCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
           <span>{successBanner}</span>
-          <button onClick={() => setSuccessBanner(null)} className="ml-auto text-green-400/60 hover:text-green-400">✕</button>
+          <button onClick={() => setSuccessBanner(null)} className="ml-auto text-muted-foreground hover:text-foreground">✕</button>
         </div>
       )}
 
       {/* Error banner */}
       {error && (
-        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-secondary/40 px-4 py-3 text-destructive text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto text-destructive/60 hover:text-destructive">✕</button>
+          <button onClick={() => setError(null)} className="ml-auto text-muted-foreground hover:text-foreground">✕</button>
         </div>
       )}
 
       {/* Payment failed warning */}
       {(statusLabel === "payment_failed" || statusLabel === "halted") && !error && (
-        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-secondary/40 px-4 py-3 text-destructive text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
           <span>
             {statusLabel === "halted"
               ? "Your subscription was halted after repeated payment failures. Subscribe again to restore access."
@@ -273,10 +273,10 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
 
       {/* ── No-subscription trial progress ─────────────────────────────── */}
       {!subscriptionActive && (
-        <div className="bg-card border border-violet-500/30 rounded-xl p-5">
+        <div className="rounded-lg bg-secondary/40 px-4 py-4">
           <div className="flex items-center justify-between mb-2">
             <p className="font-medium text-sm">Free trial — no subscription needed</p>
-            <span className="text-sm font-mono">{Math.min(trialLeadsUsed, trialLeads).toLocaleString()} / {trialLeads.toLocaleString()} leads</span>
+            <span className="text-sm tabular-nums">{Math.min(trialLeadsUsed, trialLeads).toLocaleString()} / {trialLeads.toLocaleString()} leads</span>
           </div>
           <div className="w-full bg-secondary rounded-full h-2">
             <div
@@ -293,45 +293,41 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
       )}
 
       {/* ── Credit wallet ─────────────────────────────────────────────── */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Coins className="w-4 h-4 text-primary" />
-          <h2 className="font-semibold">Credit balance</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground">Available</p>
-            <p className="text-2xl font-bold font-mono">{wallet.balance.toLocaleString()}</p>
+      <section className="border-y border-border py-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8">
+          <div className="lg:pr-8">
+            <p className="text-[13px] text-muted-foreground">Available</p>
+            <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums">{wallet.balance.toLocaleString()}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Reserved</p>
-            <p className="text-2xl font-bold font-mono text-amber-400">{wallet.held.toLocaleString()}</p>
+          <div className="lg:px-8 lg:border-l lg:border-border">
+            <p className="text-[13px] text-muted-foreground">Reserved</p>
+            <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums text-amber-400">{wallet.held.toLocaleString()}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Used this cycle</p>
-            <p className="text-2xl font-bold font-mono">{creditsUsedThisCycle.toLocaleString()}</p>
+          <div className="lg:px-8 lg:border-l lg:border-border">
+            <p className="text-[13px] text-muted-foreground">Used this cycle</p>
+            <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums">{creditsUsedThisCycle.toLocaleString()}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Renews to</p>
-            <p className="text-2xl font-bold font-mono">{subscriptionActive ? plan.credits.toLocaleString() : "—"}</p>
+          <div className="lg:px-8 lg:border-l lg:border-border">
+            <p className="text-[13px] text-muted-foreground">Renews to</p>
+            <p className="mt-2.5 text-[34px] leading-none font-semibold tracking-tight tabular-nums">{subscriptionActive ? plan.credits.toLocaleString() : "—"}</p>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1.5">
-          <Coins className="w-3 h-3" /> ~2 leads per credit (varies by search). You only pay for qualified leads — credits are reserved at run start and reconciled to actual cost.
+        <p className="text-xs text-muted-foreground mt-6 flex items-center gap-1.5">
+          <Coins className="w-3 h-3" strokeWidth={1.75} /> ~2 leads per credit (varies by search). You only pay for qualified leads — credits are reserved at run start and reconciled to actual cost.
         </p>
-      </div>
+      </section>
 
       {/* ── Subscription ──────────────────────────────────────────────── */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      <section className="border-t border-border pt-8">
         <div className="flex items-center justify-between mb-1">
           <p className="text-sm text-muted-foreground">Current plan</p>
           {subscriptionActive && (organization.razorpaySubscriptionId || organization.stripeSubscriptionId) && !cancelRequested && statusLabel !== "cancelled" && (
             <button
               onClick={handleCancel}
               disabled={cancelLoading}
-              className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-xs hover:bg-secondary transition-colors disabled:opacity-50 text-muted-foreground"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
             >
-              {cancelLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+              {cancelLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" strokeWidth={1.75} />}
               {organization.billingGateway === "stripe" ? "Manage subscription" : "Cancel plan"}
             </button>
           )}
@@ -342,7 +338,7 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
             <div className="flex items-center gap-2">
               <p className="text-xl font-semibold">{plan.name}</p>
               <span className="text-sm text-muted-foreground">· {localised.formatted}/mo</span>
-              <span className="flex items-center gap-1 text-xs text-green-400"><CheckCircle className="w-3 h-3" /> Active</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active</span>
             </div>
             {cancelRequested && (
               <p className="text-xs text-amber-400 mt-2">
@@ -363,17 +359,17 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
             statusColor={statusColor}
           />
         )}
-      </div>
+      </section>
 
       {/* ── Referral code (only before subscribing) ───────────────────── */}
       {!subscriptionActive && (
-        <div className="bg-card border border-border rounded-xl p-4">
+        <section className="border-t border-border pt-8">
           <button
             type="button"
             onClick={() => setShowRefInput((v) => !v)}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
           >
-            <Tag className="w-4 h-4" />
+            <Tag className="w-4 h-4" strokeWidth={1.75} />
             <span>Have a referral code?</span>
             {showRefInput ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
           </button>
@@ -386,40 +382,40 @@ export function BillingClient({ organization, plan, wallet, creditsUsedThisCycle
                   onChange={(e) => setRefCode(e.target.value.toUpperCase())}
                   placeholder="Enter 8-character code (e.g. FLOW1XY9)"
                   maxLength={8}
-                  className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-28"
+                  className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm tabular-nums tracking-wide placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-28"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs">
                   {refStatus === "validating" && <span className="flex items-center gap-1 text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" />Checking…</span>}
-                  {refStatus === "valid" && <span className="flex items-center gap-1 text-green-400"><CheckCircle className="w-3 h-3" />Valid</span>}
+                  {refStatus === "valid" && <span className="flex items-center gap-1 text-emerald-400"><CheckCircle className="w-3 h-3" />Valid</span>}
                   {refStatus === "invalid" && <span className="flex items-center gap-1 text-destructive"><XCircle className="w-3 h-3" />Invalid</span>}
                 </div>
               </div>
               {refStatus === "valid" && refName && (
-                <p className="text-xs text-green-400 mt-1.5">✓ Referred by <strong>{refName}</strong> — your first month will earn them a free month!</p>
+                <p className="text-xs text-emerald-400 mt-1.5">✓ Referred by <strong>{refName}</strong> — your first month will earn them a free month!</p>
               )}
             </div>
           )}
-        </div>
+        </section>
       )}
 
       {/* ── Recent activity ───────────────────────────────────────────── */}
       {ledger.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Recent credit activity</h2>
-          <ul className="divide-y divide-border">
+        <section className="border-t border-border pt-8">
+          <h2 className="text-sm font-semibold mb-3">Recent credit activity</h2>
+          <div className="divide-y divide-border">
             {ledger.map((e) => (
-              <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
+              <div key={e.id} className="flex items-center justify-between py-4 text-sm">
                 <span className="text-foreground">{LEDGER_LABELS[e.type] ?? e.type}</span>
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-muted-foreground">{new Date(e.createdAt).toLocaleDateString()}</span>
-                  <span className={`font-mono font-medium w-16 text-right ${e.amount >= 0 ? "text-green-400" : "text-foreground"}`}>
+                  <span className="text-xs text-muted-foreground tabular-nums">{new Date(e.createdAt).toLocaleDateString()}</span>
+                  <span className={`font-medium w-16 text-right tabular-nums ${e.amount >= 0 ? "text-emerald-400" : "text-foreground"}`}>
                     {e.amount >= 0 ? "+" : ""}{e.amount.toLocaleString()}
                   </span>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
-        </div>
+          </div>
+        </section>
       )}
 
       <p className="text-xs text-muted-foreground">
@@ -449,7 +445,7 @@ function SubscribeCard({
         )}
       </div>
 
-      <div className="rounded-xl border border-primary/40 bg-primary/[0.04] p-5">
+      <div className="rounded-lg border border-border p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
@@ -459,14 +455,14 @@ function SubscribeCard({
             <ul className="space-y-1 mt-3">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Check className="w-3 h-3 text-primary shrink-0" />
+                  <Check className="w-3 h-3 text-primary shrink-0" strokeWidth={1.75} />
                   {f}
                 </li>
               ))}
             </ul>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-2xl font-bold font-mono">{localised.formatted}</p>
+            <p className="text-2xl font-semibold tracking-tight tabular-nums">{localised.formatted}</p>
             <p className="text-xs text-muted-foreground">/month</p>
             {localised.currency.code !== "INR" && (
               <p className="text-xs text-muted-foreground/70 mt-0.5">{localised.note}</p>
@@ -474,9 +470,9 @@ function SubscribeCard({
             <button
               onClick={onSubscribe}
               disabled={loading}
-              className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" strokeWidth={1.75} />}
               Subscribe
             </button>
           </div>

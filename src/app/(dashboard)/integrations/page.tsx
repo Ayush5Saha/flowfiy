@@ -22,9 +22,9 @@ export default async function IntegrationsPage() {
   );
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Integrations</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Connect your tools to power the AI outbound pipeline
         </p>

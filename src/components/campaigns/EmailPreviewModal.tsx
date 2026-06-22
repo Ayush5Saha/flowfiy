@@ -48,7 +48,7 @@ export function EmailPreviewModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+        className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -99,7 +99,7 @@ export function EmailPreviewModal({
                     onClick={() => void copy(current.subject ?? "", "subject")}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all"
                   >
-                    {copied === "subject" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied === "subject" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
                 <p className="text-sm font-medium">{current.subject}</p>
@@ -113,7 +113,7 @@ export function EmailPreviewModal({
                     onClick={() => void copy(current.body ?? "", "body")}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all"
                   >
-                    {copied === "body" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied === "body" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{current.body}</p>
@@ -125,7 +125,7 @@ export function EmailPreviewModal({
                   onClick={() => void copy(`Subject: ${current.subject ?? ""}\n\n${current.body ?? ""}`, "all")}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {copied === "all" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied === "all" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied === "all" ? "Copied!" : "Copy subject + body"}
                 </button>
               </div>

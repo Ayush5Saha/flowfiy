@@ -146,7 +146,12 @@ export function Sidebar({
   const displayName = userFullName || userEmail.split("@")[0];
 
   // ── Shared nav content (used in both desktop aside and mobile drawer) ──────
-  function NavContent({ onClose }: { onClose?: () => void }) {
+  // Rendered as a direct function call (not <NavContent />) so it inlines into
+  // Sidebar's tree at a stable position. As a JSX element it would get a fresh
+  // component identity on every Sidebar re-render (e.g. on navigation), forcing
+  // React to remount the whole subtree — which made the CreditBalancePill flash
+  // back to "…" each time. Inlining keeps the children mounted.
+  function renderNav() {
     return (
       <>
         {/* ── Org switcher ─────────────────────────────── */}
@@ -253,7 +258,7 @@ export function Sidebar({
             <Image src="/logo.svg" alt="Flowfiy" width={100} height={28} priority />
           </Link>
         </div>
-        <NavContent />
+        {renderNav()}
       </aside>
 
       {/* ── Mobile drawer ────────────────────────────────────── */}
@@ -290,7 +295,7 @@ export function Sidebar({
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <NavContent onClose={() => setDrawerOpen(false)} />
+              {renderNav()}
             </motion.div>
           </>
         )}

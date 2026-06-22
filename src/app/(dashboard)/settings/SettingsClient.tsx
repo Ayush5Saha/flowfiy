@@ -50,7 +50,7 @@ function SaveButton({ loading, saved }: { loading: boolean; saved: boolean }) {
     <button
       type="submit"
       disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+      className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
     >
       {loading ? (
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -73,7 +73,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls = "w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring";
+const inputCls = "w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground";
 const textareaCls = `${inputCls} resize-none`;
 
 function toggleArr(arr: string[], val: string): string[] {
@@ -196,13 +196,13 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
       {tab === "workspace" && (
         <form onSubmit={handleSaveWorkspace} className="space-y-6">
           {orgError && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <div className="rounded-lg bg-secondary/40 px-4 py-3 text-destructive text-sm">
               {orgError}
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-            <h2 className="font-medium">Workspace details</h2>
+          <section className="border-t border-border pt-8 space-y-4">
+            <h2 className="text-sm font-semibold">Workspace details</h2>
 
             <Field label="Workspace name">
               <input
@@ -217,14 +217,14 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
             <div className="grid grid-cols-2 gap-4 text-sm pt-2">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Slug</p>
-                <p className="font-mono text-xs bg-secondary px-3 py-2 rounded-lg border border-border">{organization.slug}</p>
+                <p className="text-xs tabular-nums bg-secondary/40 px-3 py-2 rounded-lg border border-border">{organization.slug}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Plan</p>
                 <p className="capitalize px-3 py-2 text-xs">{organization.plan.toLowerCase()}</p>
               </div>
             </div>
-          </div>
+          </section>
 
           <div className="flex justify-end">
             <SaveButton loading={orgLoading} saved={orgSaved} />
@@ -236,14 +236,14 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
       {tab === "business" && (
         <form onSubmit={handleSaveBusinessProfile} className="space-y-6">
           {bpError && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <div className="rounded-lg bg-secondary/40 px-4 py-3 text-destructive text-sm">
               {bpError}
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-xl p-5 space-y-5">
+          <section className="border-t border-border pt-8 space-y-5">
             <div>
-              <h2 className="font-medium">Business & ICP</h2>
+              <h2 className="text-sm font-semibold">Business & ICP</h2>
               <p className="text-muted-foreground text-xs mt-1">Flowfiy uses this to research and qualify leads. Be specific.</p>
             </div>
 
@@ -351,7 +351,7 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
                 ))}
               </div>
             </Field>
-          </div>
+          </section>
 
           <div className="flex justify-end">
             <SaveButton loading={bpLoading} saved={bpSaved} />
@@ -361,30 +361,30 @@ export function SettingsClient({ organization, businessProfile, user }: Props) {
 
       {/* Account tab */}
       {tab === "account" && (
-        <div className="space-y-4">
-          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-            <h2 className="font-medium">Your account</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center py-2 border-b border-border">
+        <div className="space-y-8">
+          <section className="border-t border-border pt-8 space-y-4">
+            <h2 className="text-sm font-semibold">Your account</h2>
+            <div className="divide-y divide-border text-sm">
+              <div className="flex justify-between items-center py-3">
                 <span className="text-muted-foreground">Email</span>
                 <span>{user.email}</span>
               </div>
-              <div className="flex justify-between items-center py-2">
+              <div className="flex justify-between items-center py-3">
                 <span className="text-muted-foreground">Role</span>
-                <span className="capitalize px-2.5 py-0.5 bg-secondary rounded-full text-xs border border-border">
+                <span className="capitalize px-2.5 py-0.5 bg-secondary/40 rounded-full text-xs border border-border">
                   {user.role.toLowerCase()}
                 </span>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="bg-card border border-border rounded-xl p-5">
-            <h2 className="font-medium mb-1">Workspace membership</h2>
+          <section className="border-t border-border pt-8">
+            <h2 className="text-sm font-semibold mb-1">Workspace membership</h2>
             <p className="text-muted-foreground text-xs mb-3">You are {user.role === "OWNER" ? "the owner" : `a ${user.role.toLowerCase()}`} of this workspace.</p>
             <div className="text-xs text-muted-foreground">
               To change your email address or delete your account, contact <span className="text-foreground">support@flowfiy.com</span>.
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>

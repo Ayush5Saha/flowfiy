@@ -239,12 +239,12 @@ function IntegrationCard({
           {config.howToGet && <HowToGetBox howToGet={config.howToGet} docsUrl={config.docsUrl} />}
 
           {error && (
-            <div className="mb-3 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
+            <div className="mb-3 rounded-lg bg-secondary/40 px-4 py-3 text-destructive text-xs">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-3 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs">
+            <div className="mb-3 rounded-lg bg-secondary/40 px-4 py-3 text-emerald-400 text-xs">
               {success}
             </div>
           )}
@@ -256,7 +256,7 @@ function IntegrationCard({
               </p>
               <button
                 onClick={handleOAuthConnect}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 <Key className="w-4 h-4" />
                 Connect with Google
@@ -272,7 +272,7 @@ function IntegrationCard({
                     value={credentials[field.key] ?? ""}
                     onChange={(e) => setCredentials({ ...credentials, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
-                    className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+                    className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground tabular-nums"
                   />
                 </div>
               ))}
@@ -281,7 +281,7 @@ function IntegrationCard({
                 <button
                   onClick={handleSave}
                   disabled={validating || saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {(validating || saving) && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {validating ? "Validating..." : saving ? "Saving..." : "Save & Connect"}
@@ -290,7 +290,7 @@ function IntegrationCard({
                 {isConnected && (
                   <button
                     onClick={handleDisconnect}
-                    className="px-4 py-2 border border-destructive/30 text-destructive rounded-lg text-sm hover:bg-destructive/10 transition-colors"
+                    className="px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-destructive transition-colors"
                   >
                     Disconnect
                   </button>
