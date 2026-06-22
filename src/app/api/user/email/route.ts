@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { enforceRateLimit, authRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Cap email-change requests per user + IP.
+  const limited = await enforceRateLimit(authRateLimit, `email-change:${user.id}:${getClientIp(req)}`);
+  if (limited) return limited;
 
   const { email } = await req.json();
   if (!email?.trim()) return NextResponse.json({ error: "Email is required" }, { status: 400 });

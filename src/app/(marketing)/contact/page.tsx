@@ -38,7 +38,7 @@ const FAQS = [
 ];
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: SUBJECTS[0], message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: SUBJECTS[0], message: "", company: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +64,7 @@ export default function ContactPage() {
       }
 
       setSent(true);
-      setForm({ name: "", email: "", subject: SUBJECTS[0], message: "" });
+      setForm({ name: "", email: "", subject: SUBJECTS[0], message: "", company: "" });
     } catch {
       setError("Something went wrong. Please email us directly at support@flowfiy.com");
     } finally {
@@ -150,6 +150,17 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Honeypot — hidden from humans, catches bots */}
+                <input
+                  type="text"
+                  name="company"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  aria-hidden="true"
+                  className="absolute left-[-9999px] w-px h-px opacity-0"
+                />
                 {error && (
                   <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                     {error}

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function RefundPage() {
-  const lastUpdated = "June 16, 2026";
+  const lastUpdated = "June 23, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -34,7 +34,7 @@ export default function RefundPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">2. Subscription and credits</h2>
             <p>
-              Flowfiy is subscription-only — $50/month for 400 credits. There is no free tier. Credits are a prepaid in-app unit (1 credit = ₹10 in value) that meters lead generation; they are an advance payment for future services and are non-refundable except as set out below. A search reserves an estimated number of credits and is charged only the actual cost when it finishes, never above the estimate you approve.
+              Flowfiy is subscription-based — $50/month for 400 credits — with a limited free trial for new accounts. Credits are a prepaid in-app unit (1 credit = ₹10 in value) that meters lead generation; they are an advance payment for future services and are non-refundable except as set out below. A search reserves an estimated number of credits and is charged only the actual cost when it finishes, never above the estimate you approve.
             </p>
           </section>
 

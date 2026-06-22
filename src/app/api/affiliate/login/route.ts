@@ -3,10 +3,19 @@ import { z } from "zod";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { createAccessToken } from "@/lib/affiliate";
+import { enforceRateLimit, loginRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({ email: z.string().email() });
 
 export async function POST(req: NextRequest) {
+  // Throttle magic-link requests per IP to prevent email-bombing / enumeration.
+  const limited = await enforceRateLimit(
+    loginRateLimit,
+    `affiliate-login:${getClientIp(req)}`,
+    "Too many requests. Please wait a few minutes and try again."
+  );
+  if (limited) return limited;
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

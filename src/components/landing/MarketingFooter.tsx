@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Twitter, Linkedin, Github, Mail } from "lucide-react";
+import { CookiePreferencesButton } from "@/components/analytics/CookiePreferencesButton";
 
 const footerLinks = [
   {
@@ -118,7 +119,7 @@ export function MarketingFooter() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-600">© 2026 Flowfiy. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <span>AI outbound, fully managed · No API keys required</span>
+            <CookiePreferencesButton className="hover:text-zinc-400 transition-colors" />
             <span className="hidden sm:inline">·</span>
             <Link href="/contact" className="hover:text-zinc-400 transition-colors hidden sm:inline">support@flowfiy.com</Link>
           </div>

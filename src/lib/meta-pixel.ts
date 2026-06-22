@@ -1,9 +1,10 @@
 /**
  * Client-side Meta (Facebook) Pixel event helper.
  *
- * The base pixel + PageView is loaded by <MetaPixel /> in the root layout.
- * Use this to fire standard conversion events from client components. It is a
- * safe no-op if the pixel hasn't loaded (SSR, ad-blocker, fbq not ready).
+ * The base pixel + PageView is loaded by <ConsentAnalytics /> in the root
+ * layout, but only after the visitor has consented (region-aware). Use this to
+ * fire standard conversion events from client components. It is a safe no-op if
+ * the pixel hasn't loaded (SSR, ad-blocker, no consent, fbq not ready).
  */
 
 type MetaPixelParams = {

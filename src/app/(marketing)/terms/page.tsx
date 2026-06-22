@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
-  const lastUpdated = "June 16, 2026";
+  const lastUpdated = "June 23, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -47,7 +47,7 @@ export default function TermsPage() {
               <li>You must provide accurate information when creating an account</li>
               <li>You are responsible for maintaining the security of your login credentials</li>
               <li>You must be at least 18 years old to use the Service</li>
-              <li>An active subscription is required to use the Service; there is no free tier</li>
+              <li>A limited free trial is available; continued use beyond the trial requires an active paid subscription</li>
             </ul>
           </section>
 
@@ -86,7 +86,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">6. Data and privacy</h2>
             <p>
-              Our collection and use of personal data is governed by our <Link href="/privacy" className="text-violet-400 hover:text-violet-300">Privacy Policy</Link>. Lead data you generate and outreach copy you create remain your data. We do not use your lead data to train AI models or share it with other tenants.
+              Our collection and use of personal data is governed by our <Link href="/privacy" className="text-violet-400 hover:text-violet-300">Privacy Policy</Link>, including our <Link href="/privacy#cookies" className="text-violet-400 hover:text-violet-300">cookie &amp; consent practices</Link>. Lead data you generate and outreach copy you create remain your data. We do not use your lead data to train AI models or share it with other tenants.
             </p>
           </section>
 

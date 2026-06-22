@@ -4,8 +4,17 @@ import {
   generateAdminToken,
   ADMIN_COOKIE_NAME,
 } from "@/lib/admin-auth";
+import { enforceRateLimit, loginRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Brute-force protection: cap login attempts per source IP.
+  const limited = await enforceRateLimit(
+    loginRateLimit,
+    `admin-login:${getClientIp(request)}`,
+    "Too many login attempts. Please wait a few minutes and try again."
+  );
+  if (limited) return limited;
+
   const { email, password } = await request.json();
 
   const session = await validateAdminCredentials(email, password);

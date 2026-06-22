@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { GoogleAnalytics } from "@next/third-parties/google";
-import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { ConsentAnalytics } from "@/components/analytics/ConsentAnalytics";
+import { CookieConsent } from "@/components/analytics/CookieConsent";
 import { SignupConversionTracker } from "@/components/analytics/SignupConversionTracker";
 import "./globals.css";
 
@@ -252,43 +252,16 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
-        {/* Meta Pixel base code — inline in <head> so it loads immediately and
-            is detectable by Meta's tools. Route-change PageViews (SPA nav) are
-            added by <MetaPixel /> in the body; signup conversions fire
-            CompleteRegistration via the trackMetaPixel helper. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${META_PIXEL_ID}');
-fbq('track', 'PageView');`,
-          }}
-        />
       </head>
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} font-sans min-h-screen`}
       >
-        {/* Meta Pixel <noscript> fallback */}
-        <noscript>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
-            alt=""
-          />
-        </noscript>
         {children}
-        <MetaPixel />
+        {/* Consent-gated tracking — resolves region client-side (keeps pages
+            static) and loads Meta Pixel + GA only when consent allows. */}
+        <ConsentAnalytics metaPixelId={META_PIXEL_ID} gaId={GA_ID} />
         <SignupConversionTracker />
-        {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
+        <CookieConsent />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { BugReportWidget } from "@/components/support/BugReportWidget";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
@@ -61,6 +62,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
+      <BugReportWidget />
     </ToastProvider>
   );
 }

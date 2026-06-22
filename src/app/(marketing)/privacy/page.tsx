@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  const lastUpdated = "June 16, 2026";
+  const lastUpdated = "June 23, 2026";
 
   return (
     <div className="py-16 px-4 sm:px-6">
@@ -85,11 +85,14 @@ export default function PrivacyPage() {
                   {[
                     ["Supabase", "Database, authentication, file storage", "US / EU"],
                     ["Railway", "Background worker infrastructure", "US"],
-                    ["Upstash", "Redis job queue", "US"],
+                    ["Upstash", "Redis job queue & rate limiting", "US"],
                     ["Razorpay", "Payment processing (India)", "India / Global"],
                     ["Stripe", "Payment processing (international)", "US / Global"],
                     ["Vercel", "Web application hosting", "Global CDN"],
+                    ["Resend", "Transactional & support email delivery", "US / Global"],
                     ["Google (Gemini)", "Managed AI inference for the pipeline", "US / Global"],
+                    ["Google Analytics", "Website traffic analytics (consent-based)", "US / Global"],
+                    ["Meta (Facebook Pixel)", "Advertising measurement (consent-based)", "US / Global"],
                     ["Apify", "Lead discovery (Google Maps & B2B sources)", "US / EU"],
                     ["Prospeo", "B2B email resolution", "EU"],
                   ].map(([name, purpose, loc]) => (
@@ -138,10 +141,40 @@ export default function PrivacyPage() {
             </ul>
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">8. Cookies</h2>
+          <section id="cookies" className="scroll-mt-24">
+            <h2 className="text-xl font-semibold text-white mb-3">8. Cookies &amp; tracking</h2>
             <p>
-              Flowfiy uses only essential cookies — session cookies required for authentication. We do not use third-party advertising or tracking cookies.
+              Flowfiy uses a small number of cookies and similar technologies. They fall into two groups:
+            </p>
+            <div className="mt-4 rounded-xl border border-white/6 overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-zinc-900/60 border-b border-white/8">
+                    <th className="text-left py-3 px-4 font-medium text-zinc-400">Category</th>
+                    <th className="text-left py-3 px-4 font-medium text-zinc-400">Examples</th>
+                    <th className="text-left py-3 px-4 font-medium text-zinc-400">Needs consent?</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[
+                    ["Essential", "Supabase auth session, security & rate-limiting, your cookie choice", "No — always on"],
+                    ["Analytics", "Google Analytics (aggregate traffic & usage)", "Yes"],
+                    ["Advertising", "Meta (Facebook) Pixel (ad measurement)", "Yes"],
+                  ].map(([cat, ex, consent]) => (
+                    <tr key={cat as string} className="bg-zinc-900/20">
+                      <td className="py-2.5 px-4 text-zinc-300">{cat}</td>
+                      <td className="py-2.5 px-4 text-zinc-400">{ex}</td>
+                      <td className="py-2.5 px-4 text-zinc-500">{consent}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4">
+              Essential cookies are required for the platform to function and are always active. Analytics and advertising cookies load only with your consent, which we collect through a cookie banner on your first visit. You can change or withdraw your choice at any time using the <strong className="text-white">&ldquo;Cookie preferences&rdquo;</strong> link in our footer.
+            </p>
+            <p className="mt-3">
+              Because some privacy laws require prior opt-in, our consent is <span className="text-white">region-aware</span>: visitors in the EU, EEA, the UK, and Switzerland are not tracked until they explicitly accept. Elsewhere, analytics and advertising cookies are enabled by default and you can reject them at any time. We honour browser &ldquo;Do Not Track&rdquo; signals where technically feasible.
             </p>
           </section>
 
