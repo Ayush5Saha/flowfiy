@@ -16,7 +16,6 @@
  */
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { creditsForCostUsd, LEADS_PER_CREDIT_ESTIMATE, type LeadType } from "./rates";
 
 export interface WalletState {
   balance: number;
@@ -57,12 +56,6 @@ export async function getWallet(organizationId: string): Promise<WalletState> {
     select: { balance: true, held: true },
   });
   return { balance: w.balance, held: w.held };
-}
-
-/** Estimate the credits to HOLD before a run (heuristic — not the charge). */
-export function estimateCredits(leadType: LeadType, expectedQualified: number): number {
-  const per = LEADS_PER_CREDIT_ESTIMATE[leadType] ?? LEADS_PER_CREDIT_ESTIMATE.B2B;
-  return Math.max(1, Math.ceil(expectedQualified / per));
 }
 
 /** Add credits to a wallet (PURCHASE / GRANT / REFUND / positive ADJUST). */
@@ -135,15 +128,18 @@ export async function reserveCredits(
 }
 
 /**
- * Reconcile a finished run. Charges actual COGS (clamped to the reserved hold,
- * so the user is never billed above the approved ceiling) and releases the rest.
- * Pass totalCostUsd = 0 to release the whole hold (cancel / empty / failed run).
+ * Reconcile a finished run. Charges `chargeCredits` (clamped to the reserved
+ * hold, so the user is never billed above the approved ceiling) and releases the
+ * rest. The customer charge is computed by the caller from leads DELIVERED — the
+ * optional `costUsd` is only the true COGS, recorded on the CONSUME row for
+ * internal margin tracking; it is NOT what the wallet pays. Pass chargeCredits =
+ * 0 to release the whole hold (cancel / empty / failed run).
  */
 export async function reconcileRun(
   organizationId: string,
-  args: { reservedCredits: number; totalCostUsd: number; ref: LedgerRef }
+  args: { reservedCredits: number; chargeCredits: number; costUsd?: number; ref: LedgerRef }
 ): Promise<{ consumed: number; released: number; balance: number }> {
-  const actual = Math.min(creditsForCostUsd(args.totalCostUsd), args.reservedCredits);
+  const actual = Math.max(0, Math.min(Math.ceil(args.chargeCredits), args.reservedCredits));
   const released = args.reservedCredits - actual;
 
   return serializable(async (tx) => {
@@ -159,7 +155,7 @@ export async function reconcileRun(
           type: "CONSUME",
           amount: -actual,
           balanceAfter: wallet.balance,
-          costUsd: new Prisma.Decimal(args.totalCostUsd.toFixed(6)),
+          costUsd: args.costUsd != null ? new Prisma.Decimal(args.costUsd.toFixed(6)) : null,
           refType: args.ref.refType ?? null,
           refId: args.ref.refId ?? null,
           metadata: args.ref.metadata,
@@ -188,7 +184,7 @@ export async function releaseHold(
   reservedCredits: number,
   ref: LedgerRef = {}
 ): Promise<{ released: number; balance: number }> {
-  const r = await reconcileRun(organizationId, { reservedCredits, totalCostUsd: 0, ref });
+  const r = await reconcileRun(organizationId, { reservedCredits, chargeCredits: 0, costUsd: 0, ref });
   return { released: r.released, balance: r.balance };
 }
 

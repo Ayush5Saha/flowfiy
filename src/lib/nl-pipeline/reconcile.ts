@@ -1,19 +1,30 @@
 /**
- * Reconcile a finished NL run's credits from actual COGS.
+ * Reconcile a finished NL run's credits.
  *
- * Total run COGS = actor cost (× candidates examined) + website audits + Prospeo
- * enrichment + Gemini per researched lead. Reconciled against the reserved hold:
- * charge actual (clamped to the hold), release the rest. Empty runs charge nothing.
+ * The customer is billed PURELY on qualified leads DELIVERED, at the published
+ * rate (≈2 leads per credit) — never for candidates examined or for research
+ * spend. The charge is clamped to the reserved hold and the remainder released;
+ * an empty run (0 qualified) charges nothing.
+ *
+ * True COGS (actor + website audits + Prospeo + Gemini) is still computed and
+ * stamped onto the CONSUME ledger row as `costUsd`, but only for internal margin
+ * tracking — it is not what the wallet pays.
  */
 import { prisma } from "@/lib/prisma";
 import { reconcileRun, releaseHold } from "@/lib/credits/service";
-import { WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD, ENRICH_RATES } from "@/lib/credits/rates";
+import {
+  creditsForQualifiedLeads,
+  WEBSITE_AUDIT_COST_USD,
+  GEMINI_PER_LEAD_USD,
+  ENRICH_RATES,
+} from "@/lib/credits/rates";
 
 interface CostMeta {
   candidatesExamined?: number;
   audited?: number;
   enriched?: number;
-  actorPerResultUsd?: number;
+  actorPerResultUsd?: number;   // legacy per-round snapshot (pre-actorCostUsd rows)
+  actorCostUsd?: number;        // actor COGS summed in USD across rounds
   savedLeads?: number;
 }
 
@@ -24,23 +35,33 @@ export async function reconcileLeadRequest(leadListId: string, organizationId: s
   if (lr.actualCredits !== null) return; // already reconciled
 
   const held = lr.heldCredits ?? 0;
+
+  // ── What the customer pays: qualified leads DELIVERED ÷ leads-per-credit ──
+  const qualified = await prisma.lead.count({ where: { leadListId, status: "QUALIFIED" } });
+  const charge = creditsForQualifiedLeads(qualified);
+
+  // ── True COGS — recorded for internal margin tracking only ───────────────
+  // Actor cost is summed in USD per round (`actorCostUsd`); fall back to the
+  // legacy single-rate snapshot for rows written before that field existed.
   const meta = (lr.costMeta ?? {}) as CostMeta;
+  const actorCostUsd =
+    meta.actorCostUsd ?? (meta.candidatesExamined ?? 0) * (meta.actorPerResultUsd ?? 0);
   const totalCostUsd =
-    (meta.candidatesExamined ?? 0) * (meta.actorPerResultUsd ?? 0) +
+    actorCostUsd +
     (meta.audited ?? 0) * WEBSITE_AUDIT_COST_USD +
     (meta.enriched ?? 0) * ENRICH_RATES.prospeo +
     (meta.savedLeads ?? 0) * GEMINI_PER_LEAD_USD;
 
   const { consumed } = await reconcileRun(organizationId, {
     reservedCredits: held,
-    totalCostUsd,
+    chargeCredits: charge,
+    costUsd: totalCostUsd,
     ref: { refType: "lead_request", refId: lr.id },
   });
 
-  // Count delivered leads against the no-subscription trial allowance — only
-  // while the org is unsubscribed (subscribers are metered by credits alone).
-  const savedLeads = meta.savedLeads ?? 0;
-  if (savedLeads > 0) {
+  // Count DELIVERED qualified leads against the no-subscription trial allowance —
+  // only while the org is unsubscribed (subscribers are metered by credits alone).
+  if (qualified > 0) {
     const org = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: { plan: true, subscriptionStatus: true },
@@ -48,7 +69,7 @@ export async function reconcileLeadRequest(leadListId: string, organizationId: s
     const subscribed = !!org && org.plan !== "FREE" && org.subscriptionStatus === "active";
     if (!subscribed) {
       await prisma.organization
-        .update({ where: { id: organizationId }, data: { trialLeadsUsed: { increment: savedLeads } } })
+        .update({ where: { id: organizationId }, data: { trialLeadsUsed: { increment: qualified } } })
         .catch(() => null);
     }
   }

@@ -7,10 +7,7 @@ import { runPlanner } from "@/ai/agents/planner";
 import { getCentralLLMClient } from "@/ai/client";
 import { reserveCredits } from "@/lib/credits/service";
 import { releaseLeadRequestHold } from "@/lib/nl-pipeline/reconcile";
-import { creditsForCostUsd, WEBSITE_AUDIT_COST_USD, GEMINI_PER_LEAD_USD, TRIAL_LEADS } from "@/lib/credits/rates";
-import { ACTORS } from "@/ai/actors/registry";
-import { signalProvidersFor } from "@/ai/criteria/engine";
-import { resolveCrawl } from "@/ai/config";
+import { creditsForQualifiedLeads, TRIAL_LEADS } from "@/lib/credits/rates";
 import { getLeadDiscoveryQueue } from "@/workers/queues";
 import type { ResolvedPlan, PlannerDecision } from "@/ai/criteria/types";
 
@@ -45,23 +42,14 @@ export async function planForRequest(args: {
 }
 
 /**
- * Pre-run credit estimate (the HOLD ceiling). Mirrors the reconciliation formula
- * so the reserved amount comfortably covers the actual charge.
+ * Pre-run credit HOLD (the reservation ceiling). The run bills the customer for
+ * qualified leads DELIVERED at the published rate (≈2 leads/credit), so the most
+ * a run can ever charge is the cost of delivering the FULL requested count. We
+ * reserve exactly that — an exact ceiling, not a COGS guess — and reconcile
+ * releases whatever isn't delivered.
  */
 export function estimateForPlan(plan: ResolvedPlan): number {
-  const actor = ACTORS[plan.actorKey];
-  // Mirror the ACTUAL crawl discovery will run (candidate count + whether sites
-  // are scraped) so the reserved hold matches what the run really costs — not an
-  // inflated worst case.
-  const { candidateTarget, scrapeContacts } = resolveCrawl(plan);
-  const effectivePlan = { ...plan, enrichments: { ...plan.enrichments, companyContacts: scrapeContacts } };
-  const audited = signalProvidersFor(plan.criteria).has("website-audit") ? candidateTarget : 0;
-  const expectedSaved = plan.maxResults; // we deliver up to the requested count
-  const cogs =
-    candidateTarget * actor.perResultCostUsd(effectivePlan) +
-    audited * WEBSITE_AUDIT_COST_USD +
-    expectedSaved * GEMINI_PER_LEAD_USD;
-  return Math.max(1, creditsForCostUsd(cogs));
+  return Math.max(1, creditsForQualifiedLeads(plan.maxResults));
 }
 
 export type ConfirmResult =

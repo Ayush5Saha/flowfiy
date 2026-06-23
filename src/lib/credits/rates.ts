@@ -30,6 +30,23 @@ export function creditsForCostUsd(costUsd: number): number {
   return Math.ceil(inr / CREDIT_VALUE_INR);
 }
 
+// ─── Customer charge model — the PUBLISHED contract ──────────────────────────
+// The ONLY thing a customer is billed for is QUALIFIED leads actually delivered.
+// Promised identically across the site, pricing pages and llms.txt:
+//   "~2 leads per credit; you only pay for qualified leads; an empty search
+//    costs nothing."
+// This is the single source of truth for what a run COSTS THE CUSTOMER. The
+// cost-plus COGS math above is kept only to (a) size the reserve hold and
+// (b) snapshot true COGS on the ledger for internal margin tracking — it must
+// never be what the wallet is actually charged.
+export const LEADS_PER_CREDIT = 2;
+
+/** Credits a customer pays for N delivered qualified leads (0 leads ⇒ 0 credits). */
+export function creditsForQualifiedLeads(qualifiedLeads: number): number {
+  if (qualifiedLeads <= 0) return 0;
+  return Math.ceil(qualifiedLeads / LEADS_PER_CREDIT);
+}
+
 // ─── Plan & top-up ──────────────────────────────────────────────────────────────
 export const PLAN_PRICE_USD = 50;
 export const PLAN_CREDITS = 400;                 // granted each billing cycle
@@ -44,13 +61,7 @@ export const CREDIT_EXPIRY_DAYS = 60;            // roll over once / expire afte
 export const TRIAL_LEADS = 100;
 export const TRIAL_BUFFER = 0.5;                 // 50% headroom for high-condition (audit-heavy) leads
 // Minimum deposit to fund the trial: 100 leads ÷ ~2 leads/credit = 50, ×1.5 buffer = 75.
-export const TRIAL_MIN_CREDITS = Math.ceil((TRIAL_LEADS / 2) * (1 + TRIAL_BUFFER));
-
-// ─── Estimate heuristic (NOT the charge) ─────────────────────────────────────────
-// Used only to size the pre-run HOLD. The real charge is reconciled from actual
-// COGS after the run. Tuned to the Starter-tier build-ups in the plan doc.
-export const LEADS_PER_CREDIT_ESTIMATE = { LOCAL: 1.6, B2B: 1.2 } as const;
-export type LeadType = keyof typeof LEADS_PER_CREDIT_ESTIMATE;
+export const TRIAL_MIN_CREDITS = Math.ceil((TRIAL_LEADS / LEADS_PER_CREDIT) * (1 + TRIAL_BUFFER));
 
 // ─── Gemini model rates (USD per 1M tokens) ──────────────────────────────────────
 export const MODEL_RATES = {

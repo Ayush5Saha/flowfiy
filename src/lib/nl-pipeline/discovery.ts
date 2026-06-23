@@ -186,8 +186,14 @@ export async function runNlDiscovery(opts: {
     )
   );
 
-  // Accumulate COGS across rounds so the final reconcile charges for the whole loop.
-  const prevMeta = (lr.costMeta ?? {}) as { candidatesExamined?: number; audited?: number; enriched?: number; savedLeads?: number };
+  // Accumulate the run's true COGS across rounds for the internal margin snapshot
+  // (the customer is billed on delivered leads, not this — see reconcile). Actor
+  // cost is summed in DOLLARS per round: each round may or may not scrape contacts,
+  // so a single per-result rate can't be applied to the cumulative candidate count.
+  const prevMeta = (lr.costMeta ?? {}) as {
+    candidatesExamined?: number; audited?: number; enriched?: number; actorCostUsd?: number; savedLeads?: number;
+  };
+  const roundActorCostUsd = candidatesExamined * actor.perResultCostUsd(crawlPlan);
   await prisma.leadRequest.update({
     where: { id: leadRequestId },
     data: {
@@ -195,7 +201,7 @@ export async function runNlDiscovery(opts: {
         candidatesExamined: (prevMeta.candidatesExamined ?? 0) + candidatesExamined,
         audited: (prevMeta.audited ?? 0) + audited,
         enriched: (prevMeta.enriched ?? 0) + enriched,
-        actorPerResultUsd: actor.perResultCostUsd(crawlPlan),
+        actorCostUsd: (prevMeta.actorCostUsd ?? 0) + roundActorCostUsd,
         savedLeads: (prevMeta.savedLeads ?? 0) + saved.length,
       } as never,
     },

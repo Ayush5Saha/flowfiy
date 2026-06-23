@@ -608,7 +608,7 @@ model LeadRequest {
   estimatedCredits Int?              @map("estimated_credits")
   heldCredits      Int?              @map("held_credits")  // amount reserved at confirm
   actualCredits    Int?              @map("actual_credits")
-  costMeta         Json?             @map("cost_meta")     // { candidatesExamined, audited, enriched, actorPerResultUsd }
+  costMeta         Json?             @map("cost_meta")     // COGS snapshot (margin tracking only): { candidatesExamined, audited, enriched, actorCostUsd, savedLeads }
   leadListId       String?           @unique @map("lead_list_id")
   error            String?
   createdAt        DateTime          @default(now()) @map("created_at")
