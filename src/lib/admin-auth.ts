@@ -1,10 +1,13 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
-// Built-in "owner" super-admin. Always able to log in and manage the team, even
-// before any admin_users rows exist. Override via env in production.
+// Built-in "owner" super-admin. Able to log in and manage the team even before
+// any admin_users rows exist — BUT ONLY when ADMIN_PASSWORD is configured in the
+// environment. There is deliberately no hardcoded password fallback: a secret in
+// source is a secret for everyone. If ADMIN_PASSWORD is unset, owner bootstrap
+// login is disabled and you must use a DB admin_users account instead.
 const OWNER_EMAIL = (process.env.ADMIN_EMAIL || "sahaayush6000@gmail.com").toLowerCase();
-const OWNER_PASSWORD = process.env.ADMIN_PASSWORD || "AyushSaha123";
+const OWNER_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const COOKIE_NAME = "admin_token";
 
 export type AdminRole = "OWNER" | "ADMIN";
@@ -15,8 +18,37 @@ export interface AdminSession {
   role: AdminRole;
 }
 
-function getSecret(): string {
-  return process.env.ENCRYPTION_KEY || "admin-fallback-secret-key";
+/**
+ * Dedicated signing key for admin session tokens.
+ *
+ * Resolution order:
+ *   1. ADMIN_TOKEN_SECRET (explicit, preferred)
+ *   2. ENCRYPTION_KEY with domain separation — so the AES data key is never
+ *      reused verbatim as an HMAC key.
+ *
+ * There is NO guessable fallback. If neither is configured the app refuses to
+ * mint or verify admin tokens (fail closed) instead of trusting a public secret.
+ */
+function getSecret(): Buffer {
+  const explicit = process.env.ADMIN_TOKEN_SECRET;
+  if (explicit && explicit.length >= 16) {
+    return crypto.createHash("sha256").update(explicit).digest();
+  }
+  const enc = process.env.ENCRYPTION_KEY;
+  if (enc && enc.length >= 32) {
+    return crypto.createHmac("sha256", enc).update("flowfiy:admin-token:v1").digest();
+  }
+  throw new Error(
+    "Admin token secret unavailable: set ADMIN_TOKEN_SECRET or ENCRYPTION_KEY"
+  );
+}
+
+/** Constant-time string comparison that never throws on length mismatch. */
+function safeStringEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
 }
 
 // ─── Password hashing (scrypt — no external dependency) ───────────────────────
@@ -81,8 +113,13 @@ export async function validateAdminCredentials(
   const normalized = (email || "").trim().toLowerCase();
   if (!normalized || !password) return null;
 
-  // Built-in owner — checked first so the founder is never locked out.
-  if (normalized === OWNER_EMAIL && password === OWNER_PASSWORD) {
+  // Built-in owner — only when ADMIN_PASSWORD is configured. Constant-time
+  // comparison so the check leaks no timing signal about the secret.
+  if (
+    OWNER_PASSWORD &&
+    safeStringEqual(normalized, OWNER_EMAIL) &&
+    safeStringEqual(password, OWNER_PASSWORD)
+  ) {
     return { email: OWNER_EMAIL, name: "Owner", role: "OWNER" };
   }
 

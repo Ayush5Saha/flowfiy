@@ -58,17 +58,22 @@ export const contactRateLimit = makeLimiter(Ratelimit.slidingWindow(5, "10 m"), 
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Best-effort client IP from proxy headers. */
+/** Best-effort client IP from proxy headers.
+ *
+ * Prefer platform-controlled headers (set/overwritten at the edge) over the
+ * raw `x-forwarded-for`, whose leftmost value is client-supplied and therefore
+ * spoofable — trusting it lets an attacker rotate it to defeat IP rate limits.
+ */
 export function getClientIp(req: Request): string {
   const h = req.headers;
+  const trusted =
+    h.get("x-vercel-forwarded-for") ??
+    h.get("cf-connecting-ip") ??
+    h.get("x-real-ip");
+  if (trusted) return trusted.split(",")[0]!.trim();
   const xff = h.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim();
-  return (
-    h.get("x-real-ip") ??
-    h.get("cf-connecting-ip") ??
-    h.get("x-vercel-forwarded-for") ??
-    "unknown"
-  );
+  return "unknown";
 }
 
 /**

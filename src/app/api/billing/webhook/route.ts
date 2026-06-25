@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { getRazorpay, PLANS, getPlanByRazorpayPlanId } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
@@ -7,9 +7,17 @@ import { grantCreditsOnce } from "@/lib/credits/service";
 import { PLAN_CREDITS } from "@/lib/credits/rates";
 
 function verifySignature(body: string, signature: string): boolean {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  // Fail closed: no secret configured → reject everything rather than throw.
+  if (!secret) {
+    console.error("[webhook] RAZORPAY_WEBHOOK_SECRET is not set — rejecting");
+    return false;
+  }
   const expected = createHmac("sha256", secret).update(body).digest("hex");
-  return expected === signature;
+  const a = Buffer.from(expected, "hex");
+  const b = Buffer.from(signature, "hex");
+  // Constant-time comparison; mismatched lengths can't be equal.
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 type RazorpayEvent = {

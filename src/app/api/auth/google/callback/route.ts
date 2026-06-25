@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { GOOGLE_OAUTH_STATE_COOKIE } from "../route";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const state = searchParams.get("state");
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
   const redirectUri = `${appUrl}/api/auth/google/callback`;
 
+  const cookieState = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
+
   if (error || !code) {
     return NextResponse.redirect(`${appUrl}/login?error=google_auth_failed`);
+  }
+
+  // CSRF: the state nonce must round-trip exactly. Reject if missing/mismatched.
+  if (!state || !cookieState || state !== cookieState) {
+    const res = NextResponse.redirect(`${appUrl}/login?error=invalid_state`);
+    res.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, "", { maxAge: 0, path: "/" });
+    return res;
   }
 
   try {
@@ -63,7 +74,9 @@ export async function GET(request: NextRequest) {
       isNewUser = lastSignIn - createdAt < 60_000; // within 60s of account creation
     }
 
-    return NextResponse.redirect(`${appUrl}${isNewUser ? "/onboarding?newSignup=1" : "/dashboard"}`);
+    const res = NextResponse.redirect(`${appUrl}${isNewUser ? "/onboarding?newSignup=1" : "/dashboard"}`);
+    res.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, "", { maxAge: 0, path: "/" });
+    return res;
   } catch (err) {
     console.error("Google OAuth callback error:", err);
     return NextResponse.redirect(`${appUrl}/login?error=google_auth_failed`);

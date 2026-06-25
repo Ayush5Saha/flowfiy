@@ -4,6 +4,8 @@
 // SSRF guard is mandatory — this fetches a user-supplied URL server-side, so we
 // reject loopback/private/link-local targets BEFORE any DNS/connect happens.
 
+import { lookup } from "node:dns/promises";
+
 /** User-facing failure that the API route maps to a 4xx with this message. */
 export class ScrapeError extends Error {
   constructor(
@@ -17,6 +19,7 @@ export class ScrapeError extends Error {
 
 const FETCH_UA = "Mozilla/5.0 (compatible; FlowfiyBot/1.0)";
 const FETCH_TIMEOUT_MS = 12_000;
+const MAX_REDIRECTS = 5;
 const MAX_BODY_BYTES = 1_500_000; // ~1.5MB
 const MAX_PAGE_CHARS = 8_000;
 const MAX_TOTAL_CHARS = 35_000;
@@ -85,20 +88,76 @@ function safeUrl(raw: string): URL {
   return url;
 }
 
-/** Fetch one URL with the shared caps; returns raw HTML or throws ScrapeError. */
-async function fetchHtml(url: URL): Promise<string> {
-  let res: Response;
+/**
+ * Resolve `host` and reject if ANY resolved address is private/loopback.
+ *
+ * The string-level checks in `safeUrl` can't stop a public hostname that
+ * resolves to an internal IP (DNS rebinding) — this closes that gap by checking
+ * the actual A/AAAA records before we connect.
+ */
+async function assertPublicHost(host: string): Promise<void> {
+  const cleaned = host.toLowerCase().replace(/^\[|\]$/g, "");
+  if (isPrivateAddress(cleaned)) {
+    throw new ScrapeError("That URL points to a private or local address.", "blocked_url");
+  }
+  let records: Array<{ address: string }>;
   try {
-    res = await fetch(url.toString(), {
-      method: "GET",
-      redirect: "follow",
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      headers: { "User-Agent": FETCH_UA },
-    });
+    records = await lookup(cleaned, { all: true });
   } catch {
     throw new ScrapeError("We couldn't reach that website. Check the URL and try again.", "unreachable");
   }
+  for (const r of records) {
+    if (isPrivateAddress(r.address)) {
+      throw new ScrapeError("That URL resolves to a private or local address.", "blocked_url");
+    }
+  }
+}
 
+/** Fetch one URL with the shared caps; returns raw HTML or throws ScrapeError. */
+async function fetchHtml(startUrl: URL): Promise<string> {
+  // Follow redirects manually so every hop is re-validated against SSRF — a
+  // public page that 302s to http://169.254.169.254/ (cloud metadata) or an
+  // internal host must not be followed blindly.
+  let url = startUrl;
+  let res: Response | undefined;
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    await assertPublicHost(url.hostname);
+    try {
+      res = await fetch(url.toString(), {
+        method: "GET",
+        redirect: "manual",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        headers: { "User-Agent": FETCH_UA },
+      });
+    } catch {
+      throw new ScrapeError("We couldn't reach that website. Check the URL and try again.", "unreachable");
+    }
+
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location");
+      if (!loc) break;
+      let next: URL;
+      try {
+        next = new URL(loc, url);
+      } catch {
+        throw new ScrapeError("That website returned an invalid redirect.", "unreachable");
+      }
+      if (next.protocol !== "http:" && next.protocol !== "https:") {
+        throw new ScrapeError("That website redirected to an unsupported address.", "blocked_url");
+      }
+      url = next;
+      continue;
+    }
+    break;
+  }
+
+  if (!res) {
+    throw new ScrapeError("We couldn't reach that website. Check the URL and try again.", "unreachable");
+  }
+  if (res.status >= 300 && res.status < 400) {
+    throw new ScrapeError("That website redirected too many times.", "unreachable");
+  }
   if (!res.ok) {
     throw new ScrapeError(`That website returned an error (HTTP ${res.status}).`, "unreachable");
   }
