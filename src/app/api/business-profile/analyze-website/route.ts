@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rate-limit";
 import { scrapeWebsiteForProfile, ScrapeError } from "@/lib/website-scraper";
-import { getClaudeClient } from "@/ai/client";
-import { AnthropicLLMClient } from "@/ai/llm";
+import { getCentralLLMClient } from "@/ai/client";
 import { runProfileExtractor, type ProfileDraft } from "@/ai/agents/profile-extractor";
 
 const schema = z.object({
@@ -98,7 +97,9 @@ export async function POST(req: NextRequest) {
 
   let draft: ProfileDraft;
   try {
-    const client = new AnthropicLLMClient(getClaudeClient());
+    // Platform-funded Gemini (same key as the lead pipeline) — keeps website
+    // import free for users and off the metered Anthropic key.
+    const { client } = getCentralLLMClient("profileExtractor");
     const raw = await runProfileExtractor(client, { pages: scraped.pages, finalUrl: scraped.finalUrl });
     draft = sanitizeDraft(raw);
   } catch {

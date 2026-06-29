@@ -23,7 +23,9 @@ export async function runProfileExtractor(
   const { systemPrompt, userContent } = buildProfileExtractorPrompt(input);
 
   const response = await client.messages.create({
-    // Haiku: structured extraction from scraped HTML text — cheap and sufficient.
+    // Structured extraction from scraped HTML text. The concrete model is chosen by
+    // the caller's client (central Gemini in prod); this id is only a fallback for
+    // an Anthropic client and is ignored by the Gemini/OpenRouter adapters.
     model: CLAUDE_MODELS.fast,
     max_tokens: 1536,
     temperature: 0,

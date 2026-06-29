@@ -65,7 +65,8 @@ export type AgentTask =
   | "companyAnalyzer"
   | "research"
   | "qualification"
-  | "personalization";
+  | "personalization"
+  | "profileExtractor";
 
 /** Per-task model map. Cheap tier for scoring/research, flash for routing + copy. */
 export const TASK_MODELS: Record<AgentTask, string> = {
@@ -75,6 +76,7 @@ export const TASK_MODELS: Record<AgentTask, string> = {
   research:        GEMINI_MODELS.flashLite,
   qualification:   GEMINI_MODELS.flashLite,
   personalization: GEMINI_MODELS.flash,       // quality matters most
+  profileExtractor: GEMINI_MODELS.flash,      // large scraped input → structured profile draft
 };
 
 /**
