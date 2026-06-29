@@ -98,17 +98,18 @@ export async function markListReady(
   target: number,
   log: Logger
 ): Promise<void> {
-  const list = await prisma.leadList.findUnique({
-    where: { id: leadListId },
-    select: { status: true },
-  });
-  if (list?.status === "READY") return;
-
   const totalLeads = await prisma.lead.count({ where: { leadListId } });
-  await prisma.leadList.update({
-    where: { id: leadListId },
+
+  // Atomically claim the READY transition. Many per-lead finalizers race here
+  // (the qualification + personalization workers both run at concurrency 10);
+  // a non-atomic read-check-write let several slip through and each fired the
+  // completion webhook AND reconcile — double-charging credits. A conditional
+  // updateMany lets exactly ONE caller win; the rest no-op.
+  const claimed = await prisma.leadList.updateMany({
+    where: { id: leadListId, status: { not: "READY" } },
     data: { status: "READY", jobStatus: "complete", totalLeads, qualifiedLeads: qualified },
   });
+  if (claimed.count === 0) return; // another finalizer already completed this list
 
   const message =
     target > 0 && qualified < target

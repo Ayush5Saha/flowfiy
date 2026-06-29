@@ -32,7 +32,17 @@ interface CostMeta {
 export async function reconcileLeadRequest(leadListId: string, organizationId: string): Promise<void> {
   const lr = await prisma.leadRequest.findUnique({ where: { leadListId } });
   if (!lr) return;                       // not an NL run
-  if (lr.actualCredits !== null) return; // already reconciled
+  if (lr.actualCredits !== null) return; // already reconciled (fast path)
+
+  // Atomically claim this reconcile so concurrent finalizers can never charge
+  // twice. Only the caller that flips actualCredits away from null proceeds; the
+  // sentinel (-1) is overwritten with the real consumed amount once reconciled.
+  // This guards the credit wallet independently of the caller-side READY claim.
+  const claim = await prisma.leadRequest.updateMany({
+    where: { id: lr.id, actualCredits: null },
+    data: { actualCredits: -1 },
+  });
+  if (claim.count === 0) return;         // lost the race — already reconciled
 
   const held = lr.heldCredits ?? 0;
 
@@ -52,12 +62,21 @@ export async function reconcileLeadRequest(leadListId: string, organizationId: s
     (meta.enriched ?? 0) * ENRICH_RATES.prospeo +
     (meta.savedLeads ?? 0) * GEMINI_PER_LEAD_USD;
 
-  const { consumed } = await reconcileRun(organizationId, {
-    reservedCredits: held,
-    chargeCredits: charge,
-    costUsd: totalCostUsd,
-    ref: { refType: "lead_request", refId: lr.id },
-  });
+  let consumed: number;
+  try {
+    ({ consumed } = await reconcileRun(organizationId, {
+      reservedCredits: held,
+      chargeCredits: charge,
+      costUsd: totalCostUsd,
+      ref: { refType: "lead_request", refId: lr.id },
+    }));
+  } catch (err) {
+    // Reconcile failed — release the claim so a later finalizer can retry.
+    await prisma.leadRequest
+      .updateMany({ where: { id: lr.id, actualCredits: -1 }, data: { actualCredits: null } })
+      .catch(() => null);
+    throw err;
+  }
 
   // Count DELIVERED qualified leads against the no-subscription trial allowance —
   // only while the org is unsubscribed (subscribers are metered by credits alone).
