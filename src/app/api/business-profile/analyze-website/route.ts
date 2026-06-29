@@ -7,6 +7,7 @@ import { generationRateLimit } from "@/lib/rate-limit";
 import { scrapeWebsiteForProfile, ScrapeError } from "@/lib/website-scraper";
 import { getCentralLLMClient } from "@/ai/client";
 import { runProfileExtractor, type ProfileDraft } from "@/ai/agents/profile-extractor";
+import { ICP_QUESTIONS, type IcpAnswers } from "@/lib/icp";
 
 const schema = z.object({
   organizationId: z.string().uuid(),
@@ -53,6 +54,28 @@ function sanitizeDraft(raw: ProfileDraft): ProfileDraft {
   };
 }
 
+/** Validate the model's structured ICP against the allowed options for each question.
+ *  Unknown keys / invalid option strings are dropped so onboarding only ever pre-fills
+ *  real, selectable answers. */
+function sanitizeIcp(raw: unknown): IcpAnswers {
+  const out: Record<string, string | string[]> = {};
+  if (!raw || typeof raw !== "object") return out as IcpAnswers;
+  const r = raw as Record<string, unknown>;
+  for (const q of ICP_QUESTIONS) {
+    const v = r[q.key];
+    const allowed = new Set(q.options);
+    if (q.multi) {
+      if (Array.isArray(v)) {
+        const vals = [...new Set(v.filter((x): x is string => typeof x === "string" && allowed.has(x)))];
+        if (vals.length) out[q.key] = vals;
+      }
+    } else if (typeof v === "string" && allowed.has(v)) {
+      out[q.key] = v;
+    }
+  }
+  return out as IcpAnswers;
+}
+
 async function getOrgMembership(userId: string, organizationId: string) {
   return prisma.organizationMember.findUnique({
     where: { organizationId_userId: { organizationId, userId } },
@@ -96,12 +119,14 @@ export async function POST(req: NextRequest) {
   }
 
   let draft: ProfileDraft;
+  let icp: IcpAnswers;
   try {
     // Platform-funded Gemini (same key as the lead pipeline) — keeps website
     // import free for users and off the metered Anthropic key.
     const { client } = getCentralLLMClient("profileExtractor");
     const raw = await runProfileExtractor(client, { pages: scraped.pages, finalUrl: scraped.finalUrl });
     draft = sanitizeDraft(raw);
+    icp = sanitizeIcp(raw.icp);
   } catch {
     return NextResponse.json(
       { error: "We read your site but couldn't draft a profile. Please enter it manually." },
@@ -111,6 +136,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     draft,
+    icp,
     confidence: draft.confidence,
     warnings: draft.warnings,
     analyzedUrl: scraped.finalUrl,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ChevronDown, ArrowLeft, Check, Sparkles, AlertCircle } from "lucide-react";
@@ -118,11 +119,47 @@ function Dropdown({
   placeholder: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  // Fixed viewport coords for the portalled menu (see below).
+  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number; up: boolean } | null>(null);
 
+  // Position the menu under (or above, when there's no room) the trigger, kept in
+  // sync with scroll/resize. It's rendered in a portal on <body> so the wizard
+  // card's `overflow-hidden` (needed for the progress bar + slide animation) can't
+  // clip the last options — the bug where "Other" got cut off at the card edge.
+  useEffect(() => {
+    if (!open) { setPos(null); return; }
+    const place = () => {
+      const el = triggerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const gap = 8;
+      const below = window.innerHeight - r.bottom - gap;
+      const above = r.top - gap;
+      const up = below < 220 && above > below;
+      const maxHeight = Math.max(160, Math.min(288, up ? above : below));
+      setPos(up
+        ? { left: r.left, width: r.width, bottom: window.innerHeight - r.top + gap, maxHeight, up }
+        : { left: r.left, width: r.width, top: r.bottom + gap, maxHeight, up });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+
+  // Close on click outside BOTH the trigger and the (portalled) menu.
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
@@ -140,8 +177,9 @@ function Dropdown({
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-secondary px-4 py-3.5 text-left text-sm transition-colors ${
@@ -164,34 +202,34 @@ function Dropdown({
         <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.985 }}
-            transition={{ duration: 0.16, ease: EASE }}
-            className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-border bg-card p-1.5 shadow-2xl shadow-black/40"
-          >
-            {options.map((o) => (
-              <button
-                key={o}
-                type="button"
-                onClick={() => pick(o)}
-                className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                  isOn(o) ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"
-                }`}
-              >
-                <span>{o}</span>
-                {isOn(o) && <Check className="h-4 w-4 shrink-0" />}
-              </button>
-            ))}
-            {multi && (
-              <p className="px-3 py-2 text-[11px] text-muted-foreground">Pick all that apply, then continue.</p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && pos && createPortal(
+        <motion.div
+          ref={menuRef}
+          initial={{ opacity: 0, y: pos.up ? 6 : -6, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.16, ease: EASE }}
+          style={{ position: "fixed", left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.maxHeight }}
+          className="z-50 overflow-auto rounded-xl border border-border bg-card p-1.5 shadow-2xl shadow-black/40"
+        >
+          {options.map((o) => (
+            <button
+              key={o}
+              type="button"
+              onClick={() => pick(o)}
+              className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                isOn(o) ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"
+              }`}
+            >
+              <span>{o}</span>
+              {isOn(o) && <Check className="h-4 w-4 shrink-0" />}
+            </button>
+          ))}
+          {multi && (
+            <p className="px-3 py-2 text-[11px] text-muted-foreground">Pick all that apply, then continue.</p>
+          )}
+        </motion.div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -256,18 +294,34 @@ export function OnboardingWizard({ userId }: { userId: string }) {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organizationId: orgId, url: website.trim() }),
       });
-      const data = (await res.json()) as { draft?: DraftLite; analyzedUrl?: string; error?: string };
+      const data = (await res.json()) as {
+        draft?: DraftLite;
+        icp?: Record<string, string | string[]>;
+        analyzedUrl?: string;
+        error?: string;
+      };
       if (!res.ok) {
         setImportError(typeof data.error === "string" ? data.error : "We couldn't read that site. Continue and fill it in manually.");
         return;
       }
       const m = mapDraftToOnboarding(data.draft ?? {});
+      const finalCompany = companyName.trim() || (m.companyName ?? "");
+      const finalDetails = m.businessDetails ?? businessDetails;
       if (m.companyName && !companyName.trim()) setCompanyName(m.companyName);
       if (m.outreachTone) setOutreachTone(m.outreachTone);
       if (m.businessDetails) setBusinessDetails(m.businessDetails);
-      if (Object.keys(m.answers).length) setAnswers((p) => ({ ...p, ...m.answers }));
+      // The server-inferred ICP (validated against the question options) fills every
+      // ICP step; the draft-derived guesses are a fallback the ICP overrides.
+      const mergedAnswers = { ...m.answers, ...(data.icp ?? {}) };
+      if (Object.keys(mergedAnswers).length) setAnswers((p) => ({ ...p, ...mergedAnswers }));
       if (data.analyzedUrl) setWebsite(data.analyzedUrl);
       setImported(true);
+      // Everything's pre-filled — jump to the final step so they review + finish.
+      // (Only when the two hard-required fields are present, so Finish won't 400.)
+      if (finalCompany && finalDetails.trim().length >= 10) {
+        setDir(1);
+        setIndex(STEPS.length - 1);
+      }
     } catch {
       setImportError("Something went wrong reading that site. Continue and fill it in manually.");
     } finally {
@@ -468,6 +522,12 @@ export function OnboardingWizard({ userId }: { userId: string }) {
 
               {step.kind === "details" && (
                 <div className="space-y-3">
+                  {imported && (
+                    <div className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                      <span>Imported from your website — we pre-filled every step, including your ICP. Review this, go <span className="font-medium">Back</span> to fine-tune any answer, or finish.</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-violet-400" />
                     <span className="text-[11px] font-medium text-violet-400">Last step — this powers your emails</span>

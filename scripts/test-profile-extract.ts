@@ -4,8 +4,7 @@
 import { readFileSync } from "fs";
 import { scrapeWebsiteForProfile, ScrapeError } from "@/lib/website-scraper";
 import { runProfileExtractor } from "@/ai/agents/profile-extractor";
-import { AnthropicLLMClient } from "@/ai/llm";
-import { getClaudeClient } from "@/ai/client";
+import { getCentralLLMClient } from "@/ai/client";
 
 // Minimal .env.local loader — only sets vars that aren't already in the env.
 for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
@@ -41,12 +40,12 @@ async function expectBlocked(url: string) {
   console.log(`pages: ${scraped.pages.length} (${scraped.pages.map((p) => new URL(p.url).pathname).join(", ")})`);
   console.log(`total chars: ${scraped.pages.reduce((n, p) => n + p.text.length, 0)}`);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.log("\nANTHROPIC_API_KEY missing — skipping LLM extraction step.");
+  if (!process.env.GEMINI_API_KEY) {
+    console.log("\nGEMINI_API_KEY missing — skipping LLM extraction step.");
     return;
   }
-  console.log("\n— Extract draft —");
-  const client = new AnthropicLLMClient(getClaudeClient());
+  console.log("\n— Extract draft + ICP (central Gemini) —");
+  const { client } = getCentralLLMClient("profileExtractor");
   const draft = await runProfileExtractor(client, scraped);
   console.log(JSON.stringify(draft, null, 2));
 })().catch((e) => {

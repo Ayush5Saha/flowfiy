@@ -12,6 +12,8 @@ export interface ProfileDraft {
   painPointsSolved: string;
   offerPositioning: string;
   outreachTone: "professional" | "conversational" | "direct";
+  /** Structured ICP answers (option strings), for pre-filling onboarding. Validated in the route. */
+  icp?: Record<string, unknown>;
   confidence: number;
   warnings: string[];
 }
@@ -27,7 +29,7 @@ export async function runProfileExtractor(
     // the caller's client (central Gemini in prod); this id is only a fallback for
     // an Anthropic client and is ignored by the Gemini/OpenRouter adapters.
     model: CLAUDE_MODELS.fast,
-    max_tokens: 1536,
+    max_tokens: 2048, // legacy profile fields + the structured ICP object
     temperature: 0,
     system: [{ type: "text", text: systemPrompt }],
     messages: [{ role: "user", content: userContent }],
