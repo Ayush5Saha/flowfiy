@@ -118,7 +118,7 @@ export function ProfileClient({ user, membership }: ProfileClientProps) {
       )}
 
       {/* Account info */}
-      <AccountInfoSection userId={user.id} createdAt={user.createdAt} />
+      <AccountInfoSection userId={user.id} createdAt={user.createdAt} isOAuthUser={user.isOAuthUser} />
 
       {/* Danger zone */}
       <DangerZone />
@@ -367,7 +367,7 @@ function PasswordSection() {
 }
 
 /* ─── Account Info Section ────────────────────────────────────────────────── */
-function AccountInfoSection({ userId, createdAt }: { userId: string; createdAt: string }) {
+function AccountInfoSection({ userId, createdAt, isOAuthUser }: { userId: string; createdAt: string; isOAuthUser: boolean }) {
   const [copied, setCopied] = useState(false);
 
   function copyId() {
@@ -400,7 +400,7 @@ function AccountInfoSection({ userId, createdAt }: { userId: string; createdAt: 
         </div>
         <div className="flex items-center justify-between py-3">
           <span className="text-xs text-muted-foreground">Auth provider</span>
-          <span className="text-xs font-medium">Email / Password</span>
+          <span className="text-xs font-medium">{isOAuthUser ? "Google" : "Email / Password"}</span>
         </div>
       </div>
     </section>
@@ -411,6 +411,28 @@ function AccountInfoSection({ userId, createdAt }: { userId: string; createdAt: 
 function DangerZone() {
   const [confirming, setConfirming] = useState(false);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleDelete() {
+    if (input !== "DELETE" || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/user/account", { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        setError(typeof data.error === "string" ? data.error : "Failed to delete account. Please try again.");
+        setLoading(false);
+        return;
+      }
+      // Account + session are gone — hard-navigate to the marketing site.
+      window.location.href = "/";
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  }
 
   return (
     <section className="border-t border-border pt-8 mt-8 space-y-4">
@@ -441,22 +463,28 @@ function DangerZone() {
             This will permanently delete your account, all leads, campaigns, and integrations.
             Type <span className="font-semibold text-foreground tabular-nums">DELETE</span> to confirm.
           </p>
+          {error && <Toast message={error} type="error" />}
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleDelete(); }}
             placeholder="Type DELETE to confirm"
-            className="w-full rounded-lg border border-destructive/30 bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-destructive placeholder:text-muted-foreground"
+            disabled={loading}
+            className="w-full rounded-lg border border-destructive/30 bg-secondary/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-destructive placeholder:text-muted-foreground disabled:opacity-60"
           />
           <div className="flex gap-2">
             <button
-              disabled={input !== "DELETE"}
-              className="px-4 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-40"
+              onClick={handleDelete}
+              disabled={input !== "DELETE" || loading}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-40"
             >
-              Permanently Delete
+              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {loading ? "Deleting…" : "Permanently Delete"}
             </button>
             <button
-              onClick={() => { setConfirming(false); setInput(""); }}
-              className="px-4 py-2.5 border border-border rounded-lg text-sm hover:bg-secondary transition-colors"
+              onClick={() => { setConfirming(false); setInput(""); setError(""); }}
+              disabled={loading}
+              className="px-4 py-2.5 border border-border rounded-lg text-sm hover:bg-secondary transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
