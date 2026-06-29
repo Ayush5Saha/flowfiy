@@ -34,7 +34,7 @@ interface CampaignLeadsTableProps {
   campaignId: string;
   followUp1DelayDays: number;
   followUp2DelayDays: number;
-  stats: { total: number; pending: number; sent: number; replied: number };
+  stats: { total: number; pending: number; sent: number; replied: number; noEmail?: number };
 }
 
 const leadStatusColor: Record<string, string> = {
@@ -47,7 +47,11 @@ const leadStatusColor: Record<string, string> = {
   MEETING_BOOKED: "bg-yellow-500/10 text-yellow-400",
 };
 
-type FilterTab = "ALL" | "PENDING" | "SENT" | "REPLIED" | "MEETING_BOOKED";
+type FilterTab = "ALL" | "PENDING" | "SENT" | "REPLIED" | "MEETING_BOOKED" | "NO_EMAIL";
+
+// A lead is "sendable-pending" only if it has an email; otherwise it can never
+// be sent and is surfaced separately as "No email".
+const hasNoEmail = (cl: CampaignLead) => !cl.lead.email;
 
 export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDays, followUp2DelayDays, stats }: CampaignLeadsTableProps) {
   const router = useRouter();
@@ -123,7 +127,8 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
 
   const counts = {
     ALL: campaignLeads.length,
-    PENDING: campaignLeads.filter((cl) => effectiveClStatus(cl) === "PENDING").length,
+    PENDING: campaignLeads.filter((cl) => effectiveClStatus(cl) === "PENDING" && !hasNoEmail(cl)).length,
+    NO_EMAIL: campaignLeads.filter((cl) => effectiveClStatus(cl) === "PENDING" && hasNoEmail(cl)).length,
     SENT: campaignLeads.filter((cl) => ["SENT", "OPENED"].includes(effectiveClStatus(cl))).length,
     REPLIED: campaignLeads.filter((cl) => effectiveClStatus(cl) === "REPLIED").length,
     MEETING_BOOKED: campaignLeads.filter((cl) => isMeetingBooked(cl)).length,
@@ -134,6 +139,8 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
     if (filter === "ALL") return true;
     if (filter === "MEETING_BOOKED") return isMeetingBooked(cl);
     if (filter === "SENT") return s === "SENT" || s === "OPENED";
+    if (filter === "NO_EMAIL") return s === "PENDING" && hasNoEmail(cl);
+    if (filter === "PENDING") return s === "PENDING" && !hasNoEmail(cl);
     return s === filter;
   });
 
@@ -173,6 +180,8 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
     { key: "SENT", label: `Sent (${counts.SENT})` },
     { key: "REPLIED", label: `Replied (${counts.REPLIED})` },
     { key: "MEETING_BOOKED", label: `Meetings (${counts.MEETING_BOOKED})` },
+    // Only show the "No email" tab when there are leads that can't be emailed
+    ...(counts.NO_EMAIL > 0 ? [{ key: "NO_EMAIL" as const, label: `No email (${counts.NO_EMAIL})` }] : []),
   ];
 
   return (
@@ -187,6 +196,12 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
             <span>{stats.sent} sent</span>
             <span>·</span>
             <span className="text-emerald-400">{stats.replied} replied</span>
+            {!!stats.noEmail && stats.noEmail > 0 && (
+              <>
+                <span>·</span>
+                <span className="text-amber-400">{stats.noEmail} no email</span>
+              </>
+            )}
           </div>
           {campaignLeads.length > 0 && (
             <button
@@ -231,6 +246,7 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
           {filtered.map((cl) => {
             const isMeeting = isMeetingBooked(cl);
             const clStatus = effectiveClStatus(cl);
+            const noEmail = clStatus === "PENDING" && hasNoEmail(cl);
             const canMarkMeeting = clStatus === "REPLIED" || isMeeting;
             const canMarkReplied = clStatus === "SENT" || clStatus === "OPENED";
 
@@ -329,10 +345,17 @@ export function CampaignLeadsTable({ campaignLeads, campaignId, followUp1DelayDa
                     </a>
                   )}
 
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${
-                    isMeeting ? leadStatusColor["MEETING_BOOKED"] : (leadStatusColor[clStatus] ?? "bg-secondary text-muted-foreground")
-                  }`}>
-                    {isMeeting ? "Meeting 🎉" : (clStatus.charAt(0) + clStatus.slice(1).toLowerCase())}
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${
+                      isMeeting
+                        ? leadStatusColor["MEETING_BOOKED"]
+                        : noEmail
+                          ? "bg-amber-500/10 text-amber-400"
+                          : (leadStatusColor[clStatus] ?? "bg-secondary text-muted-foreground")
+                    }`}
+                    title={noEmail ? "This lead has no email address, so it can't be emailed. Reach them via WhatsApp/phone." : undefined}
+                  >
+                    {isMeeting ? "Meeting 🎉" : noEmail ? "No email" : (clStatus.charAt(0) + clStatus.slice(1).toLowerCase())}
                   </span>
                 </div>
               </div>

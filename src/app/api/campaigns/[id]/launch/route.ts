@@ -90,12 +90,33 @@ export async function POST(
     return NextResponse.json({ queued: 0, message: "No pending leads to send. Add leads first." });
   }
 
+  // ── Skip leads with no email address ──────────────────────────────────────
+  // Leads sourced from Google Maps (local businesses) frequently have no email —
+  // the send worker can't deliver to them and the job would fail silently,
+  // leaving the lead stuck at PENDING forever. Filter them out here so we never
+  // enqueue an undeliverable send, and report the count back to the user.
+  // We deliberately leave their status as PENDING (no DB write): if the lead is
+  // later enriched with an email, a re-launch picks it up automatically.
+  const sendableLeads = pendingLeads.filter((cl) => !!cl.lead.email);
+  const noEmailCount = pendingLeads.length - sendableLeads.length;
+
+  if (sendableLeads.length === 0) {
+    return NextResponse.json({
+      queued: 0,
+      noEmailCount,
+      message:
+        `None of these ${noEmailCount} lead${noEmailCount === 1 ? "" : "s"} have an email address, ` +
+        `so there's nothing to send. They were likely sourced from Google Maps — local businesses ` +
+        `rarely list email. Reach them via WhatsApp/phone, or target an ICP that has email addresses.`,
+    });
+  }
+
   // ── Feature 10: A/B test — assign variants alternately at launch time ────
   // Only runs when abTestEnabled is true on the campaign.
   // Assigns every lead's outreachCopy to variant A or B alternately, giving
   // each variant exactly half the sends for a fair split.
   if (campaign.abTestEnabled) {
-    const copyUpdates = pendingLeads
+    const copyUpdates = sendableLeads
       .filter((cl) => cl.outreachCopy)
       .map((cl, idx) => ({
         id: cl.outreachCopy!.id,
@@ -110,7 +131,7 @@ export async function POST(
   }
 
   // ── Cross-list deduplication ──────────────────────────────────────────────
-  const leadEmails = pendingLeads
+  const leadEmails = sendableLeads
     .map((cl) => cl.lead.email)
     .filter((e): e is string => !!e);
 
@@ -125,9 +146,9 @@ export async function POST(
       })
     : 0;
 
-  // Enqueue initial email (step 0) for each lead
+  // Enqueue initial email (step 0) for each sendable lead
   await Promise.all(
-    pendingLeads.map((cl) =>
+    sendableLeads.map((cl) =>
       enqueueEmailJob({
         campaignLeadId: cl.id,
         organizationId: campaign.organizationId,
@@ -140,10 +161,19 @@ export async function POST(
   // we do fire lead.qualified for each qualified lead that gets enqueued.
   // (A dedicated campaign.launched event would be a future addition)
 
+  let message = `Queued ${sendableLeads.length} initial email${sendableLeads.length === 1 ? "" : "s"}.`;
+  if (noEmailCount > 0) {
+    message += ` ${noEmailCount} lead${noEmailCount === 1 ? "" : "s"} had no email address and ${noEmailCount === 1 ? "was" : "were"} skipped — reach those via WhatsApp/phone.`;
+  }
+  if (duplicateCount > 0) {
+    message += ` Note: ${duplicateCount} lead(s) were already contacted in other campaigns and will be skipped automatically.`;
+  }
+
   return NextResponse.json({
-    queued: pendingLeads.length,
+    queued: sendableLeads.length,
+    noEmailCount,
     duplicatesDetected: duplicateCount,
     abTestEnabled: campaign.abTestEnabled,
-    message: `Queued ${pendingLeads.length} initial emails.${duplicateCount > 0 ? ` Note: ${duplicateCount} lead(s) were already contacted in other campaigns and will be skipped automatically.` : " Follow-ups will be scheduled automatically after each send."}`,
+    message,
   });
 }

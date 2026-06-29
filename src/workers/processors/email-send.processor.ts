@@ -23,8 +23,17 @@ export async function processEmailSend(job: Job<EmailJobData>) {
     },
   });
 
-  if (!campaignLead || !campaignLead.outreachCopy || !campaignLead.lead.email) {
+  if (!campaignLead || !campaignLead.outreachCopy) {
     throw new Error(`Campaign lead ${campaignLeadId} missing required data`);
+  }
+
+  // No email address = nothing to deliver to (common for Google Maps leads).
+  // Skip gracefully instead of throwing — a throw would burn the 2 retries and
+  // leave the lead silently stuck at PENDING. Leaving it PENDING means a future
+  // re-launch will pick it up automatically once an email is added.
+  if (!campaignLead.lead.email) {
+    console.log(`[email] Skipping ${campaignLeadId} — lead has no email address`);
+    return;
   }
 
   const { campaign, outreachCopy, lead } = campaignLead;

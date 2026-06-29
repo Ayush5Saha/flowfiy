@@ -57,7 +57,11 @@ export default async function CampaignDetailPage({
 
   const stats = {
     total: campaign.campaignLeads.length,
-    pending: campaign.campaignLeads.filter((cl) => cl.status === "PENDING").length,
+    // "Pending" = genuinely sendable but not yet sent. Leads with no email
+    // address can never be sent, so they're tracked separately (noEmail) and
+    // excluded here — otherwise they'd inflate the pending count forever.
+    pending: campaign.campaignLeads.filter((cl) => cl.status === "PENDING" && !!cl.lead.email).length,
+    noEmail: campaign.campaignLeads.filter((cl) => cl.status === "PENDING" && !cl.lead.email).length,
     // "Sent" includes leads that went on to reply (they were still sent)
     sent: campaign.campaignLeads.filter((cl) => ["SENT", "REPLIED", "BOUNCED"].includes(cl.status)).length,
     replied: campaign.campaignLeads.filter((cl) => cl.status === "REPLIED").length,

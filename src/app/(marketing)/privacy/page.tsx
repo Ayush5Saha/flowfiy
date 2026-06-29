@@ -178,15 +178,34 @@ export default function PrivacyPage() {
             </p>
           </section>
 
+          <section id="google-user-data" className="scroll-mt-24">
+            <h2 className="text-xl font-semibold text-white mb-3">9. Google user data &amp; Limited Use</h2>
+            <p>
+              When you connect your Gmail account, Flowfiy requests a deliberately narrow set of Google OAuth scopes:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-zinc-400 mt-3">
+              <li><code className="text-violet-300">gmail.send</code> — to send the outreach emails and follow-ups you have approved, on your behalf. Flowfiy can only <em>send</em> mail; it cannot read, search, or delete anything in your mailbox.</li>
+              <li><code className="text-violet-300">openid</code> and <code className="text-violet-300">userinfo.email</code> — to identify the email address of the account you connected, so we can display it and set the correct &ldquo;From&rdquo; address.</li>
+            </ul>
+            <p className="mt-4">
+              We do <strong className="text-white">not</strong> request access to read your inbox, your contacts, or any other Google data, and we never store the contents of your mailbox.
+            </p>
+            <p className="mt-4">
+              Flowfiy&apos;s use and transfer of information received from Google APIs to any other app will adhere to the{" "}
+              <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline">Google API Services User Data Policy</a>, including the{" "}
+              <a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline">Limited Use requirements</a>. Specifically, data obtained through Google APIs is used only to provide and improve the Gmail-sending feature you enabled; it is never sold, never used for advertising, and never used to train generalized AI/ML models.
+            </p>
+          </section>
+
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">9. Changes to this policy</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">10. Changes to this policy</h2>
             <p>
               We may update this policy from time to time. Material changes will be communicated via email to registered users at least 14 days before they take effect. Continued use of the platform after a policy update constitutes acceptance of the updated policy.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">10. Contact</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">11. Contact</h2>
             <p>
               Questions about this privacy policy? Email <span className="text-violet-400">privacy@flowfiy.com</span> or write to: Flowfiy, Privacy Team.
             </p>
