@@ -27,8 +27,24 @@ export async function GET(req: NextRequest) {
       totalLeads: true,
       qualifiedLeads: true,
       createdAt: true,
+      // How many QUALIFIED leads actually have an email address — i.e. how many
+      // a campaign could really email. Leads from Google Maps (local businesses)
+      // frequently have none, so this can be far below qualifiedLeads.
+      _count: {
+        select: {
+          leads: {
+            where: { status: "QUALIFIED", email: { not: null }, NOT: { email: "" } },
+          },
+        },
+      },
     },
   });
 
-  return NextResponse.json({ leadLists });
+  // Flatten the filtered relation count into a plain `emailableLeads` field.
+  const withEmailable = leadLists.map(({ _count, ...list }) => ({
+    ...list,
+    emailableLeads: _count.leads,
+  }));
+
+  return NextResponse.json({ leadLists: withEmailable });
 }

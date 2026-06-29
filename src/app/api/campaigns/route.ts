@@ -59,6 +59,32 @@ export async function POST(req: NextRequest) {
   });
   if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // Email-address pre-check: a campaign on a lead list that has zero qualified
+  // leads with an email can never send anything. Block it up front with a clear
+  // message instead of letting the user create an undeliverable campaign.
+  if (data.leadListId) {
+    const emailableCount = await prisma.lead.count({
+      where: {
+        leadListId: data.leadListId,
+        organizationId,
+        status: "QUALIFIED",
+        email: { not: null },
+        NOT: { email: "" },
+      },
+    });
+    if (emailableCount === 0) {
+      return NextResponse.json(
+        {
+          error: "no_emailable_leads",
+          message:
+            "This lead list has no leads with an email address, so a campaign can't email anyone. " +
+            "Pick a list that has emails, or enrich these leads first (these are usually reachable via WhatsApp/phone instead).",
+        },
+        { status: 422 }
+      );
+    }
+  }
+
   const campaign = await prisma.campaign.create({
     data: { organizationId, ...data },
   });

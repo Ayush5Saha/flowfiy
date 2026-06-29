@@ -9,6 +9,8 @@ interface LeadList {
   id: string;
   name: string;
   qualifiedLeads: number;
+  /** Qualified leads that actually have an email address (campaign-sendable). */
+  emailableLeads: number;
   totalLeads: number;
   status: string;
 }
@@ -79,6 +81,17 @@ function NewCampaignInner() {
     if (!form.name.trim()) { setError("Campaign name is required"); return; }
     if (!form.leadListId) { setError("Select a lead list"); return; }
 
+    // Email-address pre-check: don't let the user create a campaign on a list
+    // where no lead has an email — nothing could ever be sent.
+    const chosen = orgData.leadLists.find((l) => l.id === form.leadListId);
+    if (chosen && chosen.emailableLeads === 0) {
+      setError(
+        "This lead list has no leads with an email address, so a campaign can't email anyone. " +
+        "Pick a list that has emails, or reach these leads via WhatsApp/phone instead."
+      );
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -98,7 +111,11 @@ function NewCampaignInner() {
 
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error?.formErrors?.[0] ?? json.error ?? "Failed to create campaign");
+        setError(
+          json.message ??
+          json.error?.formErrors?.[0] ??
+          (typeof json.error === "string" ? json.error : "Failed to create campaign")
+        );
         return;
       }
 
@@ -200,27 +217,39 @@ function NewCampaignInner() {
             <p className="text-sm text-muted-foreground italic">No eligible lead lists found</p>
           ) : (
             <div className="divide-y divide-border">
-              {orgData?.leadLists.map((list) => (
-                <button
-                  key={list.id}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, leadListId: list.id }))}
-                  className="w-full flex items-center justify-between gap-4 py-4 text-left group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${form.leadListId === list.id ? "bg-primary" : "bg-muted-foreground/50"}`} />
-                    <div className="min-w-0">
-                      <p className={`text-sm font-medium truncate transition-colors ${form.leadListId === list.id ? "text-primary" : "group-hover:text-primary"}`}>{list.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1 tabular-nums">
-                        {list.qualifiedLeads} qualified leads
-                      </p>
+              {orgData?.leadLists.map((list) => {
+                const noEmail = list.emailableLeads === 0;
+                const selected = form.leadListId === list.id;
+                return (
+                  <button
+                    key={list.id}
+                    type="button"
+                    disabled={noEmail}
+                    onClick={() => { if (!noEmail) setForm((f) => ({ ...f, leadListId: list.id })); }}
+                    title={noEmail ? "This lead list has no leads with an email address" : undefined}
+                    className={`w-full flex items-center justify-between gap-4 py-4 text-left group ${noEmail ? "opacity-60 cursor-not-allowed" : ""}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${selected ? "bg-primary" : "bg-muted-foreground/50"}`} />
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium truncate transition-colors ${selected ? "text-primary" : noEmail ? "" : "group-hover:text-primary"}`}>{list.name}</p>
+                        {noEmail ? (
+                          <p className="text-xs text-amber-400 mt-1">
+                            No leads in this list have an email address — can&apos;t be emailed
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1 tabular-nums">
+                            <span className="text-foreground">{list.emailableLeads}</span> of {list.qualifiedLeads} qualified lead{list.qualifiedLeads === 1 ? "" : "s"} have an email
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {form.leadListId === list.id && (
-                    <ChevronRight className="w-4 h-4 text-primary shrink-0" strokeWidth={1.75} />
-                  )}
-                </button>
-              ))}
+                    {selected && !noEmail && (
+                      <ChevronRight className="w-4 h-4 text-primary shrink-0" strokeWidth={1.75} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </section>
@@ -337,7 +366,7 @@ function NewCampaignInner() {
           <div className="rounded-lg bg-secondary/40 px-4 py-3 text-sm mt-8">
             <p className="font-medium mb-2 text-primary">Campaign Summary</p>
             <ul className="space-y-1 text-muted-foreground text-xs">
-              <li>• <strong className="text-foreground tabular-nums">{selectedList.qualifiedLeads}</strong> qualified leads from &quot;{selectedList.name}&quot;</li>
+              <li>• <strong className="text-foreground tabular-nums">{selectedList.emailableLeads}</strong> of {selectedList.qualifiedLeads} qualified leads will be emailed from &quot;{selectedList.name}&quot;{selectedList.emailableLeads < selectedList.qualifiedLeads ? ` (${selectedList.qualifiedLeads - selectedList.emailableLeads} have no email and will be skipped)` : ""}</li>
               <li>• Initial email → Follow-up on day {form.followUp1DelayDays} → Follow-up on day {form.followUp2DelayDays}</li>
               <li>• Max {form.dailySendLimit} emails per day</li>
             </ul>
@@ -353,7 +382,7 @@ function NewCampaignInner() {
           </Link>
           <button
             type="submit"
-            disabled={submitting || !form.leadListId || !form.name.trim()}
+            disabled={submitting || !form.leadListId || !form.name.trim() || selectedList?.emailableLeads === 0}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (

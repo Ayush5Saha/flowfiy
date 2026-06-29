@@ -41,6 +41,12 @@ export async function POST(
 
   // Resolve which leads to add
   let leadsToAdd: { id: string; outreachCopyId?: string }[] = [];
+  // Qualified leads that have no email address — they can never be emailed, so
+  // we never add them to the campaign. Tracked so we can tell the user.
+  let skippedNoEmail = 0;
+
+  // Keep only leads that actually have a deliverable email address.
+  const hasEmail = (l: { email: string | null }) => !!l.email && l.email.trim() !== "";
 
   if (parsed.data.leadIds?.length) {
     // Explicit lead IDs provided
@@ -52,7 +58,9 @@ export async function POST(
       },
       include: { outreachCopies: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
-    leadsToAdd = leads.map((l) => ({
+    const emailable = leads.filter(hasEmail);
+    skippedNoEmail = leads.length - emailable.length;
+    leadsToAdd = emailable.map((l) => ({
       id: l.id,
       outreachCopyId: l.outreachCopies[0]?.id,
     }));
@@ -66,7 +74,9 @@ export async function POST(
       },
       include: { outreachCopies: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
-    leadsToAdd = leads.map((l) => ({
+    const emailable = leads.filter(hasEmail);
+    skippedNoEmail = leads.length - emailable.length;
+    leadsToAdd = emailable.map((l) => ({
       id: l.id,
       outreachCopyId: l.outreachCopies[0]?.id,
     }));
@@ -78,7 +88,13 @@ export async function POST(
   }
 
   if (leadsToAdd.length === 0) {
-    return NextResponse.json({ added: 0, message: "No qualified leads with outreach copy found" });
+    return NextResponse.json({
+      added: 0,
+      skippedNoEmail,
+      message: skippedNoEmail > 0
+        ? `None of these ${skippedNoEmail} qualified lead${skippedNoEmail === 1 ? "" : "s"} have an email address, so there's nothing to email. Reach them via WhatsApp/phone, or pick a list that has emails.`
+        : "No qualified leads with outreach copy found",
+    });
   }
 
   // Upsert — skip leads already in this campaign
@@ -90,7 +106,7 @@ export async function POST(
   const newLeads = leadsToAdd.filter((l) => !existingIds.has(l.id));
 
   if (newLeads.length === 0) {
-    return NextResponse.json({ added: 0, message: "All selected leads are already in this campaign" });
+    return NextResponse.json({ added: 0, skippedNoEmail, message: "All selected leads are already in this campaign" });
   }
 
   await prisma.campaignLead.createMany({
@@ -103,5 +119,5 @@ export async function POST(
     })),
   });
 
-  return NextResponse.json({ added: newLeads.length });
+  return NextResponse.json({ added: newLeads.length, skippedNoEmail });
 }
