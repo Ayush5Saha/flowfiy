@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ChevronDown, ArrowLeft, Check, Sparkles } from "lucide-react";
+import { Loader2, ChevronDown, ArrowLeft, Check, Sparkles, AlertCircle } from "lucide-react";
 import { ICP_QUESTIONS, type IcpQuestion } from "@/lib/icp";
+import { FEATURES } from "@/lib/feature-flags";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 type AnswerMap = Record<string, string | string[]>;
@@ -30,6 +31,81 @@ const TONES = [
   { value: "conversational", label: "Conversational", hint: "Warm and human" },
   { value: "direct", label: "Direct", hint: "Short and punchy" },
 ];
+
+// ── Website-import → onboarding prefill ─────────────────────────────────────────
+// /api/business-profile/analyze-website returns the legacy ProfileDraft shape. Map the
+// parts we can confidently onto the structured onboarding fields. A site reveals what a
+// company DOES (business details) more reliably than the user's targeting *choices*, so
+// the ICP answers below are best-effort defaults the user reviews on the next steps.
+type DraftLite = {
+  companyName?: string;
+  serviceOffered?: string;
+  painPointsSolved?: string;
+  offerPositioning?: string;
+  outreachTone?: string;
+  targetIndustries?: string[];
+  targetGeographies?: string[];
+  companySizeRange?: string | null;
+};
+
+const GEO_TO_ICP: Record<string, string> = {
+  "united states": "United States", "united kingdom": "United Kingdom", canada: "Canada",
+  australia: "Australia", india: "India", singapore: "Singapore", uae: "UAE",
+  germany: "Germany", france: "France", global: "Worldwide", worldwide: "Worldwide",
+};
+const SIZE_TO_ICP: Record<string, string> = {
+  "1-10": "2-10 Employees", "11-50": "11-50 Employees", "51-200": "51-200 Employees",
+  "201-500": "201-1000 Employees", "500+": "1000+ Employees",
+};
+const INDUSTRY_TO_ICP: Record<string, string> = {
+  saas: "SaaS", "e-commerce": "E-commerce", ecommerce: "E-commerce",
+  "marketing agency": "Marketing", marketing: "Marketing",
+  fintech: "Finance", finance: "Finance",
+  healthtech: "Healthcare", healthcare: "Healthcare",
+  "it services": "IT Services", "artificial intelligence": "Artificial Intelligence", ai: "Artificial Intelligence",
+  "real estate": "Real Estate", legal: "Legal", education: "Education",
+  manufacturing: "Manufacturing", retail: "Retail",
+};
+
+function mapDraftToOnboarding(draft: DraftLite): {
+  companyName?: string;
+  outreachTone?: string;
+  businessDetails?: string;
+  answers: AnswerMap;
+} {
+  const answers: AnswerMap = {};
+  const inds = [...new Set(
+    (draft.targetIndustries ?? [])
+      .map((i) => INDUSTRY_TO_ICP[i.trim().toLowerCase()])
+      .filter((x): x is string => Boolean(x))
+  )];
+  if (inds.length) answers.industries = inds;
+  const geos = [...new Set(
+    (draft.targetGeographies ?? [])
+      .map((g) => GEO_TO_ICP[g.trim().toLowerCase()])
+      .filter((x): x is string => Boolean(x))
+  )];
+  if (geos.length) answers.countries = geos;
+  const size = draft.companySizeRange ? SIZE_TO_ICP[draft.companySizeRange] : undefined;
+  if (size) answers.companySize = size;
+
+  const businessDetails = [
+    draft.serviceOffered?.trim(),
+    draft.painPointsSolved?.trim() ? `Who we help / problems we solve: ${draft.painPointsSolved.trim()}` : "",
+    draft.offerPositioning?.trim() ? `What makes us different: ${draft.offerPositioning.trim()}` : "",
+  ].filter(Boolean).join("\n\n");
+
+  const tone = ["professional", "conversational", "direct"].includes(draft.outreachTone ?? "")
+    ? draft.outreachTone
+    : undefined;
+
+  return {
+    companyName: draft.companyName?.trim() || undefined,
+    outreachTone: tone,
+    businessDetails: businessDetails || undefined,
+    answers,
+  };
+}
 
 // ── Dropdown (single + multi) ───────────────────────────────────────────────────
 function Dropdown({
@@ -136,6 +212,11 @@ export function OnboardingWizard({ userId }: { userId: string }) {
   const [outreachTone, setOutreachTone] = useState("professional");
   const [answers, setAnswers] = useState<AnswerMap>({});
 
+  // Website autofill (company step)
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [imported, setImported] = useState(false);
+
   const step = STEPS[index];
   const isLast = index === STEPS.length - 1;
   const progress = (index / (STEPS.length - 1)) * 100;
@@ -165,6 +246,33 @@ export function OnboardingWizard({ userId }: { userId: string }) {
     if (!res.ok) { setError(typeof data.error === "string" ? data.error : "Failed to create workspace"); return false; }
     setOrgId(data.organization!.id);
     return true;
+  }
+
+  async function autofillFromWebsite(): Promise<void> {
+    if (!orgId || !website.trim() || importing) return;
+    setImporting(true); setImportError("");
+    try {
+      const res = await fetch("/api/business-profile/analyze-website", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId: orgId, url: website.trim() }),
+      });
+      const data = (await res.json()) as { draft?: DraftLite; analyzedUrl?: string; error?: string };
+      if (!res.ok) {
+        setImportError(typeof data.error === "string" ? data.error : "We couldn't read that site. Continue and fill it in manually.");
+        return;
+      }
+      const m = mapDraftToOnboarding(data.draft ?? {});
+      if (m.companyName && !companyName.trim()) setCompanyName(m.companyName);
+      if (m.outreachTone) setOutreachTone(m.outreachTone);
+      if (m.businessDetails) setBusinessDetails(m.businessDetails);
+      if (Object.keys(m.answers).length) setAnswers((p) => ({ ...p, ...m.answers }));
+      if (data.analyzedUrl) setWebsite(data.analyzedUrl);
+      setImported(true);
+    } catch {
+      setImportError("Something went wrong reading that site. Continue and fill it in manually.");
+    } finally {
+      setImporting(false);
+    }
   }
 
   async function submit(): Promise<void> {
@@ -264,11 +372,54 @@ export function OnboardingWizard({ userId }: { userId: string }) {
                       className="w-full rounded-xl border border-border bg-secondary px-4 py-3.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                     <input
-                      value={website} onChange={(e) => setWebsite(e.target.value)}
+                      value={website}
+                      onChange={(e) => { setWebsite(e.target.value); if (imported) setImported(false); }}
+                      onKeyDown={(e) => {
+                        // Enter triggers autofill (and must not bubble to the wizard's
+                        // root handler, which would advance the step).
+                        if (e.key === "Enter" && website.trim() && !importing) {
+                          e.preventDefault(); e.stopPropagation(); autofillFromWebsite();
+                        }
+                      }}
                       placeholder="https://yourcompany.com  (optional)"
                       className="w-full rounded-xl border border-border bg-secondary px-4 py-3.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                   </div>
+
+                  {FEATURES.websiteImport && (
+                    <div className="rounded-xl border border-primary/30 bg-primary/[0.04] p-3.5">
+                      {imported ? (
+                        <div className="flex items-start gap-2 text-sm">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                          <span>Imported from your site — we&apos;ve pre-filled the next steps. Hit <span className="font-medium">Continue</span> to review and tweak each one.</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start gap-2.5">
+                            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-400" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">Autofill from your website</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">We&apos;ll read your site and pre-fill your business details and ICP. You review every step.</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button" onClick={autofillFromWebsite} disabled={!website.trim() || importing}
+                            className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                          >
+                            {importing ? <><Loader2 className="h-4 w-4 animate-spin" /> Reading your site…</> : <><Sparkles className="h-4 w-4" /> Autofill from website</>}
+                          </button>
+                          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                            {website.trim() ? "Prefer to type it yourself? Just hit Continue." : "Enter your website to autofill — or hit Continue to fill it in yourself."}
+                          </p>
+                        </>
+                      )}
+                      {importError && (
+                        <p className="mt-2 flex items-start gap-1.5 text-xs text-destructive">
+                          <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" /><span>{importError}</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
