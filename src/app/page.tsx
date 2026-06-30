@@ -195,6 +195,28 @@ const faqJsonLd = {
   ],
 };
 
+// VideoObject for the hero product demo — lets Google show a video rich result
+// and gives answer/generative engines machine-readable metadata for the embed.
+const videoJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  name: "Flowfiy Demo | AI That Finds Your Next Customer",
+  description:
+    "A walkthrough of how to use Flowfiy: describe the leads you want in plain English, then Flowfiy finds matching businesses, researches and scores each one 0–100, writes personalized cold emails, and sends them from your Gmail after review.",
+  thumbnailUrl: ["https://i.ytimg.com/vi/T3E6Bkrt_68/maxresdefault.jpg"],
+  uploadDate: "2026-06-30",
+  duration: "PT2M49S",
+  embedUrl: "https://www.youtube.com/embed/T3E6Bkrt_68",
+  publisher: {
+    "@type": "Organization",
+    name: "Flowfiy",
+    logo: {
+      "@type": "ImageObject",
+      url: `${process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com"}/logo.png`,
+    },
+  },
+};
+
 export default function HomePage() {
   return (
     <>
@@ -205,6 +227,10 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }}
       />
       <LandingPageV2 />
     </>

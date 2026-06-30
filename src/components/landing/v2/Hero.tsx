@@ -84,8 +84,10 @@ export function Hero() {
           <HeroLeadInput />
         </div>
 
-        {/* Demo video — directly below the input. Owns the #demo anchor. */}
-        <motion.div
+        {/* Demo video — directly below the input. Owns the #demo anchor.
+            <figure> + <figcaption> give crawlers and answer/generative engines
+            descriptive context for the embed (paired with the VideoObject JSON-LD). */}
+        <motion.figure
           id="demo"
           className="mx-auto w-full max-w-2xl scroll-mt-24"
           initial={{ opacity: 0, y: reduced ? 0 : 16 }}
@@ -93,7 +95,11 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.6, ease: EASE }}
         >
           <DemoVideoPlayer />
-        </motion.div>
+          <figcaption className="mt-3 text-sm text-zinc-500">
+            Watch the ~3-minute walkthrough: describe your leads in plain English, then
+            Flowfiy finds, researches and scores each one and writes the cold outreach.
+          </figcaption>
+        </motion.figure>
 
         {/* Trust line */}
         <p className="font-mono text-[11px] text-zinc-500">

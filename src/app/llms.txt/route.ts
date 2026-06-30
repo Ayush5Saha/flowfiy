@@ -40,7 +40,8 @@ const CONTENT = `# Flowfiy
 - [What is Condition-Based Targeting?](${BASE_URL}/glossary/condition-based-targeting)
 
 ## Core pages
-- [Home](${BASE_URL}/): product overview
+- [Home](${BASE_URL}/): product overview, with a ~3-minute demo video in the hero
+- [Product demo (video)](https://youtu.be/T3E6Bkrt_68): "Flowfiy Demo | AI That Finds Your Next Customer" — a ~3-minute walkthrough showing how to describe leads in plain English and let Flowfiy find, qualify, and write the outreach
 - [Pricing](${BASE_URL}/pricing): plans and FAQ
 - [Use cases](${BASE_URL}/use-cases): AI lead generation, cold email automation
 - [Flowfiy vs Clay](${BASE_URL}/vs/clay): comparison
