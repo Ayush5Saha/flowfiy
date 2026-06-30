@@ -19,7 +19,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://lumberjack.razorpay.com https://api.stripe.com https://*.googleapis.com https://accounts.google.com https://api.resend.com https://www.google-analytics.com https://*.facebook.com",
-  "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",
+  "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
