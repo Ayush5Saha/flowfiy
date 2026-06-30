@@ -23,14 +23,14 @@ export function LandingPageV2() {
         <Cursor />
         <MarketingNav />
         <Hero />
+        <DemoVideo />
 
         {/* Phase B sections — each owns its own anchor id internally:
-            StoryScroll #how-it-works · DemoVideo #demo · ProofStrip #proof
+            DemoVideo #demo · StoryScroll #how-it-works · ProofStrip #proof
             FeatureRail #features · AlwaysOn #always-on · PricingV2 #pricing
             TestimonialsV2 #testimonials · FinalCTAV2 #cta — matching the
             MarketingNav anchors. */}
         <StoryScroll />
-        <DemoVideo />
         <ProofStrip />
         <FeatureRail />
         <AlwaysOn />
