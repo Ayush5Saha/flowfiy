@@ -5,7 +5,6 @@ import {
   EASE,
   Eyebrow,
   Lines,
-  GlowButton,
   Counter,
   MaskReveal,
   useReducedMotionSafe,
@@ -13,6 +12,7 @@ import {
 import { EngineCanvas } from "./EngineCanvas";
 import { ShaderField } from "./ShaderField";
 import { HeroLeadInput } from "./HeroLeadInput";
+import { DemoVideoPlayer } from "./DemoVideo";
 
 const TICKER = [
   { value: 1247, suffix: "", label: "leads found today" },
@@ -80,25 +80,32 @@ export function Hero() {
             </p>
           </MaskReveal>
 
-          {/* Secondary action + trust line */}
-          <motion.div
-            className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2"
+          {/* Primary action — the "describe your leads" bar */}
+          <div className="mt-8">
+            <HeroLeadInput />
+          </div>
+
+          {/* Trust line */}
+          <motion.p
+            className="mt-6 font-mono text-[11px] text-zinc-500"
             initial={{ opacity: 0, y: reduced ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6, ease: EASE }}
+            transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
           >
-            <GlowButton href="#how-it-works" variant="ghost">
-              See how it works ↓
-            </GlowButton>
-            <p className="font-mono text-[11px] text-zinc-500">
-              Fully managed AI · No API keys · You only pay for qualified leads
-            </p>
-          </motion.div>
+            Fully managed AI · No API keys · You only pay for qualified leads
+          </motion.p>
         </div>
 
-        {/* Right: Perplexity-style entry — type your leads, pick a count, go */}
-        <div className="flex w-full justify-center">
-          <HeroLeadInput />
+        {/* Right: product demo video (click-to-play). Owns the #demo anchor. */}
+        <div id="demo" className="flex w-full justify-center scroll-mt-24">
+          <motion.div
+            className="w-full max-w-xl"
+            initial={{ opacity: 0, y: reduced ? 0 : 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
+          >
+            <DemoVideoPlayer />
+          </motion.div>
         </div>
       </div>
 
