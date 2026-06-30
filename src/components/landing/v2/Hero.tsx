@@ -37,91 +37,69 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Readability scrims — keep the headline crisp over the right-weighted aurora */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#030305] via-[#030305]/85 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030305]/90 via-transparent to-[#030305]/40" />
+      {/* Readability scrims — darken behind the centered column, let the aurora breathe at the edges */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_72%_60%_at_50%_44%,rgba(3,3,5,0.72),transparent_78%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030305] via-transparent to-[#030305]/45" />
 
-      {/* Content — editorial copy on the left, the input bar centered on the right */}
-      <div className="relative z-10 mx-auto grid w-full max-w-[1320px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-40 pt-32 sm:px-8 lg:grid-cols-2 lg:gap-16">
-        <div className="min-w-0 max-w-2xl">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
-            <Eyebrow>AI Lead Generation and Outbound Engine</Eyebrow>
-          </motion.div>
+      {/* Content — centered single column: headline → subtext → input → video */}
+      <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-7 px-6 pb-44 pt-32 text-center sm:px-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, ease: EASE }}
+        >
+          <Eyebrow>AI Lead Generation and Outbound Engine</Eyebrow>
+        </motion.div>
 
-          <h1 className="mt-7 font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(3rem,9vw,7.5rem)]">
-            {/* Crawlable keyword context for the primary heading; visually hidden. */}
-            <span className="sr-only">
-              Flowfiy — the AI outbound sales platform: describe the leads you want and it finds, qualifies and writes the outreach.{" "}
-            </span>
-            <Lines text="Describe the leads" delay={0.05} mode="mount" />
-            {/* Static gradient fill — premium restraint, no animated gradient */}
-            <span className="block overflow-hidden">
-              <motion.span
-                className="block bg-gradient-to-r from-indigo-400 via-violet-400 to-violet-500 bg-clip-text text-transparent will-change-transform"
-                initial={reduced ? { opacity: 0 } : { y: "110%" }}
-                animate={reduced ? { opacity: 1 } : { y: "0%" }}
-                transition={{ duration: 0.9, delay: 0.13, ease: EASE }}
-              >
-                you want.
-              </motion.span>
-            </span>
-          </h1>
-
-          <MaskReveal delay={0.32} className="mt-8" mode="mount">
-            <p className="max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Say it in plain English — even by condition, like "coffee shops
-              with no website." Flowfiy finds matching businesses, scores each
-              one 0–100, and writes personalized cold emails sent from your Gmail
-              after review. No API keys, no setup.
-            </p>
-          </MaskReveal>
-
-          {/* Primary action — the "describe your leads" bar */}
-          <div className="mt-8">
-            <HeroLeadInput />
-          </div>
-
-          {/* Trust line */}
-          <motion.p
-            className="mt-6 font-mono text-[11px] text-zinc-500"
-            initial={{ opacity: 0, y: reduced ? 0 : 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
-          >
-            Fully managed AI · No API keys · You only pay for qualified leads
-          </motion.p>
-        </div>
-
-        {/* Right: product demo video (click-to-play). Owns the #demo anchor. */}
-        <div id="demo" className="flex w-full justify-center scroll-mt-24">
-          <motion.div
-            className="w-full max-w-xl"
-            initial={{ opacity: 0, y: reduced ? 0 : 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
-          >
-            <DemoVideoPlayer />
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Scroll cue — bottom-center, above the ticker; hidden below lg */}
-      {!reduced && (
-        <div className="absolute bottom-28 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-3 lg:flex">
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-600 [writing-mode:vertical-rl]">
-            scroll
+        <h1 className="font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(2.5rem,6.5vw,4.75rem)]">
+          {/* Crawlable keyword context for the primary heading; visually hidden. */}
+          <span className="sr-only">
+            Flowfiy — the AI outbound sales platform: describe the leads you want and it finds, qualifies and writes the outreach.{" "}
           </span>
-          <motion.span
-            className="block h-12 w-px origin-top bg-gradient-to-b from-zinc-500 to-transparent"
-            animate={{ scaleY: [0, 1, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <Lines text="Describe the leads" delay={0.05} mode="mount" />
+          {/* Static gradient fill — premium restraint, no animated gradient */}
+          <span className="block overflow-hidden">
+            <motion.span
+              className="block bg-gradient-to-r from-indigo-400 via-violet-400 to-violet-500 bg-clip-text text-transparent will-change-transform"
+              initial={reduced ? { opacity: 0 } : { y: "110%" }}
+              animate={reduced ? { opacity: 1 } : { y: "0%" }}
+              transition={{ duration: 0.9, delay: 0.13, ease: EASE }}
+            >
+              you want.
+            </motion.span>
+          </span>
+        </h1>
+
+        <MaskReveal delay={0.32} mode="mount">
+          <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+            Say it in plain English — even by condition, like "coffee shops with
+            no website." Flowfiy finds matching businesses, scores each one
+            0–100, and writes personalized cold emails sent from your Gmail after
+            review. No API keys, no setup.
+          </p>
+        </MaskReveal>
+
+        {/* Primary action — the "describe your leads" bar */}
+        <div className="flex w-full justify-center">
+          <HeroLeadInput />
         </div>
-      )}
+
+        {/* Demo video — directly below the input. Owns the #demo anchor. */}
+        <motion.div
+          id="demo"
+          className="mx-auto w-full max-w-2xl scroll-mt-24"
+          initial={{ opacity: 0, y: reduced ? 0 : 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.6, ease: EASE }}
+        >
+          <DemoVideoPlayer />
+        </motion.div>
+
+        {/* Trust line */}
+        <p className="font-mono text-[11px] text-zinc-500">
+          Fully managed AI · No API keys · You only pay for qualified leads
+        </p>
+      </div>
 
       {/* Live-stat ticker strip pinned to the hero's bottom edge */}
       <motion.div
