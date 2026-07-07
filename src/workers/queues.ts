@@ -26,22 +26,9 @@ function makeQueue(name: string, opts: object) {
   return new Queue(name, { connection: getConnection(), defaultJobOptions: opts as never });
 }
 
-export function getLeadGenerationQueue() {
-  return makeQueue("lead-generation-pipeline", {
-    attempts: 3,
-    backoff: {
-      type: "exponential",
-      delay: 60_000, // 1 min → 2 min between retries (gives rate-limits / Claude overload time to clear)
-    },
-    timeout: 20 * 60 * 1000, // 20-minute hard ceiling per attempt
-    removeOnComplete: { count: 100 },
-    removeOnFail: { count: 50 },
-  });
-}
-
 // ─── Architecture 3: 4-stage pipeline queues ─────────────────────────────────
 //
-// Replaces the monolithic lead-generation-pipeline with 4 focused queues:
+// Replaces the old monolithic pipeline with 4 focused queues:
 //   lead-discovery        → Apollo/Apify search, creates RESEARCHING leads
 //   lead-research         → Apify website scrape + Company Analyzer (Haiku)
 //   lead-qualification    → Qualification Agent (Haiku), scores 0-100

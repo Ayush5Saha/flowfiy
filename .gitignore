@@ -55,3 +55,15 @@ coverage/
 # video production artifacts (frames, ffmpeg binaries, renders)
 launch-video/
 reel-overlay/
+
+# local-only tooling & business files
+growth-engine/
+videos/
+.agents/
+skills-lock.json
+/*.docx
+/*.pptx
+/*.xlsx
+/*.csv
+/*.pdf
+/*.skill

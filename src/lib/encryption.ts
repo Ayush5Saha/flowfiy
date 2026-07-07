@@ -12,7 +12,7 @@ function getEncryptionKey(): Buffer {
   return buf;
 }
 
-export function encrypt(plaintext: string): string {
+function encrypt(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
@@ -27,7 +27,7 @@ export function encrypt(plaintext: string): string {
   return Buffer.concat([iv, tag, encrypted]).toString("hex");
 }
 
-export function decrypt(encryptedHex: string): string {
+function decrypt(encryptedHex: string): string {
   const key = getEncryptionKey();
   const data = Buffer.from(encryptedHex, "hex");
 

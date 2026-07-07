@@ -18,13 +18,6 @@ export function getRazorpay(): InstanceType<typeof Razorpay> {
   return _razorpay;
 }
 
-/** @deprecated use getRazorpay() inside route handlers */
-export const razorpay = {
-  get subscriptions() { return getRazorpay().subscriptions; },
-  get customers()     { return getRazorpay().customers; },
-  get orders()        { return getRazorpay().orders; },
-};
-
 // Prices in INR (Razorpay native currency).
 // USD reference shown in UI only. INR amounts = USD * ~83.
 export const PLANS = {

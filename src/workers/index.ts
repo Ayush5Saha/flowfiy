@@ -1,7 +1,6 @@
 ﻿import "./load-env"; // MUST be first — populates process.env for the standalone worker
 import { Worker } from "bullmq";
 import { getRedisConnection } from "./queues";
-import { processLeadGeneration } from "./processors/lead-generation.processor";
 import { processLeadDiscovery } from "./processors/lead-discovery.processor";
 import { processLeadResearch } from "./processors/lead-research.processor";
 import { processLeadQualification } from "./processors/lead-qualification.processor";
@@ -12,15 +11,6 @@ import type { EmailJobData } from "./processors/email-send.processor";
 console.log("[worker] Starting Flowfiy workers...");
 
 const connection = getRedisConnection();
-
-// ─── Legacy pipeline (kept alive to drain any existing jobs in Redis) ─────────
-// New runs are enqueued to lead-discovery. Old runs in Redis will drain naturally.
-
-const leadGenerationWorker = new Worker(
-  "lead-generation-pipeline",
-  processLeadGeneration,
-  { connection, concurrency: 3 }
-);
 
 // ─── Architecture 3: 4-stage pipeline workers ────────────────────────────────
 //
@@ -71,13 +61,6 @@ const emailSendWorker = new Worker(
 
 // ─── Event listeners ──────────────────────────────────────────────────────────
 
-leadGenerationWorker.on("completed", (job) => {
-  console.log(`[worker] Lead gen job ${job.id} completed`);
-});
-leadGenerationWorker.on("failed", (job, err) => {
-  console.error(`[worker] Lead gen job ${job?.id} failed:`, err.message);
-});
-
 leadDiscoveryWorker.on("completed", (job) => {
   console.log(`[worker] Discovery job ${job.id} completed`);
 });
@@ -120,7 +103,6 @@ emailSendWorker.on("failed", (job, err) => {
 process.on("SIGTERM", async () => {
   console.log("[worker] SIGTERM received. Closing workers...");
   await Promise.all([
-    leadGenerationWorker.close(),
     leadDiscoveryWorker.close(),
     leadResearchWorker.close(),
     leadQualificationWorker.close(),
