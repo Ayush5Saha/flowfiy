@@ -1,0 +1,26 @@
+<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="44" height="44" rx="10" fill="url(#bg)"/>
+
+  <!-- Top highlight shimmer -->
+  <rect width="44" height="22" rx="10" fill="white" fill-opacity="0.10"/>
+
+  <!-- F — vertical stem (thicker for legibility) -->
+  <rect x="9" y="8" width="5" height="28" rx="2.5" fill="white"/>
+
+  <!-- F — top horizontal bar -->
+  <rect x="9" y="8" width="22" height="5" rx="2.5" fill="white"/>
+
+  <!-- F — middle horizontal bar -->
+  <rect x="9" y="19.5" width="15" height="5" rx="2.5" fill="white"/>
+
+  <!-- Flow arrow tip on middle bar -->
+  <path d="M23 22 L32 18 L32 26 Z" fill="white" fill-opacity="0.55"/>
+</svg>

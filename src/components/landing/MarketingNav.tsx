@@ -161,9 +161,11 @@ export function MarketingNav() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0">
-          <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} priority />
+        {/* Logo — icon mark + real "Flowfiy" wordmark text so the app name is
+            visible, selectable DOM text (matches the OAuth consent screen name). */}
+        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="Flowfiy — home">
+          <Image src="/brand-mark.svg" alt="" width={32} height={32} priority />
+          <span className="text-lg font-bold tracking-tight text-white">Flowfiy</span>
         </Link>
 
         {/* Desktop nav */}

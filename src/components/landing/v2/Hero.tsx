@@ -48,7 +48,7 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: EASE }}
         >
-          <Eyebrow>AI Lead Generation and Outbound Engine</Eyebrow>
+          <Eyebrow>Flowfiy · AI Lead Generation &amp; Outbound Engine</Eyebrow>
         </motion.div>
 
         <h1 className="font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(2.5rem,6.5vw,4.75rem)]">
@@ -72,10 +72,11 @@ export function Hero() {
 
         <MaskReveal delay={0.32} mode="mount">
           <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Say it in plain English — even by condition, like "coffee shops with
-            no website." Flowfiy finds matching businesses, scores each one
-            0–100, and writes personalized cold emails sent from your Gmail after
-            review. No API keys, no setup.
+            <strong className="font-semibold text-zinc-200">Flowfiy is an AI outbound sales platform.</strong>{" "}
+            Describe the leads you want in plain English — even by condition, like
+            &ldquo;coffee shops with no website.&rdquo; Flowfiy finds matching businesses,
+            scores each one 0–100, and writes personalized cold emails sent from
+            your Gmail after review. No API keys, no setup.
           </p>
         </MaskReveal>
 

@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+// Statically pre-render — always reachable with a fast 200, no runtime deps.
+export const dynamic = "force-static";
+
 export default function TermsPage() {
   const lastUpdated = "June 23, 2026";
 

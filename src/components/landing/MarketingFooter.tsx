@@ -57,8 +57,9 @@ export function MarketingFooter() {
 
           {/* Brand */}
           <div className="lg:w-72 shrink-0">
-            <Link href="/" className="inline-flex mb-4">
-              <Image src="/logo.svg" alt="Flowfiy" width={120} height={36} />
+            <Link href="/" className="inline-flex items-center gap-2 mb-4" aria-label="Flowfiy — home">
+              <Image src="/brand-mark.svg" alt="" width={30} height={30} />
+              <span className="text-lg font-bold tracking-tight text-white">Flowfiy</span>
             </Link>
             <p className="text-sm text-zinc-500 leading-relaxed mb-5">
               AI-powered outbound sales platform. Describe the leads you want — Flowfiy finds, qualifies and writes the outreach. No API keys, fully managed.

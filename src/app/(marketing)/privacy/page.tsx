@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+// Pre-render at build time and serve as a static asset. Guarantees the page is
+// always reachable with a fast 200 (no runtime/auth dependency) — required for
+// Google's OAuth branding verification of the privacy policy URL.
+export const dynamic = "force-static";
+
 export default function PrivacyPage() {
   const lastUpdated = "June 23, 2026";
 
