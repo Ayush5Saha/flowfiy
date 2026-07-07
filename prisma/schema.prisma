@@ -481,6 +481,8 @@ model Affiliate {
   id                    String          @id @default(uuid())
   name                  String
   email                 String          @unique
+  phone                 String?         @map("phone")
+  type                  AffiliateType   @default(AFFILIATE) @map("type")
   website               String?
   socialHandle          String?         @map("social_handle")
   audienceDescription   String?         @map("audience_description")
@@ -509,6 +511,11 @@ enum AffiliateStatus {
   PENDING
   ACTIVE
   SUSPENDED
+}
+
+enum AffiliateType {
+  AFFILIATE
+  SALES_REP
 }
 
 model AffiliateConversion {

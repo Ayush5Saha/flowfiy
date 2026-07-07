@@ -7,6 +7,7 @@ export default async function AdminAffiliatesPage() {
   await requireAdmin();
 
   const affiliates = await prisma.affiliate.findMany({
+    where: { type: "AFFILIATE" },
     orderBy: { createdAt: "desc" },
     include: {
       conversions: {

@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
   }
 
   const affiliates = await prisma.affiliate.findMany({
+    where: { type: "AFFILIATE" },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

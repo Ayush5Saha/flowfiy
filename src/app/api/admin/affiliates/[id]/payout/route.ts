@@ -36,9 +36,13 @@ export async function POST(
     0n
   );
 
-  if (totalApproved < MIN_PAYOUT_PAISE) {
+  // Sales reps have a lower payout floor (₹100) than affiliates (₹500).
+  const isSalesRep = affiliate.type === "SALES_REP";
+  const minPayoutPaise = isSalesRep ? 10000n : MIN_PAYOUT_PAISE;
+
+  if (totalApproved < minPayoutPaise) {
     return NextResponse.json({
-      error: `Minimum payout is ₹500. Current approved balance: ₹${Number(totalApproved) / 100}`,
+      error: `Minimum payout is ₹${Number(minPayoutPaise) / 100}. Current approved balance: ₹${Number(totalApproved) / 100}`,
     }, { status: 400 });
   }
 
@@ -47,12 +51,12 @@ export async function POST(
     return NextResponse.json({ error: "RAZORPAY_X_ACCOUNT_NUMBER not configured." }, { status: 500 });
   }
 
-  const referenceId = `flowfiy-aff-${id}-${Date.now()}`;
+  const referenceId = `${isSalesRep ? "flowfiy-rep-" : "flowfiy-aff-"}${id}-${Date.now()}`;
 
   const payout = await createPayout({
     fundAccountId: affiliate.razorpayFundAccountId,
     amountInPaise: totalApproved,
-    narration: "Flowfiy affiliate commission",
+    narration: isSalesRep ? "Flowfiy sales commission" : "Flowfiy affiliate commission",
     referenceId,
     accountNumber,
   });

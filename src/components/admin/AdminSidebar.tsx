@@ -22,6 +22,7 @@ import {
   UserCog,
   Menu,
   X,
+  PhoneCall,
 } from "lucide-react";
 
 const NAV_MAIN = [
@@ -33,6 +34,7 @@ const NAV_MAIN = [
   { label: "Leads",         href: "/admin/leads",         icon: UserCircle2 },
   { label: "Blog",          href: "/admin/blog",          icon: Newspaper },
   { label: "Affiliates",    href: "/admin/affiliates",    icon: HandCoins },
+  { label: "Sales Team",    href: "/admin/sales-team",    icon: PhoneCall },
 ];
 
 const NAV_SYSTEM = [
