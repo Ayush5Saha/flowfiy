@@ -34,11 +34,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Sales rep not found" }, { status: 404 });
   }
 
-  // If the UPI ID changes, recreate the RazorpayX contact + fund account.
+  // (Re)create the RazorpayX contact + fund account when the UPI ID changes,
+  // OR when one was never created (UPI saved while Razorpay X was unconfigured) —
+  // re-saving the same UPI then repairs the missing fund account.
   // Gracefully fall back to saving just the UPI ID when Razorpay X is not configured.
   let razorpayContactId: string | null | undefined;
   let razorpayFundAccountId: string | null | undefined;
-  if (upiId !== undefined && upiId !== rep.upiId) {
+  if (upiId !== undefined && (upiId !== rep.upiId || !rep.razorpayFundAccountId)) {
     try {
       let contactId = rep.razorpayContactId;
       if (!contactId) {
