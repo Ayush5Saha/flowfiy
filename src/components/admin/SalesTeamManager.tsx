@@ -15,6 +15,7 @@ import {
   Wallet,
   HandCoins,
   Link2,
+  Trash2,
 } from "lucide-react";
 
 // ─── Types (mirrors the server-serialized shape from src/app/admin/sales-team/page.tsx) ───
@@ -342,6 +343,7 @@ function SalesRepRow({ rep, onNotify, onRefresh }: { rep: SalesRep; onNotify: No
   const [expanded, setExpanded] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
   const [editingUpi, setEditingUpi] = useState(false);
@@ -442,6 +444,23 @@ function SalesRepRow({ rep, onNotify, onRefresh }: { rep: SalesRep; onNotify: No
     }
   }
 
+  async function removeRep() {
+    if (!window.confirm(`Remove ${rep.name} (${rep.email})? Their referral link stops working immediately.`)) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/sales-team/${rep.id}`, { method: "DELETE" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        onNotify("error", errText(body, "Could not remove salesperson."));
+        return;
+      }
+      onNotify("success", `${rep.name} removed.`);
+      onRefresh();
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
   async function copyCode() {
     await navigator.clipboard.writeText(refLinkFor(rep.affiliateCode));
     setCodeCopied(true);
@@ -501,15 +520,26 @@ function SalesRepRow({ rep, onNotify, onRefresh }: { rep: SalesRep; onNotify: No
 
         {/* Actions */}
         <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={payNow}
-            disabled={payoutLoading || payoutDisabledReason !== null}
-            title={payoutDisabledReason ?? undefined}
-            className="px-3 py-1.5 rounded-lg bg-violet-500/15 text-violet-400 text-xs font-medium hover:bg-violet-500/25 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            {payoutLoading ? "Paying…" : payoutDisabledReason ? "Pay now" : `Pay ₹${unpaidRupees.toLocaleString("en-IN")}`}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={payNow}
+              disabled={payoutLoading || payoutDisabledReason !== null}
+              title={payoutDisabledReason ?? undefined}
+              className="px-3 py-1.5 rounded-lg bg-violet-500/15 text-violet-400 text-xs font-medium hover:bg-violet-500/25 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {payoutLoading ? "Paying…" : payoutDisabledReason ? "Pay now" : `Pay ₹${unpaidRupees.toLocaleString("en-IN")}`}
+            </button>
+            <button
+              type="button"
+              disabled={deleteLoading}
+              onClick={removeRep}
+              title={rep.customers.length > 0 ? "Has commission history — suspend instead" : "Remove salesperson"}
+              className="rounded-lg border border-red-500/20 p-1.5 text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+            >
+              {deleteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            </button>
+          </div>
         </td>
       </tr>
 
