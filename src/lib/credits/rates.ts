@@ -92,10 +92,24 @@ export const ACTOR_RATES = {
   leads_finder: {
     perResult:         0.00067, // ~$1 / 1,500
   },
+  linkedin_founder: {
+    searchPage:        0.10,    // $0.10 per search page (25 results) — harvestapi/linkedin-profile-search
+    fullProfileEmail:  0.01,    // $10 / 1,000 — full profile + email search & validation
+  },
 } as const;
 
 // ─── Email enrichment (B2B fallback when actor lacks an email) ───────────────────
 export const ENRICH_RATES = { prospeo: 0.01 } as const; // USD per verified email
+
+// ─── On-demand LinkedIn founder-email enrichment (leads-page button) ─────────────
+// An opt-in, per-lead action (NOT part of the automatic pipeline): scrape the
+// company's founder on LinkedIn (harvestapi/linkedin-profile-search) and swap in
+// their verified email. Worst-case actor spend is 1 search page + up to 3 full
+// profiles ≈ $0.13; the customer is charged the cost-plus credit price ONLY for
+// founders actually found (misses cost them nothing). Tune FOUNDER_CREDITS_PER_LEAD
+// directly if you want a rounder price — the quote UI reads this constant.
+export const FOUNDER_ENRICHMENT_MAX_COST_USD = 0.13;
+export const FOUNDER_CREDITS_PER_LEAD = creditsForCostUsd(FOUNDER_ENRICHMENT_MAX_COST_USD); // ≈ 4 credits (₹40)
 
 // ─── In-house website-quality probe (bandwidth/compute approximation) ────────────
 export const WEBSITE_AUDIT_COST_USD = 0.0005;

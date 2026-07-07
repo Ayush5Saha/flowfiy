@@ -4,6 +4,7 @@ import { getRedisConnection } from "./queues";
 import { processLeadDiscovery } from "./processors/lead-discovery.processor";
 import { processLeadResearch } from "./processors/lead-research.processor";
 import { processLeadQualification } from "./processors/lead-qualification.processor";
+import { processFounderEnrichment } from "./processors/founder-enrichment.processor";
 import { processLeadPersonalization } from "./processors/lead-personalization.processor";
 import { processEmailSend } from "./processors/email-send.processor";
 import type { EmailJobData } from "./processors/email-send.processor";
@@ -12,12 +13,15 @@ console.log("[worker] Starting Flowfiy workers...");
 
 const connection = getRedisConnection();
 
-// ─── Architecture 3: 4-stage pipeline workers ────────────────────────────────
+// ─── Architecture 3: 4-stage pipeline workers (+ 1 on-demand) ────────────────
 //
 //   lead-discovery (concurrency=3)  — one job per LeadList, fans out research jobs
 //   lead-research  (concurrency=10) — parallel per-lead: scrape + Company Analyzer (Haiku)
 //   lead-qualification (concurrency=10) — parallel per-lead: Qualification Agent (Haiku)
 //   lead-personalization (concurrency=10) — parallel per-lead: Personalization Agent (Sonnet)
+//
+// On-demand (NOT in the automatic pipeline — triggered by the leads-page buttons):
+//   lead-founder-enrichment (concurrency=5) — per-lead LinkedIn founder email (Apify harvestapi)
 
 const leadDiscoveryWorker = new Worker(
   "lead-discovery",
@@ -39,6 +43,14 @@ const leadQualificationWorker = new Worker(
   "lead-qualification",
   processLeadQualification,
   { connection, concurrency: 10 }
+);
+
+// Founder enrichment runs at concurrency 5 — each job holds one Apify actor run,
+// and 5 concurrent runs is safe for the platform account.
+const founderEnrichmentWorker = new Worker(
+  "lead-founder-enrichment",
+  processFounderEnrichment,
+  { connection, concurrency: 5 }
 );
 
 const leadPersonalizationWorker = new Worker(
@@ -82,6 +94,13 @@ leadQualificationWorker.on("failed", (job, err) => {
   console.error(`[worker] Qualification job ${job?.id} failed:`, err.message);
 });
 
+founderEnrichmentWorker.on("completed", (job) => {
+  console.log(`[worker] Founder-enrichment job ${job.id} completed`);
+});
+founderEnrichmentWorker.on("failed", (job, err) => {
+  console.error(`[worker] Founder-enrichment job ${job?.id} failed:`, err.message);
+});
+
 leadPersonalizationWorker.on("completed", (job) => {
   console.log(`[worker] Personalization job ${job.id} completed`);
 });
@@ -106,6 +125,7 @@ process.on("SIGTERM", async () => {
     leadDiscoveryWorker.close(),
     leadResearchWorker.close(),
     leadQualificationWorker.close(),
+    founderEnrichmentWorker.close(),
     leadPersonalizationWorker.close(),
     emailSendWorker.close(),
   ]);

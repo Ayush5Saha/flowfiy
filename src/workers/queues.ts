@@ -26,13 +26,17 @@ function makeQueue(name: string, opts: object) {
   return new Queue(name, { connection: getConnection(), defaultJobOptions: opts as never });
 }
 
-// ─── Architecture 3: 4-stage pipeline queues ─────────────────────────────────
+// ─── Architecture 3: 4-stage pipeline queues (+ 1 on-demand) ─────────────────
 //
-// Replaces the old monolithic pipeline with 4 focused queues:
-//   lead-discovery        → Apollo/Apify search, creates RESEARCHING leads
-//   lead-research         → Apify website scrape + Company Analyzer (Haiku)
-//   lead-qualification    → Qualification Agent (Haiku), scores 0-100
-//   lead-personalization  → Personalization Agent (Sonnet), writes email copy
+// Replaces the old monolithic pipeline with focused queues:
+//   lead-discovery          → Apollo/Apify search, creates RESEARCHING leads
+//   lead-research           → Apify website scrape + Company Analyzer (Haiku)
+//   lead-qualification      → Qualification Agent (Haiku), scores 0-100
+//   lead-personalization    → Personalization Agent (Sonnet), writes email copy
+//
+// On-demand (NOT auto-enqueued by the pipeline — fed only by the leads-page
+// "get founder email" buttons via /api/leads/[listId]/enrich-founders):
+//   lead-founder-enrichment → LinkedIn founder email via Apify (harvestapi)
 //
 // Each queue processes one lead at a time with concurrency=10, so 10 leads
 // are researched/qualified/personalized simultaneously per worker process.
@@ -62,6 +66,16 @@ export function getLeadQualificationQueue() {
     attempts: 3,
     backoff: { type: "exponential", delay: 30_000 },
     timeout: 3 * 60 * 1000, // 3 min — single Haiku call
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 100 },
+  });
+}
+
+export function getLeadFounderEnrichmentQueue() {
+  return makeQueue("lead-founder-enrichment", {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 30_000 },
+    timeout: 10 * 60 * 1000, // 10 min — on-demand actor run is 20–60s, allow headroom
     removeOnComplete: { count: 500 },
     removeOnFail: { count: 100 },
   });

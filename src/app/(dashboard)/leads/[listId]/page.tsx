@@ -8,8 +8,10 @@ import { LeadListActions } from "@/components/leads/LeadListActions";
 import { RetryListButton } from "@/components/leads/RetryListButton";
 import { LiveLogsPanel } from "@/components/leads/LiveLogsPanel";
 import { PauseResumeButton } from "@/components/leads/PauseResumeButton";
+import { FounderEnrichBulkButton } from "@/components/leads/FounderEnrichBulkButton";
 import { isPaused } from "@/lib/pipeline-pause";
 import { getCurrentUser, getOrgMembership } from "@/lib/session";
+import { isFounderEnrichmentEligible } from "@/lib/founder-enrichment";
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +49,7 @@ export default async function LeadListPage({ params }: PageProps) {
 
   const isProcessing = ["QUEUED", "RESEARCHING"].includes(leadList.status);
   const paused = isProcessing && (await isPaused(listId));
+  const eligibleFounderCount = leadList.leads.filter(isFounderEnrichmentEligible).length;
 
   // Score distribution buckets: 0-39, 40-59, 60-79, 80-100
   const scoredLeads = leadList.leads.filter((l) => l.qualificationScore !== null);
@@ -103,6 +106,13 @@ export default async function LeadListPage({ params }: PageProps) {
             qualificationScore: l.qualificationScore,
           }))}
         />
+        {leadList.status === "READY" && leadList.leads.length > 0 && (
+          <FounderEnrichBulkButton
+            listId={listId}
+            organizationId={membership.organization.id}
+            eligibleCount={eligibleFounderCount}
+          />
+        )}
         </div>
       </div>
 

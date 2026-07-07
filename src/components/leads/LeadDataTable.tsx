@@ -6,6 +6,7 @@ import {
   Search, ArrowUpDown, Copy, Check, Pencil, X, Save,
   CheckCircle, XCircle, Clock, Mail, ChevronDown,
 } from "lucide-react";
+import { FounderEnrichRowButton } from "@/components/leads/FounderEnrichRowButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ interface Lead {
     opportunityAngle?: string | null;
     researchMetadata?: unknown;
   } | null;
+  rawData?: unknown;
   outreachCopies?: Array<{
     id: string;
     subjectLine?: string | null;
@@ -64,6 +66,7 @@ const COLUMNS = [
   { key: "city",          label: "City",             width: 110, sticky: false },
   { key: "website",       label: "Website",          width: 160, sticky: false },
   { key: "email",         label: "Email",            width: 200, sticky: false },
+  { key: "founderEmail",  label: "Founder Email",    width: 150, sticky: false },
   { key: "whatsApp",      label: "WhatsApp",         width: 140, sticky: false },
   { key: "leadSource",    label: "Lead Source",      width: 110, sticky: false },
   { key: "score",         label: "Score",            width: 70,  sticky: false },
@@ -113,6 +116,46 @@ function getGap(lead: Lead) {
   const gaps = Array.isArray(meta.serviceGaps) ? (meta.serviceGaps as string[]) : [];
   if (gaps.length > 0) return gaps.slice(0, 2).join(", ");
   return lead.research?.opportunityAngle ?? "—";
+}
+
+// Local-only mirror of the generic-mailbox check in
+// src/integrations/linkedin-founder.ts — kept inline so this client component
+// never imports server-only integration code. Keep the local-part list in sync.
+const GENERIC_LOCAL_PARTS = new Set([
+  "info", "contact", "hello", "hi", "support", "sales", "admin", "office",
+  "enquiry", "enquiries", "inquiry", "inquiries", "mail", "team", "hr",
+  "careers", "help", "reception", "booking", "bookings", "feedback",
+  "service", "services", "marketing", "accounts", "billing",
+]);
+
+function isGenericLocalPart(email: string): boolean {
+  const local = (email.split("@")[0] ?? "").trim().toLowerCase();
+  return GENERIC_LOCAL_PARTS.has(local);
+}
+
+/** Founder-enrichment status for a lead, mirroring the eligibility rules in
+ *  src/lib/founder-enrichment.ts (kept inline — that module transitively pulls
+ *  in server-only code, unsafe to import from a client component). */
+function getFounderEnrichmentStatus(lead: Lead): { enriched: boolean; eligible: boolean } {
+  const rawFounderEnrichment = (lead.rawData as { founderEnrichment?: unknown } | null | undefined)
+    ?.founderEnrichment;
+  const metaFounderEnrichment = (
+    lead.research?.researchMetadata as { founderEnrichment?: { outcome?: string } } | null | undefined
+  )?.founderEnrichment;
+
+  // rawData.founderEnrichment is only ever written when a founder was actually
+  // found and saved, so its mere presence means "found" — but we also check the
+  // recorded outcome for defensiveness.
+  const enriched = !!rawFounderEnrichment || metaFounderEnrichment?.outcome === "found";
+  const attempted = !!rawFounderEnrichment || !!metaFounderEnrichment;
+
+  const hasCompany = !!(lead.companyName ?? "").trim();
+  const email = (lead.email ?? "").trim();
+  const named = !!(lead.firstName ?? "").trim();
+  const hasDecisionMakerEmail = named && !!email && !isGenericLocalPart(email);
+
+  const eligible = hasCompany && !attempted && !hasDecisionMakerEmail;
+  return { enriched, eligible };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -369,6 +412,21 @@ export function LeadDataTable({ leads, isProcessing, organizationId, listId }: L
                             ) : <span className="text-muted-foreground">—</span>}
                           </td>
                         );
+
+                      case "founderEmail": {
+                        const { enriched, eligible } = getFounderEnrichmentStatus(lead);
+                        return (
+                          <td key={col.key} className={cellClass}>
+                            <FounderEnrichRowButton
+                              listId={listId}
+                              organizationId={organizationId}
+                              leadId={lead.id}
+                              enriched={enriched}
+                              eligible={eligible}
+                            />
+                          </td>
+                        );
+                      }
 
                       case "whatsApp":
                         return (
