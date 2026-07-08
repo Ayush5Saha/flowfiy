@@ -1,13 +1,7 @@
 import { requireAdmin } from "@/lib/admin-guard";
 import { createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import AdminUserActions from "@/components/admin/AdminUserActions";
-
-const planColors: Record<string, string> = {
-  FREE:    "bg-zinc-700 text-zinc-300",
-  FLOWFIY: "bg-emerald-500/20 text-emerald-300",
-};
+import AdminUsersTable, { type AdminUserRow } from "@/components/admin/AdminUsersTable";
 
 export default async function AdminUsersPage() {
   await requireAdmin();
@@ -30,6 +24,30 @@ export default async function AdminUsersPage() {
   const bannedCount = users.filter((u) => u.banned_until).length;
   const googleCount = users.filter((u) => u.app_metadata?.provider === "google").length;
 
+  const rows: AdminUserRow[] = users.map((user) => {
+    const orgs = membersByUser[user.id] ?? [];
+    const metadataPhone =
+      typeof user.user_metadata?.phone === "string" ? user.user_metadata.phone : "";
+
+    return {
+      id: user.id,
+      name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "—",
+      email: user.email ?? "",
+      phone: user.phone ?? metadataPhone ?? "",
+      provider: user.app_metadata?.provider ?? "email",
+      isVerified: !!user.email_confirmed_at,
+      isBanned: !!user.banned_until,
+      orgs: orgs.map((m) => ({
+        id: m.id,
+        name: m.organization.name,
+        plan: m.organization.plan,
+        role: m.role,
+      })),
+      createdAt: user.created_at ?? null,
+      lastSignIn: user.last_sign_in_at ?? null,
+    };
+  });
+
   return (
     <div>
       <div className="mb-6 flex items-start justify-between">
@@ -46,103 +64,7 @@ export default async function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">User</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Auth</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Organizations</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Joined</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Last Sign In</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Actions</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">Manage</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {users.map((user) => {
-                const orgs = membersByUser[user.id] ?? [];
-                const provider = user.app_metadata?.provider ?? "email";
-                const isBanned = !!user.banned_until;
-                const isVerified = !!user.email_confirmed_at;
-
-                return (
-                  <tr key={user.id} className={`hover:bg-zinc-800/40 transition-colors ${isBanned ? "opacity-60" : ""}`}>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-white">
-                          {user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "—"}
-                        </p>
-                        <p className="text-xs text-zinc-500">{user.email}</p>
-                        <p className="text-[10px] text-zinc-700 font-mono mt-0.5">{user.id.slice(0, 12)}…</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-zinc-800 text-zinc-300 capitalize">
-                        {provider}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-1">
-                        <span className={`text-xs font-medium ${isVerified ? "text-emerald-400" : "text-amber-400"}`}>
-                          {isVerified ? "✓ Verified" : "⚠ Unverified"}
-                        </span>
-                        {isBanned && (
-                          <span className="text-xs text-red-400">🚫 Banned</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {orgs.length === 0 ? (
-                          <span className="text-zinc-600 text-xs">—</span>
-                        ) : (
-                          orgs.map((m) => (
-                            <span
-                              key={m.id}
-                              className={`px-2 py-0.5 rounded-full text-xs ${planColors[m.organization.plan] ?? "bg-zinc-700 text-zinc-300"}`}
-                            >
-                              {m.organization.name} ({m.role})
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">
-                      {user.last_sign_in_at
-                        ? new Date(user.last_sign_in_at).toLocaleDateString()
-                        : "Never"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <AdminUserActions
-                        userId={user.id}
-                        userName={user.user_metadata?.full_name ?? user.email ?? user.id}
-                        isBanned={isBanned}
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/users/${user.id}`}
-                        className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap"
-                      >
-                        Manage →
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {users.length === 0 && (
-            <p className="text-center py-12 text-zinc-500">No users found</p>
-          )}
-        </div>
-      </div>
+      <AdminUsersTable users={rows} />
     </div>
   );
 }
