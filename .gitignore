@@ -67,3 +67,5 @@ skills-lock.json
 /*.csv
 /*.pdf
 /*.skill
+
+.env*
