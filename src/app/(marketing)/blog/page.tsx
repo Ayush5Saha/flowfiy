@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Blog - AI Sales Outreach Tips & B2B Lead Generation Guides India",
   description:
-    "Practical guides on AI-powered B2B sales outreach in India - cold email personalization, lead generation automation, AI SDR tools, and condition-based lead targeting for your sales pipeline.",
+    "Practical guides on Flowfiy's AI sales engine for India - finding businesses on Google Maps, AI company research, need-based lead qualification, condition-based targeting, and cold email personalization.",
   keywords: [
     "AI sales blog India",
     "cold email tips India",
@@ -49,7 +49,7 @@ export default async function BlogPage() {
             AI sales, explained clearly.
           </h1>
           <p className="text-lg text-zinc-400 max-w-xl">
-            Practical guides on outbound automation, cold email, lead generation, and managed AI for B2B sales.
+            Practical guides on finding and qualifying leads with AI, condition-based targeting, and the cold email that closes them.
           </p>
         </div>
       </section>

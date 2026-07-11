@@ -7,9 +7,9 @@ import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { EASE } from "./motion";
 
 const EXAMPLES = [
-  "Coffee shops in Mumbai with no website",
-  "SaaS founders in the US, 11–50 staff",
-  "Dentists in Texas with bad reviews",
+  "Web design agency — restaurants with no website",
+  "Dental marketing — dentists with bad reviews",
+  "B2B SaaS — US founders, 11–50 staff",
 ];
 
 const INTENT_KEY = "flowfiy_intent";
@@ -99,8 +99,8 @@ export function HeroLeadInput() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Describe the leads you want…"
-            aria-label="Describe the leads you want"
+            placeholder="Describe your service and ideal customer…"
+            aria-label="Describe your service and ideal customer"
             className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none sm:text-[15px]"
           />
         </div>

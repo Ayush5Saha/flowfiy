@@ -17,32 +17,32 @@ type Step = {
 const STEPS: Step[] = [
   {
     index: "01",
-    kicker: "DESCRIBE",
-    title: "Describe the leads you want",
-    body: "In plain English: \"coffee shops with no website\", \"dentists with bad reviews\", \"SaaS that recently raised\". Condition-based targeting, not just category and location.",
+    kicker: "FIND",
+    title: "Describe your service. We find real businesses.",
+    body: "In plain English, or by condition — like \"restaurants with no website\" or \"dentists with bad reviews.\" Flowfiy searches Google Maps and a B2B people database for real, live businesses, not a stale contact list.",
   },
   {
     index: "02",
-    kicker: "CLARIFY",
-    title: "Flowfiy asks the right questions",
-    body: "When your request is fuzzy, Flowfiy asks a few smart clarifying questions — location, size, signals — so it finds exactly who you mean.",
+    kicker: "RESEARCH",
+    title: "AI researches every business it finds",
+    body: "Flowfiy reads each business's website, reviews, and public signals — building a real picture of who they are before it ever reaches out.",
   },
   {
     index: "03",
-    kicker: "PLAN",
-    title: "See the plan and the cost upfront",
-    body: "Flowfiy shows what it will search and the estimated credits before it runs. You only pay for qualified leads — an empty search costs nothing.",
+    kicker: "QUALIFY",
+    title: "Scored 0–100 on how much they need you",
+    body: "Every business gets a fit score based on how much it actually needs your specific service. You only pay for qualified leads — an empty search costs nothing.",
   },
   {
     index: "04",
-    kicker: "RUN",
-    title: "Find, research and score every match",
-    body: "Flowfiy finds matching businesses and people, researches each one, scores them 0–100, then writes a personalized cold email and follow-ups.",
+    kicker: "OUTREACH",
+    title: "Personalized outreach, written for each one",
+    body: "Flowfiy writes a personalized message and follow-ups for every qualified lead, using what it learned in research — ready to send from your own Gmail.",
   },
   {
     index: "05",
-    kicker: "SEND",
-    title: "Review, then send from your Gmail",
+    kicker: "REVIEW",
+    title: "Review, then it sends itself",
     body: "Every lead and draft lands ready for review. Approve what you like and Flowfiy sends it straight from your own Gmail.",
   },
 ];
@@ -116,9 +116,9 @@ function StageDiscover() {
 // Stage 02 — researched company card
 function StageResearch() {
   const rows = [
-    "Which city or region should I focus on?",
-    "How many leads are you after?",
-    "Local cafés only, or small chains too?",
+    "Reading their website",
+    "Checking recent reviews",
+    "Scanning public signals",
   ];
   return (
     <div className="flex h-full flex-col justify-center gap-4">
@@ -129,7 +129,7 @@ function StageResearch() {
         <div>
           <p className="text-sm font-semibold text-white">Flowfiy</p>
           <p className="font-mono text-[11px] text-zinc-500">
-            A few quick questions
+            Researching this business
           </p>
         </div>
       </div>
@@ -148,7 +148,7 @@ function StageResearch() {
         ))}
       </div>
       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-        Clarifying your request
+        Building the picture
       </p>
     </div>
   );
@@ -218,14 +218,14 @@ function StageQualify({ active }: { active: boolean }) {
             {n}
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-            est. credits
+            fit score
           </span>
         </div>
       </div>
       <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3.5 py-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
         <span className="font-mono text-[11px] text-emerald-200">
-          Plan ready — approve
+          High-fit lead
         </span>
       </div>
     </div>
@@ -236,7 +236,7 @@ function StageQualify({ active }: { active: boolean }) {
 function StageWrite({ active }: { active: boolean }) {
   const reduced = useReducedMotionSafe();
   const full =
-    "Saw Northvale just brought on four SDRs — scaling outbound fast. Most teams hit a personalization wall right about there.";
+    "Saw Bella Napoli has 200+ five-star reviews but no website yet — most diners search before they call. Happy to show you what one could look like.";
   const [len, setLen] = useState(reduced ? full.length : 0);
 
   useEffect(() => {
@@ -265,11 +265,11 @@ function StageWrite({ active }: { active: boolean }) {
       <div className="space-y-2 border-b border-white/[0.07] pb-3 font-mono text-[11px]">
         <div className="flex gap-2">
           <span className="w-10 text-zinc-600">To</span>
-          <span className="text-zinc-300">maya@northvale.io</span>
+          <span className="text-zinc-300">tony@bellanapoli.com</span>
         </div>
         <div className="flex gap-2">
           <span className="w-10 text-zinc-600">Subj</span>
-          <span className="text-white">Your 4 new SDRs &amp; the wall ahead</span>
+          <span className="text-white">Bella Napoli doesn&apos;t have a website yet</span>
         </div>
       </div>
       <p className="text-[13px] leading-relaxed text-zinc-300">
@@ -338,7 +338,7 @@ function StageBook({ active }: { active: boolean }) {
           Booked · to your calendar
         </p>
         <p className="mt-1.5 text-sm font-semibold text-white">
-          Intro call — Maya Chen
+          Intro call — Tony, Bella Napoli
         </p>
         <p className="mt-0.5 font-mono text-[11px] text-cyan-300">
           Thu · 10:30 AM · 30 min

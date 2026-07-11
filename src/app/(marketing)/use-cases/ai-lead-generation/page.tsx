@@ -5,7 +5,7 @@ import { Check, ArrowRight, Zap } from "lucide-react";
 export const metadata: Metadata = {
   title: "AI Lead Generation Software — Describe Your Ideal Leads",
   description:
-    "Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys. $50/mo for 400 credits.",
+    "Describe the leads you want in plain English — Flowfiy finds real businesses on Google Maps, researches and scores each 0–100 by how much they need your service, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys. $50/mo for 400 credits.",
   keywords: [
     "AI lead generation software",
     "automated B2B lead generation",
@@ -32,7 +32,7 @@ const jsonLd = {
   name: "Flowfiy — AI Lead Generation",
   applicationCategory: "BusinessApplication",
   inLanguage: "en",
-  description: "AI lead generation software. Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys.",
+  description: "AI lead generation software. Describe your service and ideal customer in plain English — Flowfiy finds real businesses on Google Maps, researches each one, scores them 0–100 by how much they need your service, and sends personalized outreach. Fully managed AI, no API keys.",
   offers: [
     { "@type": "Offer", price: "50", priceCurrency: "USD", description: "400 credits/month — about 600–800 leads. Extra credits via top-ups anytime." },
   ],
@@ -42,7 +42,7 @@ const steps = [
   { n: "01", title: "Describe the leads you want", desc: "Type it in plain English — \"coffee shops with no website\", \"dentists with bad reviews\", \"SaaS that recently raised\". Flowfiy asks smart clarifying questions when it needs to narrow the search." },
   { n: "02", title: "AI finds matching businesses", desc: "Flowfiy translates your description into a targeted search across Google Maps and a B2B people database — no API keys, no manual filters. Condition-based targeting finds leads category-and-location search can't." },
   { n: "03", title: "Every company is researched", desc: "For each lead, Flowfiy reviews their website and public signals: positioning, tech clues, team size, growth language. Email addresses are verified and enriched along the way." },
-  { n: "04", title: "AI qualifies before you see them", desc: "Every lead is scored 0–100 with reasoning. Only leads above your threshold move forward — so you spend zero time on prospects that won't convert. You only pay for qualified leads." },
+  { n: "04", title: "AI qualifies before you see them", desc: "Every lead is scored 0–100 by how much it needs your service, with reasoning. Only leads above your threshold move forward — so you spend zero time on prospects that won't convert. You only pay for qualified leads." },
   { n: "05", title: "Personalized outreach, ready to send", desc: "A subject line, email body, and two follow-ups are written per qualified lead — referencing their real company context. Connect Gmail, review, and send from your own inbox." },
 ];
 
@@ -67,7 +67,7 @@ export default function AILeadGenerationPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-              Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys.
+              Describe the leads you want in plain English — Flowfiy finds real businesses on Google Maps, researches and scores each 0–100 by how much they need your service, and writes personalized cold emails plus follow-ups. Fully managed AI, no API keys.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">

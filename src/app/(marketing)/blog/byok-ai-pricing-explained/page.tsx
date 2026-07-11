@@ -99,7 +99,7 @@ export default function BlogPostCreditPricing() {
 
             <h2 className="text-2xl font-bold text-white mt-10">What credits mean in practice</h2>
             <p>
-              Now there are no keys to connect. The AI runs on fully managed Google Gemini, the lead sources are built in, and email verification and enrichment are included. You describe the leads you want in plain English and Flowfiy finds, qualifies, and writes the outreach.
+              Now there are no keys to connect. The AI runs on fully managed Google Gemini, the lead sources are built in, and email verification and enrichment are included. You describe the leads you want in plain English and Flowfiy finds real businesses on Google Maps, qualifies them by how much they need your service, and writes the outreach.
             </p>
             <p>
               You pay in <strong className="text-white">credits</strong>. One subscription is $50/month for 400 credits — roughly 600–800 leads, depending on the search. A credit is about two qualified leads, and you only pay for leads that qualify. An empty search costs nothing.

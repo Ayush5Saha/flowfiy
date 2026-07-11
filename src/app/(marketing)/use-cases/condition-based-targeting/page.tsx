@@ -5,7 +5,7 @@ import { Check, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Condition-Based Lead Targeting — Find Businesses That Need You",
   description:
-    "Go beyond category and location. Describe leads by qualitative conditions — “coffee shops with no website”, “dentists with bad reviews”, “agencies with an outdated site” — and Flowfiy finds, scores, and writes the outreach. No API keys. $50/mo for 400 credits.",
+    "Go beyond category and location. Describe leads by qualitative conditions — “coffee shops with no website”, “dentists with bad reviews”, “agencies with an outdated site” — and Flowfiy finds them live on Google Maps, scores how much each needs you, and writes the outreach. No API keys. $50/mo for 400 credits.",
   keywords: [
     "condition-based lead targeting",
     "find businesses with no website",
@@ -64,9 +64,10 @@ export default function ConditionBasedTargetingPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-              Most lead tools only filter by industry, size, and location. Flowfiy lets you target on real-world
-              conditions — “no website”, “slow or outdated site”, “bad reviews”, “recently funded” — the signals that
-              actually mean a prospect needs what you sell.
+              Most lead tools only filter a stale contact database by industry, size, and location. Flowfiy searches
+              real businesses live on Google Maps and lets you target on real-world conditions — “no website”, “slow
+              or outdated site”, “bad reviews”, “recently funded” — the signals that actually mean a prospect needs
+              what you sell.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">

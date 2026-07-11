@@ -117,7 +117,7 @@ function MoonGlow({ reduced }: { reduced: boolean }) {
 const STATIONS = [
   { label: "Find",     glyph: "◉" },
   { label: "Research", glyph: "◎" },
-  { label: "Write",    glyph: "◈" },
+  { label: "Qualify",  glyph: "◈" },
   { label: "Send",     glyph: "◆" },
   { label: "Book",     glyph: "◉" },
 ] as const;
@@ -137,7 +137,7 @@ function PipelineRail({ reduced }: { reduced: boolean }) {
   return (
     <div
       className="relative mx-auto w-full max-w-[600px]"
-      aria-label="Flowfiy pipeline stages: Find · Research · Write · Send · Book"
+      aria-label="Flowfiy pipeline stages: Find · Research · Qualify · Send · Book"
     >
       {/* Track */}
       <div
@@ -292,8 +292,9 @@ export function AlwaysOn() {
         {/* Sub copy */}
         <MaskReveal delay={0.26} className="mt-8 max-w-[520px] text-center">
           <p className="text-base leading-relaxed text-zinc-400 sm:text-[1.0625rem]">
-            While you sleep, Flowfiy is finding, researching, writing, and
-            booking. You wake up to a full pipeline —{" "}
+            While you sleep, Flowfiy is finding real businesses, researching
+            and qualifying them, and sending outreach. You wake up to a full
+            pipeline —{" "}
             <span className="text-zinc-300">not a full to-do list.</span>
           </p>
         </MaskReveal>

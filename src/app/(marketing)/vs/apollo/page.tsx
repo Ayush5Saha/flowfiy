@@ -3,9 +3,9 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Apollo.io — AI Outbound Comparison 2026",
+  title: "Flowfiy vs Apollo.io — AI Sales Engine Comparison 2026",
   description:
-    "Flowfiy vs Apollo.io for AI-powered B2B outreach. Apollo gives you a contact database you have to set up; with Flowfiy you just describe the leads you want — no Apollo account, no keys — and it finds, qualifies, and writes the outreach. One plan: $50/mo for 400 credits.",
+    "Flowfiy vs Apollo.io. Apollo gives you a static contact database you have to set up and mine yourself. Flowfiy is an AI sales engine — it finds real businesses live on Google Maps, researches and scores each by how much they need you, then writes the outreach. No Apollo account, no keys. One plan: $50/mo for 400 credits.",
   keywords: [
     "Flowfiy vs Apollo",
     "Apollo.io alternative",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 const rows = [
   { feature: "Describe leads in plain English", outbound: true, apollo: false },
   { feature: "Condition-based targeting (e.g. \"no website\", \"bad reviews\")", outbound: true, apollo: false },
-  { feature: "Fully managed data sources — no account to set up", outbound: true, apollo: false },
+  { feature: "Live Google Maps business search — no account to set up", outbound: true, apollo: false },
   { feature: "AI company research on every prospect", outbound: true, apollo: false },
   { feature: "AI qualification scoring (0–100)", outbound: true, apollo: false },
   { feature: "AI-written personalized email copy", outbound: true, apollo: "Basic AI assist" },
@@ -53,11 +53,11 @@ export default function VsApolloPage() {
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
             Flowfiy vs Apollo.io:{" "}
             <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-              A database vs. a done-for-you pipeline
+              A static database vs. a live AI sales engine
             </span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-            Apollo.io is a contact database with a built-in sequencer — you set up an account, build filters, and do the research and writing yourself. With Flowfiy there&apos;s no Apollo account and no keys: you describe the leads you want in plain English, and it finds matching businesses, researches and scores each one, then writes the personalized outreach for you.
+            Apollo.io is a contact database with a built-in sequencer — you set up an account, build filters, and do the research and writing yourself. Flowfiy is an AI sales engine: there&apos;s no Apollo account and no keys, you describe the leads you want in plain English, and it finds real businesses live on Google Maps, researches and scores each by how much they need your service, then writes the personalized outreach for you.
           </p>
         </div>
       </section>
@@ -87,9 +87,10 @@ export default function VsApolloPage() {
               <p className="font-semibold text-white mb-3">Flowfiy gives you...</p>
               <ul className="space-y-2">
                 {[
+                  "Finds real businesses live on Google Maps — not a static list",
                   "Just describe your leads — no Apollo account, no keys",
                   "Condition-based targeting like \"shops with a slow or outdated site\"",
-                  "0–100 qualification scoring before any email is sent",
+                  "0–100 scoring by how much each lead needs your service",
                   "AI-written emails with specific facts per lead, plus follow-ups",
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
@@ -150,7 +151,7 @@ export default function VsApolloPage() {
           <h2 className="text-2xl font-bold text-white mb-6">How Flowfiy replaces the Apollo workflow</h2>
           <p className="text-zinc-400 leading-relaxed mb-8">
             With Apollo you set up an account, learn the filters, build lists, then export them somewhere to research and write. Flowfiy collapses all of that into one step: you describe the leads you want in plain English, and it asks smart clarifying questions when needed.
-            The data sources are fully managed, so there&apos;s nothing to connect — Flowfiy finds matching businesses, researches and scores each one 0–100, writes personalized emails plus follow-ups, and sends from your own Gmail after review.
+            The data sources are fully managed, so there&apos;s nothing to connect — Flowfiy finds real businesses live on Google Maps, researches and scores each one 0–100 by how much they need your service, writes personalized emails plus follow-ups, and sends from your own Gmail after review.
           </p>
           <div className="bg-zinc-900/50 border border-white/6 rounded-2xl p-6">
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-4">The whole stack, managed</p>

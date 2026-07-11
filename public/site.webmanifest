@@ -1,7 +1,7 @@
 {
   "name": "Flowfiy",
   "short_name": "Flowfiy",
-  "description": "AI-Powered B2B Sales Outreach Platform",
+  "description": "The AI Sales Engine — finds, researches, and qualifies leads from Google Maps",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",

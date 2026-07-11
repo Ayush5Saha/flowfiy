@@ -11,13 +11,13 @@ import { EASE, Eyebrow, Lines, MaskReveal, useReducedMotionSafe } from "./motion
 // priceInr ≈ $50/mo; getLocalisedPrice shows the local-currency equivalent.
 const PLANS = [
   {
-    name: "Flowfiy", priceInr: 4200, desc: "Everything you need to run outbound", gens: "400", seats: 1,
+    name: "Flowfiy", priceInr: 4200, desc: "Everything you need to find your customers", gens: "400", seats: 1,
     features: [
       "About 600–800 qualified leads/mo",
-      "Describe leads in plain English",
-      "Condition-based targeting",
-      "Research + 0–100 scoring on every lead",
-      "Personalized emails + follow-ups",
+      "Describe your service in plain English",
+      "Condition-based targeting on Google Maps",
+      "Research + 0–100 scoring by need",
+      "Personalized outreach + follow-ups",
       "Send from your own Gmail after review",
       "Fully managed AI & data — no API keys",
       "Top up extra credits anytime",

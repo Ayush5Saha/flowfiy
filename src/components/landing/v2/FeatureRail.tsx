@@ -38,7 +38,7 @@ const FEATURES: Feature[] = [
   {
     index: "01",
     title: "Works out of the box",
-    body: "No API keys, no per-tool setup. The AI and data sources are fully managed — sign up, describe the leads you want, and your first leads are ready in minutes.",
+    body: "No API keys, no per-tool setup. The AI and data sources are fully managed — sign up, describe your service, and your first leads are ready in minutes.",
     accent: "boot",
   },
   {
@@ -50,7 +50,7 @@ const FEATURES: Feature[] = [
   {
     index: "03",
     title: "Only the best fits",
-    body: "Every lead scored 0–100. See instantly who's worth your time and skip everyone who isn't.",
+    body: "Every lead scored 0–100 on how much they need your service. See instantly who's worth your time and skip everyone who isn't.",
     accent: "score",
   },
   {
@@ -83,8 +83,8 @@ const N = FEATURES.length;
 function BootAccent({ active }: { active: boolean }) {
   const reduced = useReducedMotionSafe();
   const lines = [
-    { k: "$", v: "describe the leads you want", done: true },
-    { k: "→", v: "finding matching businesses", done: true },
+    { k: "$", v: "describe your service", done: true },
+    { k: "→", v: "finding real businesses on maps", done: true },
     { k: "✓", v: "first leads ready", done: true },
   ];
   return (

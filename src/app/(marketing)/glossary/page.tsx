@@ -6,7 +6,7 @@ import { GLOSSARY } from "@/lib/seo/glossary";
 export const metadata: Metadata = {
   title: "AI Sales & Outbound Glossary — Flowfiy",
   description:
-    "Plain-English definitions of AI sales and B2B outbound terms: AI SDR, lead scoring, ICP, cold email, lead enrichment, email deliverability, and more.",
+    "Plain-English definitions of AI sales engine and B2B outbound terms: AI SDR, lead scoring, ICP, condition-based targeting, cold email, lead enrichment, email deliverability, and more.",
   keywords: [
     "AI sales glossary",
     "what is an AI SDR",
@@ -55,8 +55,9 @@ export default function GlossaryIndexPage() {
               AI sales &amp; outbound glossary
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl">
-              Plain-English definitions of the terms behind modern AI outbound —
-              what they mean and how they fit into an automated sales pipeline.
+              Plain-English definitions of the terms behind a modern AI sales engine —
+              what they mean and how they fit into finding, researching, qualifying, and
+              reaching out to leads.
             </p>
           </div>
         </section>

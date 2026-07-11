@@ -4,22 +4,22 @@ import Image from "next/image";
 import { Zap, Shield, Globe, Code2, ArrowRight, Target, Search, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Flowfiy — AI-Powered B2B Sales Outreach Platform",
+  title: "About Flowfiy — The AI Sales Engine for B2B Teams",
   description:
-    "Flowfiy is the AI outbound sales platform where you describe the leads you want in plain English — and it finds, qualifies, and writes the outreach. Fully managed AI and data. No API keys, no SDR needed.",
+    "Flowfiy is an AI sales engine. It finds real businesses on Google Maps (plus a B2B people database), researches each one with AI, scores it 0–100 by how much it needs your service, then sends personalized outreach from your own Gmail.",
   keywords: [
     "about Flowfiy",
-    "AI sales platform",
+    "AI sales engine",
+    "AI business search",
+    "Google Maps lead generation",
     "describe your leads",
-    "B2B outreach automation",
     "AI SDR platform",
-    "AI outbound sales",
-    "outbound sales software",
+    "need-based lead qualification",
     "condition-based lead targeting",
   ],
   openGraph: {
-    title: "About Flowfiy — The AI-Powered B2B Sales Platform",
-    description: "Learn how Flowfiy turns a plain-English description of your ideal leads into researched, scored, and written outreach. Fully managed AI and data. One plan, $50/mo for 400 credits.",
+    title: "About Flowfiy — The AI Sales Engine for B2B Teams",
+    description: "Flowfiy finds real businesses on Google Maps, researches each with AI, scores it 0–100 by how much it needs your service, then sends personalized outreach from your Gmail. One plan, $50/mo for 400 credits.",
     url: "/about",
   },
   alternates: { canonical: "/about" },
@@ -53,18 +53,17 @@ export default function AboutPage() {
             Our mission
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-[1.08]">
-            The outbound stack was{" "}
+            Manual prospecting was broken.{" "}
             <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-              broken.
+              We built an AI sales engine instead.
             </span>
-            <br />We rebuilt it with AI.
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed mb-8">
-            Manual SDR work — finding companies, researching them, writing cold emails — is repetitive, slow, and expensive.
-            Flowfiy replaces that entire workflow. Describe the leads you want in plain English, and it finds, qualifies, and writes personalized outreach for every one.
+            Finding companies, researching them, and writing cold emails by hand is repetitive, slow, and expensive.
+            Flowfiy replaces that entire workflow: it finds real businesses on Google Maps that match what you sell, researches each one with AI, scores it 0–100 by how much it needs your service, and sends personalized outreach from your own Gmail.
           </p>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-            We built this for revenue teams who want pipeline quality, not just volume. Every lead is researched, scored, and written for — before a single email leaves your inbox.
+            We built this for revenue teams who want pipeline quality, not just volume. Every lead is found on live data, researched, and scored before a single email leaves your inbox.
           </p>
         </div>
       </section>
@@ -80,7 +79,7 @@ export default function AboutPage() {
             For years, building a real outbound sales machine meant hiring SDRs, subscribing to five different tools, and spending weeks on setup. That was fine if you were a large enterprise. For everyone else, it was out of reach.
           </p>
           <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl pl-8 mt-4">
-            Flowfiy changes that. Describe who you sell to in plain English — even by condition, like &quot;coffee shops with no website&quot; or &quot;SaaS that recently raised&quot; — and within minutes you have a list of researched, scored, and personally written-for prospects. No team required.
+            Flowfiy changes that. Describe who you sell to in plain English — even by condition, like &quot;coffee shops with no website&quot; or &quot;SaaS that recently raised&quot; — and Flowfiy searches live data on Google Maps and a B2B people database, not a stale contact list, to find them. Within minutes you have a list of researched, scored, and personally written-for prospects. No team required.
           </p>
         </div>
       </section>
@@ -141,13 +140,13 @@ export default function AboutPage() {
                 icon: Search,
                 step: "02",
                 title: "We find, research & score them",
-                desc: "Flowfiy searches 275M+ contacts, visits each company's website, and scores every lead 0–100 based on how likely they are to need your service.",
+                desc: "Flowfiy finds real businesses on Google Maps (plus a B2B people database) — live data, not a stale contact list — visits each company's website, and scores every lead 0–100 based on how much they need your service.",
               },
               {
                 icon: Mail,
                 step: "03",
                 title: "We write a personal email to each one",
-                desc: "For every lead that scores high enough, Flowfiy writes a subject line, email body, and follow-ups — using real details from that company. You review and send.",
+                desc: "For every lead that scores high enough, Flowfiy writes a subject line, email body, and follow-ups — using real details from that company. You review and send from your own Gmail.",
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative bg-zinc-900/50 border border-white/6 rounded-2xl p-7 hover:border-violet-500/20 transition-colors">
@@ -225,9 +224,9 @@ export default function AboutPage() {
           <ol className="space-y-4">
             {[
               { n: "01", title: "Understand your ICP", desc: "Reads your business profile and your plain-English request, then builds a precise picture of who to target — industries, company sizes, job titles, and the conditions that qualify a lead." },
-              { n: "02", title: "Discover leads", desc: "Searches Google Maps and a B2B people database using that brief. Condition-based targeting finds matches a simple filter can't — like \"no website\" or \"bad reviews\" — and pulls only the businesses and people that fit." },
+              { n: "02", title: "Discover leads", desc: "Searches Google Maps and a B2B people database using that brief — real, live businesses, not a stale contact database. Condition-based targeting finds matches a simple filter can't — like \"no website\" or \"bad reviews\" — and pulls only the businesses and people that fit." },
               { n: "03", title: "Research each company", desc: "Visits each prospect's website and reads it. Extracts growth signals, website health, and service gaps, building context for personalisation." },
-              { n: "04", title: "Qualify & score", desc: "Scores every lead from 0 to 100 based on how well they fit your service. Only high-scoring leads move forward — along with a clear reason why, and you only spend credits on the ones that qualify." },
+              { n: "04", title: "Qualify & score", desc: "Scores every lead from 0 to 100 based on how much they need your service. Only high-scoring leads move forward — along with a clear reason why, and you only spend credits on the ones that qualify." },
               { n: "05", title: "Personalize outreach", desc: "Writes a subject line, email body, and follow-ups for each qualified lead — using real details from their company, not generic merge tags — ready to send from your own Gmail." },
             ].map(({ n, title, desc }) => (
               <li key={n} className="flex gap-5 bg-zinc-900/40 border border-white/6 rounded-2xl p-6">

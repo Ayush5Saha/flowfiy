@@ -2,12 +2,19 @@
 import { LandingPageV2 } from "@/components/landing/v2/LandingPageV2";
 
 export const metadata: Metadata = {
-  title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
+  title: "Flowfiy — The AI Sales Engine That Finds Leads on Google Maps",
   description:
-    "Describe the leads you want in plain English — Flowfiy finds matching businesses, scores each 0–100, and writes personalized cold emails sent from your Gmail. Target by conditions like 'coffee shops with no website'. No API keys. $50/mo for 400 credits.",
+    "Flowfiy is an AI sales engine that finds real businesses on Google Maps, researches each one, and scores them 0–100 by how much they need your service — then sends personalized outreach from your Gmail. Target by conditions like 'coffee shops with no website'. No API keys. $50/mo for 400 credits.",
   keywords: [
-    // Primary
-    "AI outbound sales platform",
+    // Primary — AI sales engine positioning
+    "AI sales engine",
+    "Google Maps lead generation",
+    "find businesses on Google Maps",
+    "AI lead qualification",
+    "personalized outreach",
+    "AI that finds customers for your service",
+    "describe your service and get leads",
+    // Target categories
     "AI lead generation",
     "AI lead generation software",
     "AI SDR",
@@ -20,10 +27,6 @@ export const metadata: Metadata = {
     "business search AI",
     "AI company research",
     "natural language lead generation",
-    "AI sales automation",
-    "cold email automation",
-    "outbound sales tool",
-    "personalized cold email",
     "describe leads in plain English",
     "condition-based lead targeting",
     // Differentiators
@@ -31,17 +34,14 @@ export const metadata: Metadata = {
     "find leads by qualitative conditions",
     "AI lead scoring software",
     "automated lead research",
-    "AI cold email writer",
-    "Gmail cold outreach automation",
     // Long-tail
     "AI-powered B2B prospecting",
     "automated lead generation",
-    "AI email outreach",
     "best AI sales tool for startups",
     "AI outreach tool for agencies",
     "AI sales pipeline automation",
     "no API key lead generation",
-    "B2B outbound automation",
+    "cold email alternative",
   ],
   authors: [{ name: "Flowfiy" }],
   creator: "Flowfiy",
@@ -61,15 +61,15 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "/",
     siteName: "Flowfiy",
-    title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
+    title: "Flowfiy — The AI Sales Engine That Finds Leads on Google Maps",
     description:
-      "Describe the leads you want in plain English — Flowfiy finds, qualifies, and writes personalized outreach sent from your Gmail. Target by conditions like 'dentists with bad reviews'. $50/mo for 400 credits.",
+      "Flowfiy finds real businesses on Google Maps, researches each one, and qualifies them by how much they need your service — then sends personalized outreach from your Gmail. Target by conditions like 'dentists with bad reviews'. $50/mo for 400 credits.",
     images: [
       {
         url: `${process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com"}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Flowfiy — Find leads, write emails, close deals automatically",
+        alt: "Flowfiy — the AI sales engine that finds, researches, and qualifies leads from Google Maps",
       },
     ],
   },
@@ -77,9 +77,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@flowfiy",
     creator: "@flowfiy",
-    title: "Flowfiy — Describe the Leads You Want, AI Finds & Writes the Outreach",
+    title: "Flowfiy — The AI Sales Engine That Finds Leads on Google Maps",
     description:
-      "Describe your ideal leads in plain English — Flowfiy finds, qualifies, and writes personalized outreach for every prospect. $50/mo for 400 credits, no API keys.",
+      "Flowfiy finds real businesses on Google Maps, researches and qualifies each one by how much they need your service, then sends personalized outreach. $50/mo for 400 credits, no API keys.",
     images: [`${process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com"}/opengraph-image`],
   },
   robots: {
@@ -109,7 +109,7 @@ const jsonLd = {
   operatingSystem: "Web",
   inLanguage: "en",
   description:
-    "Describe the leads you want in plain English — Flowfiy finds matching businesses, researches and scores each 0–100, and writes personalized cold emails plus follow-ups sent from your own Gmail. No API keys. $50/month for 400 credits.",
+    "Flowfiy is an AI sales engine that finds real businesses on Google Maps, researches each one, qualifies them by how much they need your service, and sends personalized outreach — all from a plain-English description of who you sell to. No API keys. $50/month for 400 credits.",
   offers: [
     {
       "@type": "Offer",
@@ -121,13 +121,14 @@ const jsonLd = {
     },
   ],
   featureList: [
+    "Finds real businesses on Google Maps",
+    "Researches each company with AI",
+    "Scores leads 0–100 by how much they need your service",
+    "Sends personalized outreach from your Gmail",
     "Describe your ideal leads in plain English",
     "Smart clarifying questions when a search needs them",
     "Condition-based targeting (e.g. coffee shops with no website, SaaS that recently raised)",
-    "Automated company and prospect research",
-    "AI lead qualification scoring 0–100",
-    "Personalized cold emails and follow-ups",
-    "Send from your own Gmail after review",
+    "B2B people-database discovery for contacts",
     "Fully managed AI and data sources — no API keys",
   ],
 };
@@ -141,7 +142,7 @@ const faqJsonLd = {
       name: "What is Flowfiy?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Flowfiy is an AI outbound sales platform. You describe the leads you want in plain English, and Flowfiy finds matching businesses and people, researches each one, scores prospects 0–100, writes personalized cold emails and follow-ups, and sends them from your own Gmail after you review.",
+        text: "Flowfiy is an AI sales engine. You describe your service and ideal customer in plain English, and Flowfiy finds real businesses on Google Maps and a B2B people database, researches each one with AI, scores it 0–100 by how much it needs your service, and sends personalized outreach from your own Gmail after you review.",
       },
     },
     {
@@ -149,7 +150,7 @@ const faqJsonLd = {
       name: "How does Flowfiy generate leads?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Just describe who you want to reach in plain English. Flowfiy asks smart clarifying questions when a search needs them, then finds matching businesses and people, researches each one, scores them 0–100, and writes a subject line, email body, and follow-ups for every qualified lead. The AI and data sources are fully managed — no API keys or per-tool setup.",
+        text: "Just describe who you want to reach in plain English. Flowfiy asks smart clarifying questions when a search needs them, then finds matching businesses on Google Maps and people from a B2B database, researches each one, scores them 0–100 by how much they need your service, and writes a subject line, email body, and follow-ups for every qualified lead. The AI and data sources are fully managed — no API keys or per-tool setup.",
       },
     },
     {
@@ -202,7 +203,7 @@ const videoJsonLd = {
   "@type": "VideoObject",
   name: "Flowfiy Demo | AI That Finds Your Next Customer",
   description:
-    "A walkthrough of how to use Flowfiy: describe the leads you want in plain English, then Flowfiy finds matching businesses, researches and scores each one 0–100, writes personalized cold emails, and sends them from your Gmail after review.",
+    "A walkthrough of how to use Flowfiy: describe your service in plain English, then Flowfiy finds matching businesses on Google Maps, researches and scores each one 0–100 by how much they need your service, and sends personalized outreach from your Gmail after review.",
   thumbnailUrl: ["https://i.ytimg.com/vi/T3E6Bkrt_68/maxresdefault.jpg"],
   uploadDate: "2026-06-30",
   duration: "PT2M49S",

@@ -8,10 +8,11 @@ export const metadata: Metadata = {
     "Flowfiy pricing: one simple plan at $50/month for 400 credits (~600–800 leads). No API keys — AI is fully managed. Describe the leads you want in plain English; buy more credits anytime.",
   keywords: [
     "Flowfiy pricing",
+    "AI sales engine pricing",
     "AI lead generation pricing",
     "lead credits",
     "AI SDR cost",
-    "cold email automation pricing",
+    "Google Maps lead generation pricing",
   ],
   openGraph: {
     title: "Flowfiy Pricing — $50/mo, 400 credits",
@@ -61,7 +62,7 @@ const offerJsonLd = {
   "@type": "Product",
   name: "Flowfiy",
   description:
-    "AI outbound sales platform — describe the leads you want in plain English; Flowfiy finds, researches, qualifies and writes personalized cold emails, metered by credits.",
+    "AI sales engine — finds real businesses on Google Maps, researches each one, scores it 0–100 by how much it needs your service, and writes personalized outreach from your Gmail, metered by credits.",
   brand: { "@type": "Brand", name: "Flowfiy" },
   offers: {
     "@type": "Offer",

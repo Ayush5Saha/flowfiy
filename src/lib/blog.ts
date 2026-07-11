@@ -26,9 +26,9 @@ export type PublishedBlogPost = BlogPostCard & {
 export const staticBlogPosts: BlogPostCard[] = [
   {
     slug: "how-to-set-up-flowfiy",
-    title: "How to Set Up Flowfiy: The Complete 7-Step Setup Guide",
+    title: "How to Set Up Flowfiy: The Complete 4-Step Setup Guide",
     excerpt:
-      "From sign-up to your first AI-personalized campaign in under 15 minutes. Add your ICP, connect your Claude or OpenRouter key, plug in Apollo or Apify, link Gmail, and add your calendar — every step explained.",
+      "From sign-up to your first AI-personalized outreach in minutes. Subscribe, set your business profile, describe the leads you want in plain English, then review and send from Gmail — no API keys, every step explained.",
     category: "Guides",
     readTime: "7 min read",
     date: "Jun 15, 2026",
@@ -56,9 +56,9 @@ export const staticBlogPosts: BlogPostCard[] = [
   },
   {
     slug: "byok-ai-pricing-explained",
-    title: "BYOK AI Pricing: Why We Don't Charge Per Lead Generation",
+    title: "Why We Removed API Keys: Simple Credit Pricing",
     excerpt:
-      "Most AI sales tools charge $0.50-$2.00 per lead. We charge $0. Here's the math behind BYOK (Bring Your Own Key) and why it's the only honest model for AI SaaS.",
+      "We used to ask you to bring your own API keys. Now the AI and every data source are fully managed and you pay one simple price: $50/month for 400 credits. Here's why we made the switch.",
     category: "Product",
     readTime: "5 min read",
     date: "Apr 28, 2026",

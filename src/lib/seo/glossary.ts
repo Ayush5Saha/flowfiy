@@ -18,9 +18,9 @@ export const GLOSSARY: GlossaryTerm[] = [
       "An AI SDR is software that automates the work of a sales development rep — finding leads, researching them, and writing outreach — without a human doing it manually.",
     body: [
       "A traditional SDR spends most of their week building lists, researching companies, and writing cold emails. An AI SDR does that work automatically using AI agents, so a founder or small team can run outbound at scale without hiring.",
-      "Flowfiy is an AI SDR platform: you describe the leads you want in plain English, and its managed AI handles lead discovery, company research, qualification scoring, and personalized email writing end-to-end.",
+      "Flowfiy does the same job as an AI SDR, and goes a step earlier: it's an AI sales engine that finds real businesses on Google Maps and a B2B people database itself, researches each one, scores it 0–100 by how much it needs your service, and writes the personalized outreach — from a plain-English description of who you sell to.",
     ],
-    related: ["outbound-sales", "cold-email", "lead-scoring"],
+    related: ["ai-sales-engine", "outbound-sales", "lead-scoring"],
   },
   {
     slug: "ideal-customer-profile",
@@ -40,7 +40,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       "Lead scoring is the practice of ranking prospects by how likely they are to convert, usually on a numeric scale, so you contact the best-fit leads first.",
     body: [
       "Scoring lets a team focus limited outreach capacity on the highest-potential prospects instead of treating every lead the same. Signals can include firmographics, fit to the ICP, and buying intent.",
-      "Flowfiy scores every discovered lead 0–100 with an AI qualification agent, so your pipeline is prioritized before you send a single email.",
+      "Flowfiy scores every discovered lead 0–100 for how much it needs your service, with an AI qualification agent, so your pipeline is prioritized before you send a single email.",
     ],
     related: ["ideal-customer-profile", "ai-sdr", "lead-enrichment"],
   },
@@ -53,7 +53,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       "Effective cold email is relevant and personalized — it references the recipient's company and a specific reason for reaching out, rather than a generic blast. Deliverability and personalization are the two biggest drivers of reply rates.",
       "Flowfiy writes a personalized subject line, body, and follow-ups for each lead based on real company research, then sends from your own Gmail.",
     ],
-    related: ["cold-email", "email-deliverability", "personalization-at-scale"],
+    related: ["email-deliverability", "personalization-at-scale", "outbound-sales"],
   },
   {
     slug: "lead-enrichment",
@@ -95,9 +95,9 @@ export const GLOSSARY: GlossaryTerm[] = [
       "Outbound sales is a go-to-market motion where you proactively reach out to potential customers — via email, calls, or social — rather than waiting for them to come to you.",
     body: [
       "Outbound is predictable and controllable: you choose exactly who to target. The trade-off is the manual effort of list-building, research, and writing — which is what AI outbound tools automate.",
-      "Flowfiy is an autonomous outbound engine: you define your ICP and it runs discovery, research, qualification, and personalized outreach for you.",
+      "Flowfiy is an AI sales engine built for outbound: you describe who you sell to and it runs discovery on Google Maps and a B2B people database, research, need-based qualification, and personalized outreach for you.",
     ],
-    related: ["ai-sdr", "cold-email", "ideal-customer-profile"],
+    related: ["ai-sales-engine", "ai-sdr", "ideal-customer-profile"],
   },
   {
     slug: "condition-based-targeting",
@@ -106,9 +106,9 @@ export const GLOSSARY: GlossaryTerm[] = [
       "Condition-based targeting is finding leads by qualitative conditions — like \"coffee shops with no website\" or \"dentists with bad reviews\" — rather than just category and location.",
     body: [
       "Most lead tools only filter by firmographics: industry, size, geography. Condition-based targeting goes further, matching on real-world signals such as a slow or outdated website, poor reviews, or a recent funding round — the things that actually indicate a prospect needs what you sell.",
-      "With Flowfiy you describe the leads you want in plain English, and its managed AI finds matching businesses, scores each 0–100, and writes the outreach — no API keys to set up.",
+      "With Flowfiy you describe the leads you want in plain English, and its managed AI finds matching businesses, scores each 0–100 by how much it needs your service, and writes the outreach — no API keys to set up.",
     ],
-    related: ["ideal-customer-profile", "ai-sdr", "lead-scoring"],
+    related: ["ai-sales-engine", "ideal-customer-profile", "lead-scoring"],
   },
   {
     slug: "lead-credits",
@@ -139,7 +139,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       "AI sales intelligence is the use of AI to automatically gather, analyze, and score data about prospects and companies — so sales teams know who to contact, why they're a fit, and what to say, without manual research.",
     body: [
       "Where a traditional sales-intelligence tool hands you a database and filters, AI sales intelligence interprets the data for you: it researches each account, detects buying signals, and prioritizes who to pursue. The output is a ranked, context-rich pipeline rather than a raw list.",
-      "Flowfiy is an AI sales intelligence platform — it researches every lead, scores fit 0–100 with reasoning, and turns that intelligence into personalized outreach sent from your own Gmail.",
+      "Flowfiy is an AI sales engine that includes this: it researches every lead, scores it 0–100 by how much it needs your service, and turns that intelligence into personalized outreach sent from your own Gmail.",
     ],
     related: ["lead-scoring", "lead-enrichment", "ai-sdr"],
   },
@@ -175,6 +175,17 @@ export const GLOSSARY: GlossaryTerm[] = [
       "Flowfiy is built around this: you type a description, it asks a clarifying question if needed, then finds, researches, scores, and writes outreach for matching leads.",
     ],
     related: ["condition-based-targeting", "ideal-customer-profile", "ai-sdr"],
+  },
+  {
+    slug: "ai-sales-engine",
+    term: "AI Sales Engine",
+    short:
+      "An AI sales engine is a single AI system that finds real businesses, researches each one, scores how much it needs your service, and writes and sends personalized outreach — replacing a stack of a contact database, an enrichment tool, and an email sender with one plain-English brief.",
+    body: [
+      "Most outbound stacks are assembled from separate tools: a contact database for names, an enrichment tool to fill gaps, a spreadsheet for scoring, and an email tool to send from. An AI sales engine collapses that stack into one system that runs the whole motion — discovery, research, need-based qualification, and outreach — from a single description of who you sell to.",
+      "Flowfiy is an AI sales engine: it finds real businesses on Google Maps and a B2B people database, researches each one's website and public signals, scores it 0–100 by how much it needs your service, and writes a personalized email sent from your own Gmail. Email is the last step, not the whole product.",
+    ],
+    related: ["condition-based-targeting", "ai-sdr", "lead-scoring"],
   },
   {
     slug: "ai-prospecting",

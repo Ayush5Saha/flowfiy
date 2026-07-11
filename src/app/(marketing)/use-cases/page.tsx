@@ -3,20 +3,21 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy Use Cases — AI Lead Generation & Cold Email Automation",
+  title: "Flowfiy Use Cases — AI Lead Generation & Condition-Based Targeting",
   description:
-    "See how teams use Flowfiy for B2B lead generation, condition-based targeting, and cold email automation. Describe the leads you want and Flowfiy finds, qualifies and writes the outreach. $50/mo for 400 credits.",
+    "See how teams use Flowfiy: an AI sales engine that finds real businesses on Google Maps, researches each one, and qualifies them 0–100 by how much they need your service — then sends the outreach. $50/mo for 400 credits.",
   keywords: [
     "AI sales use cases",
+    "AI sales engine use cases",
     "AI lead generation use cases",
     "condition-based lead targeting",
+    "Google Maps lead generation",
     "cold email automation use cases",
-    "B2B outbound automation examples",
   ],
   openGraph: {
-    title: "Flowfiy Use Cases — AI Outbound Sales Workflows",
+    title: "Flowfiy Use Cases — AI Sales Engine Workflows",
     description:
-      "How B2B teams use Flowfiy to find, qualify and write outreach to the exact leads they describe. $50/mo for 400 credits.",
+      "How B2B teams use Flowfiy to find real businesses on Google Maps, qualify them by need, and get outreach written for them. $50/mo for 400 credits.",
     url: "/use-cases",
   },
   alternates: { canonical: "/use-cases" },
@@ -27,7 +28,7 @@ const jsonLd = {
   "@type": "CollectionPage",
   name: "Flowfiy Use Cases",
   description:
-    "Ways B2B teams use Flowfiy for outbound sales: AI lead generation, condition-based targeting, and cold email automation.",
+    "Ways B2B teams use Flowfiy, an AI sales engine: finding businesses on Google Maps, condition-based targeting, need-based qualification, and personalized outreach.",
   inLanguage: "en",
 };
 
@@ -35,12 +36,12 @@ const useCases = [
   {
     href: "/use-cases/ai-lead-generation",
     title: "AI Lead Generation",
-    desc: "Describe the leads you want in plain English and Flowfiy finds matching businesses and people, researches each, and scores them 0–100 — ready to contact.",
+    desc: "Describe the leads you want in plain English and Flowfiy finds matching businesses on Google Maps and people in a B2B database, researches each, and scores them 0–100 by how much they need your service — ready to contact.",
   },
   {
     href: "/use-cases/cold-email-automation",
     title: "Cold Email Automation",
-    desc: "Get hyper-personalized cold emails and follow-ups for every lead and send them from your own Gmail after review — no templates, no manual research, no SDR needed.",
+    desc: "Flowfiy finds and qualifies your leads first — by how much they need your service — then writes hyper-personalized cold emails and follow-ups, sent from your own Gmail after review.",
   },
   {
     href: "/use-cases/condition-based-targeting",
@@ -65,9 +66,10 @@ export default function UseCasesHubPage() {
               What you can do with Flowfiy
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl">
-              Describe the leads you want and Flowfiy finds, qualifies and writes the
-              outreach — running your entire outbound motion from discovery to the
-              emails that book meetings. Here are the core ways B2B teams put it to work.
+              Flowfiy is an AI sales engine: describe the leads you want and it finds real
+              businesses on Google Maps, researches each one, and qualifies them 0–100 by
+              how much they need your service — then writes the outreach. Here are the
+              core ways B2B teams put it to work.
             </p>
           </div>
         </section>

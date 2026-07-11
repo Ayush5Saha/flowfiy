@@ -17,13 +17,13 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Ayush Saha — Founder of Flowfiy | AI Sales Automation",
+  title: "Ayush Saha — Founder of Flowfiy | AI Sales Engine",
   description:
-    "Ayush Saha is the founder of Flowfiy — the AI outbound sales platform where you describe the leads you want and Flowfiy finds, qualifies, and writes the outreach. Formerly an AI automation consultant.",
+    "Ayush Saha is the founder of Flowfiy — the AI sales engine that finds real businesses on Google Maps, researches each one, scores it 0–100 by how much it needs your service, and sends personalized outreach from your Gmail. Formerly an AI automation consultant.",
   openGraph: {
     title: "Ayush Saha — Founder of Flowfiy",
     description:
-      "Building Flowfiy — the AI platform that finds, scores, and writes personalised outreach from a plain-English description of the leads you want.",
+      "Building Flowfiy — the AI sales engine that finds real businesses on Google Maps, researches and scores each by need, then writes personalised outreach for you.",
     url: "/founder",
   },
   alternates: { canonical: "/founder" },
@@ -72,7 +72,7 @@ const timeline = [
   {
     year: "2026",
     title: "Founded Flowfiy",
-    desc: "Launched the AI outbound sales platform where you describe the leads you want in plain English — and Flowfiy finds, qualifies, and writes the outreach. Zero SDR required.",
+    desc: "Launched the AI sales engine that finds real businesses on Google Maps, researches and qualifies each by need, and writes the outreach. Zero SDR required.",
   },
   {
     year: "2025",
@@ -124,9 +124,10 @@ export default function ProfilePage() {
                 </Link>
               </p>
               <p className="text-zinc-400 leading-relaxed max-w-xl mb-6">
-                Building the AI platform that replaces the manual SDR stack — describe the leads
-                you want and Flowfiy finds, qualifies, and writes the outreach, so any team can
-                run a world-class pipeline without hiring a single salesperson.
+                Building the AI sales engine that replaces the manual SDR stack — Flowfiy finds
+                real businesses on Google Maps, researches each one, scores it 0–100 by how much
+                it needs your service, and writes the outreach, so any team can run a
+                world-class pipeline without hiring a single salesperson.
                 Obsessed with AI, B2B sales, and making complex things simple.
               </p>
 
@@ -185,10 +186,11 @@ export default function ProfilePage() {
                   </span>
                 </div>
                 <p className="text-zinc-400 leading-relaxed mb-5">
-                  The end-to-end AI outbound sales platform. Describe the leads you want in plain
+                  The end-to-end AI sales engine. Describe the leads you want in plain
                   English — even by real-world conditions like &ldquo;coffee shops with no
-                  website&rdquo; — and Flowfiy finds matching businesses, researches and scores
-                  each 0–100, and writes personalised cold emails plus follow-ups, ready to send
+                  website&rdquo; — and Flowfiy finds real businesses on Google Maps (plus a B2B
+                  people database), researches and scores each 0–100 by how much they need your
+                  service, and writes personalised cold emails plus follow-ups, ready to send
                   from your own Gmail. No SDR. No manual research.
                 </p>
 

@@ -32,7 +32,7 @@ const SUPPORTING = [
   },
   {
     quote:
-      "Running outbound for 8 clients, I just describe the leads I want and Flowfiy finds them. The AI and data sources are fully managed — no API keys, no infra headaches.",
+      "I run this for 8 clients — I just describe each one's service and Flowfiy finds the real businesses that need it. The AI and data sources are fully managed — no API keys, no infra headaches.",
     name: "Marcus Rivera",
     role: "Founder, RevOps Agency",
     initial: "M",

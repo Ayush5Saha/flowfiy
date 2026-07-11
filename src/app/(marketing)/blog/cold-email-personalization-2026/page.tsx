@@ -165,7 +165,7 @@ export default function BlogPostColdEmail() {
 
           <div className="bg-gradient-to-br from-violet-950/50 to-zinc-900/50 border border-violet-500/20 rounded-2xl p-8 text-center">
             <h3 className="text-xl font-bold text-white mb-3">Generate deeply personalized cold emails at scale</h3>
-            <p className="text-zinc-400 text-sm mb-6">Describe the leads you want — Flowfiy finds and researches every one, then writes 4+ specific facts per email.</p>
+            <p className="text-zinc-400 text-sm mb-6">Describe the leads you want — Flowfiy finds real businesses on Google Maps, researches every one, then writes 4+ specific facts per email.</p>
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
               Get started <ArrowRight className="w-4 h-4" />
             </Link>

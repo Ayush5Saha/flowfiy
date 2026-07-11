@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Flowfiy Alternatives & Comparisons — vs Clay, Apollo (India 2026)",
   description:
-    "Compare Flowfiy with Clay and Apollo for AI-powered B2B lead generation and cold outreach in India. See features, pricing, and which AI sales tool fits your team. $50/mo for 400 credits — fully managed, no API keys.",
+    "Compare Flowfiy — the AI sales engine that finds real businesses on Google Maps, researches them, and qualifies by need — with Clay and Apollo for B2B lead generation in India. $50/mo for 400 credits — fully managed, no API keys.",
   keywords: [
     "Flowfiy alternatives",
     "Clay alternative India",
@@ -35,27 +35,27 @@ const comparisons = [
   {
     href: "/vs/clay",
     title: "Flowfiy vs Clay",
-    desc: "Clay is an enrichment workflow builder that needs heavy setup. Flowfiy is a done-for-you, fully managed pipeline — discover, research, score, and write, with no configuration and no API keys.",
+    desc: "Clay is an enrichment workflow builder that needs heavy setup and an existing list to enrich. Flowfiy is an AI sales engine — it finds real businesses on Google Maps itself, then researches, scores by need, and writes, with no configuration and no API keys.",
   },
   {
     href: "/vs/apollo",
     title: "Flowfiy vs Apollo",
-    desc: "Apollo is a contact database — it finds leads but won't research, qualify, or write to them. Flowfiy turns those leads into personalized, ready-to-send outreach automatically.",
+    desc: "Apollo is a static contact database — it finds leads but won't research, qualify, or write to them. Flowfiy finds real businesses live on Google Maps, then turns them into researched, need-scored, ready-to-send outreach automatically.",
   },
   {
     href: "/vs/instantly",
     title: "Flowfiy vs Instantly",
-    desc: "Instantly is a cold-email sending & deliverability tool. Flowfiy adds the steps before sending — finding, researching, scoring, and writing per-lead emails.",
+    desc: "Instantly is a cold-email sending & deliverability tool. Flowfiy adds everything before sending — finding real businesses on Google Maps, researching, scoring by need, and writing per-lead emails.",
   },
   {
     href: "/vs/smartlead",
     title: "Flowfiy vs Smartlead",
-    desc: "Smartlead is cold-email infrastructure. Flowfiy is the AI SDR layer above it that builds and qualifies the pipeline before anything sends.",
+    desc: "Smartlead is cold-email infrastructure. Flowfiy is the AI sales engine above it that finds businesses on Google Maps and qualifies the pipeline by need before anything sends.",
   },
   {
     href: "/vs/lemlist",
     title: "Flowfiy vs lemlist",
-    desc: "lemlist does multichannel sequencing with template tokens. Flowfiy researches each lead and writes a unique email from scratch.",
+    desc: "lemlist does multichannel sequencing with template tokens. Flowfiy finds real businesses on Google Maps, researches each lead, and writes a unique email from scratch.",
   },
 ];
 
@@ -75,9 +75,10 @@ export default function VsHubPage() {
               How Flowfiy compares
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl">
-              Evaluating AI sales tools for your Indian B2B team? Here&apos;s how
-              Flowfiy&apos;s end-to-end outbound pipeline stacks up against the
-              tools you&apos;re probably also looking at.
+              Evaluating AI sales tools for your Indian B2B team? Flowfiy is an AI sales
+              engine that finds real businesses on Google Maps, researches and qualifies
+              them by need, and writes the outreach. Here&apos;s how it stacks up against
+              the tools you&apos;re probably also looking at.
             </p>
           </div>
         </section>

@@ -48,15 +48,15 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: EASE }}
         >
-          <Eyebrow>Flowfiy · AI Lead Generation &amp; Outbound Engine</Eyebrow>
+          <Eyebrow>Flowfiy · The AI Sales Engine</Eyebrow>
         </motion.div>
 
         <h1 className="font-black leading-[0.95] tracking-[-0.04em] text-white text-[clamp(2.5rem,6.5vw,4.75rem)]">
           {/* Crawlable keyword context for the primary heading; visually hidden. */}
           <span className="sr-only">
-            Flowfiy — the AI outbound sales platform: describe the leads you want and it finds, qualifies and writes the outreach.{" "}
+            Flowfiy — the AI sales engine: describe your service and it finds real businesses on Google Maps, researches and qualifies them, then sends personalized outreach from your Gmail.{" "}
           </span>
-          <Lines text="Describe the leads" delay={0.05} mode="mount" />
+          <Lines text="The AI Sales Engine" delay={0.05} mode="mount" />
           {/* Static gradient fill — premium restraint, no animated gradient */}
           <span className="block overflow-hidden">
             <motion.span
@@ -65,18 +65,19 @@ export function Hero() {
               animate={reduced ? { opacity: 1 } : { y: "0%" }}
               transition={{ duration: 0.9, delay: 0.13, ease: EASE }}
             >
-              you want.
+              That Finds Your Customers
             </motion.span>
           </span>
         </h1>
 
         <MaskReveal delay={0.32} mode="mount">
           <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-            <strong className="font-semibold text-zinc-200">Flowfiy is an AI outbound sales platform.</strong>{" "}
-            Describe the leads you want in plain English — even by condition, like
-            &ldquo;coffee shops with no website.&rdquo; Flowfiy finds matching businesses,
-            scores each one 0–100, and writes personalized cold emails sent from
-            your Gmail after review. No API keys, no setup.
+            <strong className="font-semibold text-zinc-200">Flowfiy is an AI sales engine.</strong>{" "}
+            Describe your service and ideal customer in plain English — even by
+            condition, like &ldquo;restaurants with no website.&rdquo; Flowfiy finds
+            real businesses on Google Maps, researches each one with AI, scores
+            how much they need your service 0–100, and sends personalized
+            outreach from your own Gmail. No API keys, no setup.
           </p>
         </MaskReveal>
 
@@ -97,8 +98,9 @@ export function Hero() {
         >
           <DemoVideoPlayer />
           <figcaption className="mt-3 text-sm text-zinc-500">
-            Watch the ~3-minute walkthrough: describe your leads in plain English, then
-            Flowfiy finds, researches and scores each one and writes the cold outreach.
+            Watch the ~3-minute walkthrough: describe your service, then Flowfiy
+            finds real businesses on Google Maps, researches and qualifies each
+            one, and sends personalized outreach from your Gmail.
           </figcaption>
         </motion.figure>
 

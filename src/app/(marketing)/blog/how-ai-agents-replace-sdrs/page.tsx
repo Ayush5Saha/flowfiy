@@ -5,7 +5,7 @@ import { ArrowRight, ArrowLeft, Clock } from "lucide-react";
 export const metadata: Metadata = {
   title: "How AI Is Replacing the Entire SDR Stack in 2026 | Flowfiy Blog",
   description:
-    "AI is replacing manual sales development reps. Describe the leads you want in plain English, and Flowfiy finds matching businesses, researches and scores each one, and writes personalized cold emails — work that used to take an SDR weeks.",
+    "AI is replacing manual sales development reps. Describe the leads you want in plain English, and Flowfiy finds real businesses on Google Maps, researches and scores each one by how much it needs your service, and writes personalized cold emails — work that used to take an SDR weeks.",
   keywords: [
     "AI SDR",
     "replace sales development rep with AI",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "How AI Is Replacing the Entire SDR Stack in 2026",
-    description: "How Flowfiy replaces manual SDR work — describe the leads you want, and AI finds, qualifies, and writes the outreach.",
+    description: "How Flowfiy's AI sales engine replaces manual SDR work — it finds real businesses on Google Maps, researches and scores each one by need, and writes the outreach.",
     url: "/blog/how-ai-agents-replace-sdrs",
     type: "article",
   },
@@ -29,7 +29,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   headline: "How AI Is Replacing the Entire SDR Stack in 2026",
-  description: "How Flowfiy replaces manual SDR work — describe the leads you want, and AI finds them, researches and scores each one, and writes the outreach.",
+  description: "How Flowfiy's AI sales engine replaces manual SDR work — it finds real businesses on Google Maps, researches and scores each one by need, and writes the outreach.",
   datePublished: "2026-05-10",
   author: { "@type": "Organization", name: "Flowfiy" },
   publisher: { "@type": "Organization", name: "Flowfiy" },

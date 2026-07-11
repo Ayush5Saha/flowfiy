@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Flowfiy — Find leads, write emails, close deals automatically";
+export const alt = "Flowfiy — the AI sales engine that finds, researches, and qualifies leads from Google Maps";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -103,9 +103,9 @@ export default function Image() {
             letterSpacing: -1.5,
           }}
         >
-          <span>Find leads, write emails,&nbsp;</span>
-          <span style={{ color: "#a78bfa" }}>close deals</span>
-          <span>&nbsp;— automatically.</span>
+          <span>The AI sales engine that&nbsp;</span>
+          <span style={{ color: "#a78bfa" }}>finds your next customer</span>
+          <span>&nbsp;on Google Maps.</span>
         </div>
 
         {/* Subtext */}
@@ -119,14 +119,14 @@ export default function Image() {
             lineHeight: 1.5,
           }}
         >
-          Describe the leads you want — AI finds, qualifies and writes the outreach.
+          AI finds real businesses, researches and qualifies them, then sends personalized outreach from your Gmail.
         </div>
 
         {/* Feature pills */}
         <div style={{ display: "flex", gap: 14 }}>
           {[
-            "Plain-English search",
-            "Condition-based targeting",
+            "Google Maps lead discovery",
+            "AI qualification scoring",
             "Sends from Gmail",
             "$50/mo · 400 credits",
           ].map((text) => (

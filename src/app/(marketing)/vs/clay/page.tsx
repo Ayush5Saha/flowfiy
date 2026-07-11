@@ -3,9 +3,9 @@ import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Flowfiy vs Clay — AI Sales Outreach Comparison 2026",
+  title: "Flowfiy vs Clay — AI Sales Engine Comparison 2026",
   description:
-    "Flowfiy vs Clay for AI-powered B2B lead generation. Clay is enrichment-only and needs setup; Flowfiy is a fully managed outbound pipeline — describe your leads in plain English, get qualified prospects and written outreach. From $50/mo for 400 credits.",
+    "Flowfiy vs Clay. Clay is an enrichment tool that needs an existing list and setup; Flowfiy is an AI sales engine that finds real businesses on Google Maps itself, researches them, scores them 0–100 by how much they need your service, and writes the outreach. From $50/mo for 400 credits.",
   keywords: [
     "Flowfiy vs Clay",
     "Clay alternative",
@@ -67,7 +67,7 @@ export default function VsClayPage() {
               </span>
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
-              Clay is a powerful data enrichment and workflow tool that you configure yourself. Flowfiy is a fully managed outbound pipeline — describe the leads you want in plain English and it finds, qualifies, and writes the outreach. No API keys, no workflow setup.
+              Clay is a powerful data enrichment and workflow tool that you configure yourself, starting from a list you already have. Flowfiy is an AI sales engine — describe the leads you want in plain English and it finds real businesses on Google Maps itself, researches and scores each by how much it needs your service, and writes the outreach. No API keys, no workflow setup.
               They solve different problems — here&apos;s how to choose.
             </p>
           </div>
@@ -98,9 +98,9 @@ export default function VsClayPage() {
                 <p className="font-semibold text-white mb-3">Choose Flowfiy if...</p>
                 <ul className="space-y-2">
                   {[
-                    "You want a full AI pipeline — describe to sent email — in one tool",
+                    "You want an AI sales engine that finds businesses on Google Maps itself, not just enriches a list you already built",
                     "You want it fully managed with no API keys or workflow setup",
-                    "You want condition-based targeting and AI scoring before any email is sent",
+                    "You want condition-based targeting and need-based AI scoring before any email is sent",
                     "You want Gmail-native sending without a separate sequencer",
                   ].map(item => (
                     <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
@@ -166,8 +166,8 @@ export default function VsClayPage() {
                 content: "Clay uses a credit-based model starting at $149/mo for 1,000 credits, and complex enrichment waterfalls consume multiple credits per row — costs grow substantially at scale. Flowfiy is one simple plan: $50/mo for 400 credits (about 600–800 leads, varies by search), billed in your local currency. You only pay for qualified leads — an empty search costs nothing — and subscribers can top up extra credits anytime.",
               },
               {
-                title: "Plain-English targeting",
-                content: "With Clay you build the search yourself — pick sources, set filters, wire up the workflow. Flowfiy lets you describe the leads you want in plain English and asks smart clarifying questions when needed. It also handles qualitative conditions Clay can&apos;t express simply, like \"coffee shops with no website,\" \"dentists with bad reviews,\" or \"SaaS that recently raised.\"",
+                title: "Where the leads come from",
+                content: "Clay needs a starting list — you import rows or connect a source, then build a waterfall to enrich them. Flowfiy is the source: describe the leads you want in plain English and it finds real businesses live on Google Maps and a B2B people database itself, then asks smart clarifying questions when needed. It also handles qualitative conditions Clay can&apos;t express simply, like \"coffee shops with no website,\" \"dentists with bad reviews,\" or \"SaaS that recently raised.\"",
               },
               {
                 title: "Email sending",
@@ -175,7 +175,7 @@ export default function VsClayPage() {
               },
               {
                 title: "AI qualification",
-                content: "Clay enriches data — it doesn&apos;t score it. You can build scoring formulas with Clay&apos;s column logic, but it requires manual setup per campaign. Flowfiy automatically researches and scores every lead 0–100 against your criteria, includes written reasoning per lead, and gates outreach to only qualified contacts — all fully managed.",
+                content: "Clay enriches data — it doesn&apos;t score it. You can build scoring formulas with Clay&apos;s column logic, but it requires manual setup per campaign. Flowfiy automatically researches and scores every lead 0–100 by how much it needs your service, includes written reasoning per lead, and gates outreach to only qualified contacts — all fully managed.",
               },
             ].map(({ title, content }) => (
               <div key={title}>

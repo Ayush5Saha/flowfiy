@@ -69,7 +69,7 @@ export const SOLUTIONS: Solution[] = [
     subhead:
       "Flowfiy is an AI sales intelligence platform: it researches every prospect, reads the real signals about their business, and scores fit 0–100 — so you know who to contact, why, and what to say before you send a single email.",
     definition:
-      "AI sales intelligence is the use of AI to automatically gather, analyze, and score data about prospects and companies — so sales teams know who to contact, why they're a fit, and what to say, without doing the research by hand.",
+      "AI sales intelligence is the use of AI to automatically gather, analyze, and score data about prospects and companies — so sales teams know who to contact, how much each one needs what they sell, and what to say, without doing the research by hand.",
     intro: [
       "Traditional sales intelligence tools hand you a database and a pile of filters. You still have to interpret the data, decide who's worth pursuing, and figure out the angle for each account. That research is where reps lose most of their week.",
       "Flowfiy turns sales intelligence into an outcome instead of a dataset. You describe the leads you want in plain English; it finds matching businesses, reads each company's website and public signals, scores them 0–100 with reasoning, and writes the outreach — so the intelligence arrives already acted on.",
@@ -77,7 +77,7 @@ export const SOLUTIONS: Solution[] = [
     ],
     capabilities: [
       { title: "Per-company research", desc: "Every lead's website and public footprint is read for positioning, size cues, tech signals, and growth language — the context that makes outreach land." },
-      { title: "0–100 qualification scoring", desc: "Each prospect is scored for fit with transparent reasoning, so your team works the highest-potential accounts first instead of treating every lead the same." },
+      { title: "0–100 qualification scoring", desc: "Each prospect is scored for how much they need what you sell, with transparent reasoning, so your team works the highest-need accounts first instead of treating every lead the same." },
       { title: "Buying-signal detection", desc: "Condition-based targeting surfaces real signals — no website, bad reviews, a slow or outdated site, a recent raise — that indicate a prospect actually needs what you sell." },
       { title: "Enriched, verified contacts", desc: "Leads arrive with verified emails and enriched company data, so the intelligence is ready to use, not a starting point for more cleanup." },
       { title: "Prioritized pipeline", desc: "Only leads above your score threshold move forward. You spend zero time on prospects that won't convert — and an empty search costs nothing." },
@@ -102,12 +102,12 @@ export const SOLUTIONS: Solution[] = [
     faqs: [
       { q: "What is AI sales intelligence?", a: "AI sales intelligence is the use of AI to automatically gather, analyze, and score data about prospects and companies — so sales teams know who to contact, why they're a fit, and what to say, without doing the research manually. Flowfiy does this end-to-end: it researches every lead, scores fit 0–100, and writes the outreach." },
       { q: "Is Flowfiy a sales intelligence platform?", a: "Yes. Flowfiy is an AI sales intelligence platform that researches each prospect, detects buying signals, and scores fit 0–100 — then goes a step further than most platforms by writing personalized outreach from that research and sending it from your own Gmail." },
-      { q: "How does Flowfiy score leads?", a: "Every discovered lead is scored 0–100 by an AI qualification agent based on fit to the leads you described and the company signals it researched. The score comes with reasoning, and only leads above your threshold move forward." },
+      { q: "How does Flowfiy score leads?", a: "Every discovered lead is scored 0–100 by an AI qualification agent based on how much it needs what you sell — combining fit to the leads you described with the company signals it researched. The score comes with reasoning, and only leads above your threshold move forward." },
       { q: "Do I need API keys or to connect other data tools?", a: "No. The AI and all data sources are fully managed by Flowfiy — there are no API keys to bring and no separate data subscriptions to wire in. You connect Gmail to send, and that's it." },
       { q: "How much does it cost?", a: "One plan: $50/month for 400 credits — about 600–800 researched, scored leads (roughly two leads per credit, varying by search). You only pay for qualified leads, so a search that returns nothing costs nothing." },
     ],
-    related: ["ai-company-research", "ai-prospecting-tool", "b2b-lead-generation-software"],
-    glossary: ["ai-sales-intelligence", "lead-scoring", "ideal-customer-profile"],
+    related: ["ai-company-research", "ai-prospecting-tool", "ai-sales-engine"],
+    glossary: ["ai-sales-intelligence", "lead-scoring", "ai-sales-engine"],
   },
 
   // ── AI Business Search / Business Search AI ─────────────────────────────
@@ -145,7 +145,7 @@ export const SOLUTIONS: Solution[] = [
       { title: "Google Maps + people database", desc: "Coverage spans local businesses via Google Maps and B2B companies and people via a managed database — so one search reaches both." },
       { title: "Smart clarifying questions", desc: "When a search is ambiguous, Flowfiy asks one focused question to sharpen it — the way a good researcher would — instead of returning noise." },
       { title: "Researched, not just listed", desc: "Every match is read and profiled: positioning, size cues, tech signals. You get context, not a bare row in a spreadsheet." },
-      { title: "From result to outreach", desc: "Each matched business is scored 0–100 and gets a personalized email plus follow-ups, sent from your own Gmail after review." },
+      { title: "From result to outreach", desc: "Each matched business is scored 0–100 for how much it needs what you're selling, then gets a personalized email plus follow-ups, sent from your own Gmail after review." },
     ],
     included: [
       "Plain-English search — no filters or boolean",
@@ -170,7 +170,7 @@ export const SOLUTIONS: Solution[] = [
       { q: "Do I need to set up filters or API keys?", a: "No. You describe what you want in a sentence; Flowfiy asks a clarifying question if needed and does the rest. The AI and data sources are fully managed — no API keys, no filter-building." },
       { q: "What does a search cost?", a: "Flowfiy runs on $50/month for 400 credits (~600–800 leads). You only pay for qualified matches, so a search that finds nothing costs nothing." },
     ],
-    related: ["natural-language-lead-generation", "ai-company-research", "ai-sales-intelligence"],
+    related: ["google-maps-lead-generation", "natural-language-lead-generation", "ai-company-research"],
     glossary: ["ai-business-search", "condition-based-targeting", "website-audit"],
   },
 
@@ -208,7 +208,7 @@ export const SOLUTIONS: Solution[] = [
       { title: "Firmographic signals", desc: "Size cues, team signals, and growth language are inferred from public data, so you understand the account before you contact it." },
       { title: "Tech & maturity clues", desc: "Signals like an outdated or slow site, missing website, or thin web presence surface exactly the prospects who need what you sell." },
       { title: "Verified contact enrichment", desc: "Each company's research is paired with verified, enriched contact data — name, role, email — ready for outreach." },
-      { title: "Research → score", desc: "Findings feed an AI qualification score 0–100 with reasoning, so research directly prioritizes your pipeline." },
+      { title: "Research → score", desc: "Findings feed an AI qualification score 0–100 for how much each business needs what you sell, with reasoning, so research directly prioritizes your pipeline." },
       { title: "Research → email", desc: "The dossier becomes a personalized subject line, body, and follow-ups that reference the company's real context." },
     ],
     included: [
@@ -234,7 +234,7 @@ export const SOLUTIONS: Solution[] = [
       { q: "Is this manual or automatic?", a: "Fully automatic. You describe the leads you want; Flowfiy finds and researches each one without you opening a single tab. The AI and data sources are managed — no API keys." },
       { q: "How much does it cost?", a: "$50/month for 400 credits — about 600–800 researched leads. You only pay for qualified leads, so an empty search is free." },
     ],
-    related: ["ai-sales-intelligence", "ai-prospecting-tool", "ai-business-search"],
+    related: ["ai-sales-intelligence", "ai-prospecting-tool", "ai-sales-engine"],
     glossary: ["ai-company-research", "lead-enrichment", "personalization-at-scale"],
   },
 
@@ -270,7 +270,7 @@ export const SOLUTIONS: Solution[] = [
     capabilities: [
       { title: "Account discovery", desc: "Describe your target and Flowfiy finds matching businesses and people across Google Maps and a B2B database — including by condition, not just category." },
       { title: "Automated research", desc: "Each account is researched from its website and public signals, so you understand the prospect before the first touch." },
-      { title: "Qualification scoring", desc: "Prospects are scored 0–100 with reasoning; only those above your threshold move forward, so capacity goes to the best-fit accounts." },
+      { title: "Qualification scoring", desc: "Prospects are scored 0–100 for how much they need what you sell, with reasoning; only those above your threshold move forward, so capacity goes to the highest-need accounts." },
       { title: "Drafted outreach", desc: "A personalized subject line, body, and two follow-ups are written per qualified prospect, grounded in the research." },
       { title: "Runs on its own", desc: "Set the brief and Flowfiy works in the background — your pipeline fills while you focus elsewhere." },
       { title: "Send from your inbox", desc: "Connect Gmail, review the drafts, and send from your own warmed mailbox — not a shared sending pool." },
@@ -298,8 +298,8 @@ export const SOLUTIONS: Solution[] = [
       { q: "Does it run automatically?", a: "Yes. You set the brief and Flowfiy finds, researches, qualifies, and drafts in the background, so you return to a ready-to-send pipeline. No API keys or per-tool setup." },
       { q: "What does it cost?", a: "$50/month for 400 credits — about 600–800 prospects. You only pay for qualified prospects, so an empty run costs nothing." },
     ],
-    related: ["b2b-lead-generation-software", "ai-sales-intelligence", "ai-company-research"],
-    glossary: ["ai-prospecting", "ai-sdr", "outbound-sales"],
+    related: ["b2b-lead-generation-software", "ai-sales-engine", "ai-company-research"],
+    glossary: ["ai-prospecting", "ai-sdr", "ai-sales-engine"],
   },
 
   // ── Natural Language Lead Generation ────────────────────────────────────
@@ -335,7 +335,7 @@ export const SOLUTIONS: Solution[] = [
       { title: "Describe, don't filter", desc: "Type your ideal customer as a sentence. Flowfiy translates it into a targeted search — no dropdowns, sliders, or boolean strings." },
       { title: "Qualitative conditions", desc: "Capture intent filters can't express: \"no website,\" \"bad reviews,\" \"slow site,\" \"recently raised.\" The condition is the buying signal." },
       { title: "Clarifying questions", desc: "When your description is ambiguous, Flowfiy asks one sharp question to narrow it — like briefing a researcher, not configuring software." },
-      { title: "Find → research → score", desc: "Matching businesses are discovered, researched from public data, and scored 0–100 with reasoning, all from the one description." },
+      { title: "Find → research → score", desc: "Matching businesses are discovered, researched from public data, and scored 0–100 for how much they need what you sell, all from the one description." },
       { title: "Outreach included", desc: "Every qualified lead gets a personalized subject line, body, and follow-ups, sent from your own Gmail after review." },
       { title: "Zero setup", desc: "No API keys, no data integrations, no filter-building. Describe, review, send." },
     ],
@@ -362,7 +362,7 @@ export const SOLUTIONS: Solution[] = [
       { q: "What happens after it finds the leads?", a: "Each match is researched, scored 0–100, and given a personalized email plus follow-ups. You review and send from your own Gmail — the whole pipeline runs from your one description." },
       { q: "How much does it cost?", a: "$50/month for 400 credits — about 600–800 leads. You only pay for qualified leads, so an empty search costs nothing." },
     ],
-    related: ["ai-business-search", "b2b-lead-generation-software", "ai-prospecting-tool"],
+    related: ["ai-business-search", "google-maps-lead-generation", "b2b-lead-generation-software"],
     glossary: ["natural-language-lead-generation", "condition-based-targeting", "ideal-customer-profile"],
   },
 
@@ -398,7 +398,7 @@ export const SOLUTIONS: Solution[] = [
     capabilities: [
       { title: "Account + contact discovery", desc: "Find target companies and the right people across Google Maps and a B2B people database — from a plain-English ICP, including by condition." },
       { title: "Firmographic research", desc: "Each account is researched from its website and public data: positioning, size cues, tech and maturity signals." },
-      { title: "Fit qualification 0–100", desc: "Every prospect is scored against your ICP with reasoning, so reps work the best-fit accounts first." },
+      { title: "Need-based qualification 0–100", desc: "Every prospect is scored by how much they need your service, with reasoning, so reps work the highest-need accounts first." },
       { title: "Personalized cold email", desc: "A subject line, body, and follow-ups are written per qualified lead, grounded in the company research — no templates." },
       { title: "Send from your Gmail", desc: "Connect Gmail and send from your own warmed mailbox after review, protecting deliverability." },
       { title: "Predictable pricing", desc: "One plan, credit-metered. You only pay for qualified leads, and an empty search costs nothing." },
@@ -426,8 +426,138 @@ export const SOLUTIONS: Solution[] = [
       { q: "Can I target by condition, not just industry and size?", a: "Yes. Beyond firmographics, you can target by qualitative conditions — no website, bad reviews, a slow or outdated site, a recent raise — which are strong B2B buying signals." },
       { q: "What does it cost?", a: "One plan: $50/month for 400 credits — about 600–800 B2B leads. You only pay for qualified leads, so a search that returns nothing is free, and subscribers can top up credits anytime." },
     ],
-    related: ["ai-prospecting-tool", "ai-sales-intelligence", "natural-language-lead-generation"],
-    glossary: ["ideal-customer-profile", "outbound-sales", "ai-sdr"],
+    related: ["ai-prospecting-tool", "ai-sales-engine", "natural-language-lead-generation"],
+    glossary: ["ideal-customer-profile", "outbound-sales", "ai-sales-engine"],
+  },
+
+  // ── AI Sales Engine ──────────────────────────────────────────────────────
+  {
+    slug: "ai-sales-engine",
+    keyword: "AI Sales Engine",
+    category: "AI Sales Engine",
+    title: "AI Sales Engine — Find, Research, Qualify & Reach Out With AI",
+    metaDescription:
+      "Flowfiy is an AI sales engine: it finds real businesses on Google Maps and a B2B database, researches each one, scores them 0–100 by how much they need your service, and sends personalized outreach from your Gmail. No API keys. $50/mo for 400 credits.",
+    keywords: [
+      "AI sales engine",
+      "what is an AI sales engine",
+      "AI sales engine software",
+      "AI sales engine vs AI SDR",
+      "AI sales automation engine",
+      "sales engine software",
+      "AI powered sales engine",
+      "AI outbound sales engine",
+    ],
+    h1: "One AI sales engine.",
+    h1Highlight: "Not a stack of five tools.",
+    subhead:
+      "Flowfiy is an AI sales engine: it finds real businesses on Google Maps and a B2B people database, researches each one, scores them 0–100 by how much they need your service, and sends personalized outreach — all from a plain-English description of who you sell to.",
+    definition:
+      "An AI sales engine is a single AI system that runs the full top-of-funnel sales motion — finding real businesses, researching each one, scoring how much each needs your service, and writing and sending personalized outreach — replacing a stack of a contact database, an enrichment tool, and an email sender with one plain-English brief.",
+    intro: [
+      "Most teams run outbound with a stack: a contact database for names, an enrichment tool to fill in the gaps, a scoring spreadsheet nobody keeps updated, and a separate email tool to send from. Each piece has its own login, its own bill, and its own blind spots — and none of them tell you why a specific business needs what you sell.",
+      "Flowfiy replaces the stack with one engine. You describe who you sell to and who needs it, in plain English. Flowfiy finds real, currently-operating businesses on Google Maps and a B2B people database, reads each one's website, reviews, and public signals, scores it 0–100 for how much it needs your service, and writes a personalized email ready to send from your own Gmail.",
+      "It isn't a cold-email tool with an AI feature bolted on, and it isn't a database you still have to research and qualify by hand. Email is just the last step — the engine's real work is finding the right businesses and knowing why each one is worth contacting before a single message goes out.",
+    ],
+    capabilities: [
+      { title: "Find — real businesses on Google Maps", desc: "Discovery starts on Google Maps plus a B2B people database, so you're contacting businesses that are actually open today — not names pulled from an export that's months stale." },
+      { title: "Research — read before you reach out", desc: "Each business's website, reviews, and public signals are read automatically, building the context a human researcher would spend twenty minutes finding." },
+      { title: "Qualify — scored 0–100 by need", desc: "Every business is scored for how much it needs your specific service — not generic firmographic fit — so you know who to contact and why before you send anything." },
+      { title: "Outreach — personalized, from your Gmail", desc: "A subject line, body, and follow-ups are written from the real research for every qualified business, then sent from your own connected Gmail account." },
+      { title: "Condition-based targeting", desc: "Target by real-world conditions — no website, bad reviews, a slow or outdated site — the exact signals that mean a business needs what you sell." },
+      { title: "One engine, one price", desc: "No separate database subscription, enrichment tool, or scoring spreadsheet to maintain — one plan, fully managed AI, no API keys." },
+    ],
+    included: [
+      "Plain-English targeting — describe who you sell to",
+      "Discovery from Google Maps + B2B people database",
+      "AI research per business (website, reviews, public signals)",
+      "AI qualification scoring 0–100 by need",
+      "Personalized subject line + body + follow-ups",
+      "Send from your own Gmail after review",
+      "Fully managed AI & data — no API keys",
+      "Pay only for qualified leads",
+    ],
+    stats: [
+      ["4-in-1", "Find, research, qualify, outreach"],
+      ["0–100", "Need-based score per business"],
+      ["600–800", "Qualified leads / month"],
+      ["$50/mo", "One plan, 400 credits"],
+    ],
+    faqs: [
+      { q: "What is an AI sales engine?", a: "An AI sales engine is a single AI system that runs the full top-of-funnel sales motion — finding real businesses, researching each one, scoring how much each needs your service, and writing personalized outreach — instead of stitching together a separate database, enrichment tool, and email sender. Flowfiy is built as one plain-English-driven engine." },
+      { q: "How is an AI sales engine different from an AI SDR or a cold email tool?", a: "A cold-email tool only sends — you still have to bring a list and write the copy. Many 'AI SDR' tools add AI on top of a static contact database. An AI sales engine like Flowfiy starts a step earlier: it finds the businesses itself from live sources like Google Maps, researches and scores each one by need, and only then writes and sends the outreach — so email is the last step, not the whole product." },
+      { q: "Where does Flowfiy find businesses?", a: "From Google Maps, for real, currently-operating local and physical businesses, and a B2B people database for companies and contacts beyond Maps. Both are searched from a single plain-English description, including by condition — like \"dentists with bad reviews.\"" },
+      { q: "How does the qualification score work?", a: "Every business Flowfiy finds is scored 0–100 by an AI agent based on how much it needs your specific service — not just generic firmographic fit — using the research gathered from that business's website and public signals. The score comes with reasoning, and you only pay for leads above your threshold." },
+      { q: "Do I need to connect a database, an enrichment tool, or my own AI keys?", a: "No. The AI and every data source — Google Maps, the B2B people database, enrichment — are fully managed inside Flowfiy. You connect only your own Gmail to send. There are no API keys and no separate subscriptions to stitch together." },
+      { q: "What does it cost?", a: "One plan: $50/month for 400 credits — about 600–800 qualified leads, roughly two leads per credit. You only pay for qualified leads, so a search that finds nothing costs nothing." },
+    ],
+    related: ["google-maps-lead-generation", "ai-sales-intelligence", "ai-prospecting-tool"],
+    glossary: ["ai-sales-engine", "condition-based-targeting", "lead-scoring"],
+  },
+
+  // ── Google Maps Lead Generation ──────────────────────────────────────────
+  {
+    slug: "google-maps-lead-generation",
+    keyword: "Google Maps Lead Generation",
+    category: "Google Maps Lead Generation",
+    title: "Google Maps Lead Generation — Find & Qualify Real Local Businesses",
+    metaDescription:
+      "Flowfiy turns Google Maps into a lead generation engine: it finds real, currently-operating local businesses, researches each one, scores them 0–100 by how much they need your service, and sends personalized outreach from your Gmail. No API keys. $50/mo for 400 credits.",
+    keywords: [
+      "Google Maps lead generation",
+      "find leads on Google Maps",
+      "Google Maps leads for business",
+      "local business leads Google Maps",
+      "AI Google Maps leads",
+      "Google Maps prospecting",
+      "local lead generation AI",
+      "Google Maps B2B leads",
+    ],
+    h1: "Turn Google Maps into",
+    h1Highlight: "a qualified lead list",
+    subhead:
+      "Flowfiy finds real, currently-operating local businesses on Google Maps, researches each one, scores it 0–100 by how much it needs your service, and writes a personalized email — from one plain-English description of who you're looking for.",
+    definition:
+      "Google Maps lead generation is finding prospective customers directly from Google Maps listings — real, currently-operating local businesses with addresses, reviews, and websites — rather than from a static, exported contact database that goes stale the day it's downloaded.",
+    intro: [
+      "A contact database is a snapshot: names and emails exported once, resold many times, and stale by the time you buy it. Businesses close, move, or already have what you're selling — the list doesn't know.",
+      "Google Maps is live. Every listing is a business operating today, with a real address, reviews, and usually a website — exactly the signals that tell you whether it needs what you sell. Flowfiy searches Google Maps, plus a B2B people database for contacts beyond Maps, from a plain-English description, including by condition, like \"plumbers with no website\" or \"cafés with bad reviews.\"",
+      "Every match is then researched from its website and public signals, scored 0–100 for how much it needs your service, and turned into a personalized email — ready to send from your own Gmail after review.",
+    ],
+    capabilities: [
+      { title: "Live, not stale", desc: "Every result comes from Google Maps' current listings — real, open businesses, not an export that was accurate six months ago." },
+      { title: "Condition-based search", desc: "Search by real-world conditions — no website, bad reviews, a slow or outdated site — the exact buying signals a plain category-and-city search can't find." },
+      { title: "Reviews & website as research", desc: "Each business's reviews, listing details, and website are read automatically, so you know its reputation and online presence before contacting it." },
+      { title: "0–100 need-based scoring", desc: "Every business found on Maps is scored for how much it needs your specific service, with reasoning — so you work the highest-need businesses first." },
+      { title: "Personalized outreach included", desc: "A subject line, body, and follow-ups are written from the research for every qualified business, sent from your own Gmail." },
+      { title: "Maps + B2B database, one search", desc: "Local, physical businesses come from Google Maps; companies and people beyond Maps come from a managed B2B people database — one plain-English search reaches both." },
+    ],
+    included: [
+      "Plain-English search of Google Maps listings",
+      "Condition-based targeting (no website, bad reviews, slow site…)",
+      "B2B people database for contacts beyond Maps",
+      "Automated research from each listing's site & reviews",
+      "AI qualification scoring 0–100 by need",
+      "Personalized email + follow-ups per lead",
+      "Send from your own Gmail after review",
+      "Fully managed AI & data — no API keys",
+    ],
+    stats: [
+      ["Live data", "Real, open businesses"],
+      ["Maps + B2B DB", "Two sources, one search"],
+      ["0–100", "Need-based score per lead"],
+      ["600–800", "Leads / month"],
+    ],
+    faqs: [
+      { q: "Can AI find leads from Google Maps?", a: "Yes. Flowfiy searches Google Maps from a plain-English description — including by condition, like \"dentists with bad reviews\" or \"coffee shops with no website\" — and returns real, currently-operating businesses, each researched and scored 0–100 before you see it." },
+      { q: "How is Google Maps data better than a contact database?", a: "A contact database is a static export: names and emails collected once and resold, often stale by the time you buy it. Google Maps listings are live — every result is a business that's open right now, with a real address, reviews, and usually a website, which are also the signals Flowfiy uses to tell whether it needs your service." },
+      { q: "Does Flowfiy only search Google Maps?", a: "No. Google Maps covers local and physical businesses; Flowfiy also searches a managed B2B people database for companies and contacts beyond what's on Maps, so one plain-English description can reach both." },
+      { q: "What do I get for each Google Maps lead?", a: "Every matching business is researched from its website and reviews, scored 0–100 for how much it needs your service, and paired with a personalized email and follow-ups — ready to review and send from your own Gmail." },
+      { q: "Do I need a Google Maps API key or scraper?", a: "No. Google Maps discovery is fully managed inside Flowfiy — there's no API key to bring, no scraper to run or maintain, and no rate limits to manage yourself." },
+      { q: "What does it cost?", a: "$50/month for 400 credits — about 600–800 leads. You only pay for qualified leads, so a search that returns nothing costs nothing." },
+    ],
+    related: ["ai-sales-engine", "ai-business-search", "natural-language-lead-generation"],
+    glossary: ["ai-sales-engine", "condition-based-targeting", "website-audit"],
   },
 ];
 

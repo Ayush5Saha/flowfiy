@@ -5,7 +5,7 @@ import { Check, ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Cold Email Automation Software — AI-Personalized Outreach",
   description:
-    "AI cold email automation. Describe the leads you want — Flowfiy finds them, qualifies them 0–100, and writes hyper-personalized subject lines, bodies, and follow-ups. Send from Gmail. No API keys. One plan: $50/mo for 400 credits.",
+    "Flowfiy is an AI sales engine that replaces ordinary cold email automation tools — it finds real businesses on Google Maps, researches each one, and scores it 0–100 by how much it needs your service, then sends personalized cold email automation from your own Gmail. No API keys. $50/mo for 400 credits.",
   keywords: [
     "cold email automation software",
     "automated cold outreach",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Cold Email Automation — AI-Personalized Outreach at Scale | Flowfiy",
-    description: "Describe the leads you want — Flowfiy finds, qualifies, writes, and sends the entire cold email pipeline from your Gmail. No API keys. $50/mo for 400 credits.",
+    description: "Flowfiy goes beyond cold email automation: it finds real businesses on Google Maps, researches and qualifies each by need, then writes and sends the outreach from your Gmail. No API keys. $50/mo for 400 credits.",
     url: "/use-cases/cold-email-automation",
   },
   alternates: { canonical: "/use-cases/cold-email-automation" },
@@ -44,7 +44,7 @@ export default function ColdEmailAutomationPage() {
             </span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            Describe the leads you want — Flowfiy finds them, qualifies them before you see them, and writes emails so specific they read like a human spent an hour on each one, then sends them from your Gmail.
+            Most cold email tools assume you already have a list. Flowfiy is an AI sales engine that builds the list first — it finds real businesses on Google Maps, researches each one, and scores it 0–100 by how much it needs your service — then writes emails so specific they read like a human spent an hour on each one, and sends them from your Gmail.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary rounded-xl text-white font-semibold text-sm hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/25">
@@ -77,14 +77,14 @@ export default function ColdEmailAutomationPage() {
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-5">The old way</p>
+              <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-5">Cold email tools alone</p>
               <div className="space-y-4">
                 {[
+                  "Assume you already have a list from somewhere else",
                   "SDR spends 30–45 min researching each company manually",
                   "Writes a generic template with one merge field",
                   "Sends 50 near-identical emails and waits",
                   "Gets 1–3% reply rate and wonders why",
-                  "Spends $80k–$120k/yr on SDR salary for this",
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3 text-sm text-zinc-500">
                     <span className="mt-1 w-4 h-4 rounded-full border border-zinc-700 flex items-center justify-center shrink-0">
@@ -96,13 +96,14 @@ export default function ColdEmailAutomationPage() {
               </div>
             </div>
             <div>
-              <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-5">With Flowfiy</p>
+              <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-5">Flowfiy's AI sales engine</p>
               <div className="space-y-4">
                 {[
+                  "Finds the businesses first — live on Google Maps, not a stale list",
                   "AI researches every company in 10–15 seconds",
+                  "Scores each lead 0–100 by how much it needs your service",
                   "AI writes emails with 4+ specific, researched facts",
                   "Only qualified leads (score ≥ threshold) get an email",
-                  "Reply rates of 12–20% from deeply personalized outreach",
                   "You only pay for qualified leads — an empty search costs nothing",
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3 text-sm text-zinc-300">

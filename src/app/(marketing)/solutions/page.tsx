@@ -55,12 +55,13 @@ export default function SolutionsHubPage() {
               Solutions
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-5">
-              One platform for the whole outbound motion
+              One AI sales engine for the whole outbound motion
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl">
-              Describe the leads you want in plain English and Flowfiy finds, researches,
-              qualifies, and writes the outreach. Here&apos;s how that maps to the things sales
-              teams search for — sales intelligence, business search, company research,
+              Describe the leads you want in plain English and Flowfiy finds real businesses
+              on Google Maps, researches each one, qualifies it 0–100 by how much it needs
+              your service, and writes the outreach. Here&apos;s how that maps to the things
+              sales teams search for — sales intelligence, business search, company research,
               prospecting, and B2B lead generation.
             </p>
           </div>

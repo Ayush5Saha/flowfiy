@@ -32,7 +32,7 @@ const jsonLd = {
   "@type": "HowTo",
   name: "How to Set Up Flowfiy",
   description:
-    "A 4-step guide to setting up Flowfiy's AI outbound sales pipeline — subscribe, set your business profile, describe the leads you want, then review and send from Gmail.",
+    "A 4-step guide to setting up Flowfiy's AI sales engine — subscribe, set your business profile, describe the leads you want so Flowfiy can find them on Google Maps, then review and send from Gmail.",
   totalTime: "PT10M",
   datePublished: "2026-06-15",
   author: { "@type": "Organization", name: "Flowfiy" },
@@ -191,10 +191,10 @@ export default function BlogPostHowToSetUpFlowfiy() {
           {/* Intro */}
           <div className="prose prose-invert prose-zinc max-w-none space-y-6 text-zinc-300 leading-relaxed">
             <p>
-              Flowfiy runs a fully managed outbound pipeline — it finds leads that match your description, researches each
-              company, qualifies them 0–100, and writes personalized outreach. There are no API keys to wire up. All it
-              needs from you is who you&apos;re selling to, who you want to reach, and your Gmail to send from. This guide
-              walks through all of it in order.
+              Flowfiy is an AI sales engine — it finds real businesses on Google Maps that match your description,
+              researches each one, scores it 0–100 by how much it needs your service, and writes personalized outreach.
+              There are no API keys to wire up. All it needs from you is who you&apos;re selling to, who you want to
+              reach, and your Gmail to send from. This guide walks through all of it in order.
             </p>
           </div>
 
