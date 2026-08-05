@@ -2,16 +2,18 @@
 
 import { motion } from "framer-motion";
 import {
-  Target, Radar, Sparkles, Inbox, LayoutDashboard,
-  Plug, Infinity as InfinityIcon, Rocket, GraduationCap,
+  Target, Radar, Sparkles, Inbox, LayoutDashboard, Plug,
+  Phone, MessageCircle, Infinity as InfinityIcon, Rocket,
+  GraduationCap, TrendingUp,
 } from "lucide-react";
 import { EASE, Eyebrow, MaskReveal } from "@/components/landing/v2/motion";
 import { TiltCard } from "./TiltCard";
 import { DELIVERABLES } from "./content";
 
 const ICONS = [
-  Target, Radar, Sparkles, Inbox, LayoutDashboard,
-  Plug, InfinityIcon, Rocket, GraduationCap,
+  Target, Radar, Sparkles, Inbox, LayoutDashboard, Plug,
+  Phone, MessageCircle, InfinityIcon, Rocket,
+  GraduationCap, TrendingUp,
 ];
 
 export function Deliverables() {
@@ -26,7 +28,7 @@ export function Deliverables() {
         <div className="max-w-2xl">
           <Eyebrow>What&apos;s included</Eyebrow>
           <h2 className="mt-5 font-black leading-[1.03] tracking-[-0.035em] text-white text-[clamp(2rem,4vw,3.25rem)]">
-            <MaskReveal>Nine deliverables.</MaskReveal>
+            <MaskReveal>Every deliverable.</MaskReveal>
             <MaskReveal delay={0.08}>
               <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
                 One handover.
@@ -63,6 +65,13 @@ export function Deliverables() {
                     <p className="mt-2.5 text-sm leading-relaxed text-zinc-500">
                       {d.body}
                     </p>
+                    {/* Marks the deliverables that only ship on a higher tier,
+                        so this list can't be read as "all of it, any price". */}
+                    {d.tier && (
+                      <span className="mt-3 inline-flex w-fit rounded-full border border-violet-400/25 bg-violet-500/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-violet-300">
+                        {d.tier}
+                      </span>
+                    )}
                   </div>
                 </TiltCard>
               </motion.div>

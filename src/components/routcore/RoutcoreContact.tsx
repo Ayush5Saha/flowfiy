@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Mail, Phone, Clock } from "lucide-react";
 import { EASE, Eyebrow, MaskReveal } from "@/components/landing/v2/motion";
-import { CONTACT } from "./content";
+import { CONTACT, TIERS, type RegionKey } from "./content";
+import { useRegion } from "./useRegion";
 
-const REGIONS = ["India", "International"] as const;
+const REGION_LABEL: Record<RegionKey, string> = {
+  IN: "India",
+  INTL: "International",
+};
 
-const BUDGETS = [
-  "₹45,000 – ₹80,000 (India)",
-  "$2,500 (International)",
-  "Not sure yet — advise me",
-] as const;
+/** Package options carry the price for the region being viewed, so the
+ *  enquiry email records exactly what the prospect was quoted on screen. */
+function packageOptions(region: RegionKey) {
+  return [
+    ...TIERS.map((t) => `${t.name} — ${t.price[region].setup} + ${t.price[region].retainer}/mo`),
+    "Not sure yet — advise me",
+  ];
+}
 
 const STEPS = [
   {
@@ -37,17 +44,27 @@ const EMPTY = {
   email: "",
   phone: "",
   companyName: "",
-  region: REGIONS[0] as string,
-  budget: BUDGETS[0] as string,
+  region: "" as string,
+  packageTier: "" as string,
   message: "",
   company: "", // honeypot
 };
 
 export function RoutcoreContact() {
+  const { region, setRegion, resolved } = useRegion();
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+
+  const options = packageOptions(region);
+
+  // Default the package to the region's first tier, and re-point it whenever
+  // the region changes — a label carrying the other region's currency would
+  // otherwise stay selected and be recorded on the enquiry.
+  useEffect(() => {
+    setForm((f) => ({ ...f, region: REGION_LABEL[region], packageTier: packageOptions(region)[0] }));
+  }, [region]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -265,23 +282,26 @@ export function RoutcoreContact() {
                   <div>
                     <label className={label}>Where are you based?</label>
                     <select
-                      value={form.region}
-                      onChange={(e) => setForm({ ...form, region: e.target.value })}
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value as RegionKey)}
                       className={field}
                     >
-                      {REGIONS.map((r) => (
-                        <option key={r} value={r} className="bg-zinc-900">{r}</option>
+                      {(Object.keys(REGION_LABEL) as RegionKey[]).map((r) => (
+                        <option key={r} value={r} className="bg-zinc-900">
+                          {REGION_LABEL[r]}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className={label}>Budget range</label>
+                    <label className={label}>Which package?</label>
                     <select
-                      value={form.budget}
-                      onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                      value={form.packageTier}
+                      onChange={(e) => setForm({ ...form, packageTier: e.target.value })}
+                      disabled={!resolved}
                       className={field}
                     >
-                      {BUDGETS.map((b) => (
+                      {options.map((b) => (
                         <option key={b} value={b} className="bg-zinc-900">{b}</option>
                       ))}
                     </select>

@@ -2,8 +2,11 @@
  * Single source of truth for every fact rendered on the Routcore page.
  *
  * Pricing here supersedes the ₹30,000 / ₹0-running-cost figures in the original
- * service-overview doc: Routcore is now sold as a build fee plus a monthly
+ * service-overview doc: Routcore is sold as a build fee plus a monthly
  * retainer, so "zero running cost" is scoped to software fees only.
+ *
+ * Three channel tiers, each priced per region. Only one region's prices are
+ * ever shown — see `useRegion` for how the visitor's region is resolved.
  */
 
 export const CONTACT = {
@@ -67,55 +70,80 @@ export const STAGES = [
   {
     n: "04",
     kicker: "Delivery",
-    title: "It sends from your own inboxes",
-    body: "Outreach goes out through your real email accounts, across up to 100 inboxes. You set a send cap per inbox; when one hits its limit the system rotates to the next, protecting the whole fleet's deliverability.",
-    points: ["Up to 100 inboxes", "Per-inbox send caps", "Automatic rotation"],
+    title: "It reaches out on your channels",
+    body: "Email goes out through your real accounts, across up to 100 inboxes — you set a cap per inbox and the system rotates when one hits its limit, protecting the whole fleet's deliverability. Add an AI voice agent, LinkedIn and WhatsApp and the same engine works those channels in step with the email.",
+    points: ["Up to 100 inboxes", "Automatic rotation", "Voice · LinkedIn · WhatsApp"],
   },
   {
     n: "05",
     kicker: "Visibility",
     title: "Everything lands on one dashboard",
-    body: "Every email sent and every reply received, across every inbox, in a single unified view. Nothing to reconcile, nothing missed, no lead left sitting in an inbox nobody checks.",
+    body: "Every message sent and every reply received — across every inbox and every channel — in a single unified view. Nothing to reconcile, nothing missed, no lead left sitting somewhere nobody checks.",
     points: ["Unified send log", "All replies in one place", "Live pipeline view"],
   },
 ] as const;
 
+/** `tier` marks a deliverable that only ships with a higher channel tier. */
 export const DELIVERABLES = [
   {
     title: "ICP definition & strategy",
     body: "A working session to lock your target profile, offer and messaging angle.",
+    tier: null,
   },
   {
     title: "Prospecting engine setup",
     body: "Configured to source prospects matching your ICP automatically.",
+    tier: null,
   },
   {
-    title: "AI email personalization",
+    title: "AI message personalization",
     body: "Per-prospect message generation, plus your core sequences and follow-ups.",
+    tier: null,
   },
   {
     title: "Up to 100 inbox connections",
     body: "With per-inbox send caps and automatic rotation to protect deliverability.",
+    tier: null,
   },
   {
     title: "Unified dashboard",
-    body: "All sends and all replies across every inbox, in one place.",
+    body: "All sends and all replies, across every inbox and channel, in one place.",
+    tier: null,
   },
   {
     title: "Tool integrations",
     body: "Apollo.io, Clay and other prospecting tools connected into the pipeline.",
+    tier: null,
+  },
+  {
+    title: "AI voice calling agent",
+    body: "Calls your prospects with a script built around your offer, and logs every outcome.",
+    tier: "Voice tier and above",
+  },
+  {
+    title: "LinkedIn & WhatsApp outreach",
+    body: "The same engine works both channels in step with the email sequence.",
+    tier: "Full-channel tier",
   },
   {
     title: "24/7 autonomous operation",
     body: "The system runs continuously once live, with no per-send or per-lead software fees.",
+    tier: null,
   },
   {
     title: "Deployment to your system",
     body: "Deployed into your own environment, fully yours to run.",
+    tier: null,
   },
   {
     title: "Training & handover",
     body: "A walkthrough plus documentation so your team can operate it confidently.",
+    tier: null,
+  },
+  {
+    title: "Ongoing optimization",
+    body: "Covered by the retainer: deliverability monitoring, ICP and copy tuning as results land.",
+    tier: null,
   },
 ] as const;
 
@@ -142,33 +170,108 @@ export const PHASES = [
   },
 ] as const;
 
-export const PLANS = [
+export type RegionKey = "IN" | "INTL";
+
+/**
+ * Per-minute voice rate. The base rate is ₹6/min; the USD figure uses the
+ * site's own INR→USD constant (1 INR ≈ 0.01195 USD, see src/lib/currency.ts),
+ * so ₹6 ≈ $0.07. Voice minutes are billed on usage, separately from the
+ * retainer — they are a pass-through telephony cost, not part of the plan.
+ */
+export const VOICE_RATE: Record<RegionKey, { rate: string; note: string }> = {
+  IN: {
+    rate: "₹6 / minute",
+    note: "Voice calling minutes are billed separately on actual usage.",
+  },
+  INTL: {
+    // No INR equivalent here — an international reader has no use for it, and
+    // the point of the region split is that they only ever see their own currency.
+    rate: "$0.07 / minute",
+    note: "Voice calling minutes are billed separately on actual usage.",
+  },
+};
+
+/** The three channel tiers, each with both regions' prices. */
+export const TIERS = [
   {
-    region: "India",
-    flag: "🇮🇳",
-    setup: "₹45,000 – ₹80,000",
-    setupNote: "one-time build, scoped to your requirements",
-    retainer: "₹20,000",
-    retainerNote: "per month, ongoing operation & optimization",
+    id: "email",
+    name: "Email",
+    tagline: "The core outbound engine, end to end.",
+    channels: ["Email"],
+    hasVoice: false,
     highlight: false,
+    price: {
+      IN: { setup: "₹45,000", retainer: "₹20,000" },
+      INTL: { setup: "$2,000", retainer: "$200" },
+    },
+    // Numeric mirror of `price`, for schema.org offers (which need bare numbers).
+    priceValue: {
+      IN: { setup: 45000, retainer: 20000 },
+      INTL: { setup: 2000, retainer: 200 },
+    },
+    features: [
+      "ICP definition & strategy session",
+      "Prospecting engine, sourcing continuously",
+      "AI-personalized email per prospect",
+      "Up to 100 inboxes with automatic rotation",
+      "Unified sends-and-replies dashboard",
+      "Apollo, Clay & tool integrations",
+    ],
   },
   {
-    region: "International",
-    flag: "🌍",
-    setup: "$2,500",
-    setupNote: "one-time build",
-    retainer: "$300",
-    retainerNote: "per month, ongoing operation & optimization",
+    id: "voice",
+    name: "Email + Voice",
+    tagline: "Add an AI voice agent that actually calls them.",
+    channels: ["Email", "Voice"],
+    hasVoice: true,
     highlight: true,
+    price: {
+      IN: { setup: "₹65,000", retainer: "₹25,000" },
+      INTL: { setup: "$2,500", retainer: "$300" },
+    },
+    priceValue: {
+      IN: { setup: 65000, retainer: 25000 },
+      INTL: { setup: 2500, retainer: 300 },
+    },
+    features: [
+      "Everything in Email",
+      "AI voice calling agent",
+      "Call scripts built around your offer",
+      "Calls triggered off email engagement",
+      "Call outcomes on the same dashboard",
+    ],
+  },
+  {
+    id: "omni",
+    name: "Email + Voice + LinkedIn + WhatsApp",
+    tagline: "Every channel your buyer actually answers on.",
+    channels: ["Email", "Voice", "LinkedIn", "WhatsApp"],
+    hasVoice: true,
+    highlight: false,
+    price: {
+      IN: { setup: "₹80,000", retainer: "₹25,000" },
+      INTL: { setup: "$3,000", retainer: "$350" },
+    },
+    priceValue: {
+      IN: { setup: 80000, retainer: 25000 },
+      INTL: { setup: 3000, retainer: 350 },
+    },
+    features: [
+      "Everything in Email + Voice",
+      "LinkedIn outreach automation",
+      "WhatsApp outreach automation",
+      "Coordinated multi-channel sequencing",
+      "Every channel's replies in one inbox",
+    ],
   },
 ] as const;
 
 export const PLAN_INCLUDES = [
-  "Everything in What's Included",
   "50% advance, 50% on delivery",
   "Live in about 2 days",
   "No per-send or per-lead software fees",
   "Deployed into your own environment",
+  "Training, documentation & handover",
   "Direct access to the founders",
 ] as const;
 
@@ -208,12 +311,18 @@ export const FAQS = [
     a: "Ongoing operation and optimization of your engine — monitoring deliverability, tuning the ICP and messaging as results come in, adjusting sequences, and support when something needs changing. The build fee gets the system live; the retainer keeps it performing.",
   },
   {
-    q: "Why is the Indian price a range?",
-    a: "₹45,000 to ₹80,000 depends on scope — how many inboxes, how many sequences, which tools need integrating, and how much custom logic your targeting needs. We quote a fixed number after the discovery call, before any work starts.",
+    q: "Which tier should I start on?",
+    a: "Most teams start on Email — it's the full engine, and it's the channel with the cleanest economics at volume. Add the voice agent when you want to reach people who don't reply to email, and go full-channel when your buyers live on LinkedIn or WhatsApp. You can upgrade later; we only charge the difference in build cost.",
+  },
+  {
+    // Deliberately no figure here — the per-minute rate is currency-specific and
+    // already shown, in the reader's own currency, on the pricing cards above.
+    q: "How is voice calling billed?",
+    a: "Separately from the retainer and charged on actual usage, at the per-minute rate shown on the pricing cards above. It's a pass-through telephony cost, so you only pay for minutes the agent actually spends on calls — nothing is metered when it isn't calling.",
   },
   {
     q: "What does \"no running cost\" mean exactly?",
-    a: "The system itself charges nothing per send or per lead — there's no software metering on top of your retainer. You do pay your own providers directly: domains and inboxes (e.g. Google Workspace), and any third-party prospecting tools you choose to connect, like Apollo or Clay.",
+    a: "The system itself charges nothing per send or per lead — there's no software metering on top of your retainer. You do pay your own providers directly: domains and inboxes (e.g. Google Workspace), any third-party prospecting tools you connect like Apollo or Clay, and voice minutes if you're on a tier that includes the calling agent.",
   },
   {
     q: "Can it really be live in two days?",

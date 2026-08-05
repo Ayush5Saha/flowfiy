@@ -15,8 +15,8 @@ import { CONTACT } from "./content";
 
 const SIGNALS = [
   "Sources prospects that match your ICP",
-  "Writes a different email for every one",
-  "Sends from up to 100 of your own inboxes",
+  "Writes a different message for every one",
+  "Email · AI voice calls · LinkedIn · WhatsApp",
   "Puts every reply on one dashboard",
 ];
 
@@ -73,8 +73,8 @@ export function RoutcoreHero() {
             </strong>{" "}
             We build it around your ideal customer, deploy it into your own
             environment, and hand you the keys — in about two days. It finds
-            prospects, writes each email personally, and sends from your inboxes,
-            around the clock.
+            prospects, writes to each one personally, and reaches them by email,
+            AI voice call, LinkedIn and WhatsApp — around the clock.
           </p>
         </MaskReveal>
 

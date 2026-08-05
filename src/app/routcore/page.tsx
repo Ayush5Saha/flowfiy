@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { RoutcorePage } from "@/components/routcore/RoutcorePage";
-import { FAQS } from "@/components/routcore/content";
+import { FAQS, TIERS, DELIVERABLES } from "@/components/routcore/content";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://flowfiy.com";
 const URL = `${BASE_URL}/routcore`;
 
 const TITLE = "Routcore — Done-For-You AI Lead Generation & Outreach Systems";
 const DESCRIPTION =
-  "Routcore by Flowfiy builds and deploys a personalized AI lead generation and outreach system into your own environment in about two days. It finds prospects matching your ICP, writes a personalized email for each one, and sends from up to 100 of your own inboxes — every reply on one dashboard. ₹45,000–₹80,000 + ₹20,000/mo in India, $2,500 + $300/mo international.";
+  "Routcore by Flowfiy builds and deploys a personalized AI lead generation and outreach system into your own environment in about two days. It finds prospects matching your ICP, writes to each one personally, and reaches them by email, AI voice call, LinkedIn and WhatsApp — every reply on one dashboard. Three tiers from ₹45,000 + ₹20,000/mo in India, or $2,000 + $200/mo internationally.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -63,52 +63,51 @@ const serviceJsonLd = {
   serviceType: "AI lead generation and cold outreach system implementation",
   url: URL,
   description:
-    "A done-for-you AI lead generation and outreach system. Routcore defines your ideal customer profile, sources matching prospects online, writes a personalized email for every prospect, sends from up to 100 of your own inboxes with automatic rotation, and puts every send and reply on one unified dashboard. Built, tested and deployed into your own environment in about two days.",
+    "A done-for-you AI lead generation and outreach system. Routcore defines your ideal customer profile, sources matching prospects online, writes a personalized message for every prospect, and reaches them by email, AI voice call, LinkedIn and WhatsApp — putting every send and reply on one unified dashboard. Built, tested and deployed into your own environment in about two days. Sold in three channel tiers, priced per region.",
   provider: { "@id": `${BASE_URL}/#organization` },
   areaServed: [
     { "@type": "Country", name: "India" },
     { "@type": "Place", name: "Worldwide" },
   ],
-  offers: [
+  // Each tier is offered at a region-specific price; the page only ever shows
+  // one region's, but both belong in the structured data for search engines.
+  offers: TIERS.flatMap((t) => [
     {
       "@type": "Offer",
-      name: "Routcore build & retainer — India",
+      name: `Routcore — ${t.name} (India)`,
+      price: String(t.priceValue.IN.setup),
       priceCurrency: "INR",
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        minPrice: "45000",
-        maxPrice: "80000",
-        priceCurrency: "INR",
-      },
-      description:
-        "One-time build of ₹45,000–₹80,000 scoped to requirements, plus a ₹20,000 per month retainer for ongoing operation and optimization. 50% advance, 50% on delivery.",
+      description: `One-time build of ${t.price.IN.setup} plus a ${t.price.IN.retainer} per month retainer for ongoing operation and optimization.${
+        t.hasVoice ? " Voice calling minutes billed separately at ₹6 per minute." : ""
+      } 50% advance, 50% on delivery.`,
       eligibleRegion: { "@type": "Country", name: "India" },
+      itemOffered: {
+        "@type": "Service",
+        name: `Routcore ${t.name}`,
+        description: t.tagline,
+      },
     },
     {
       "@type": "Offer",
-      name: "Routcore build & retainer — International",
-      price: "2500",
+      name: `Routcore — ${t.name} (International)`,
+      price: String(t.priceValue.INTL.setup),
       priceCurrency: "USD",
-      description:
-        "One-time build of $2,500 plus a $300 per month retainer for ongoing operation and optimization. 50% advance, 50% on delivery.",
+      description: `One-time build of ${t.price.INTL.setup} plus a ${t.price.INTL.retainer} per month retainer for ongoing operation and optimization.${
+        t.hasVoice ? " Voice calling minutes billed separately at about $0.07 per minute." : ""
+      } 50% advance, 50% on delivery.`,
+      itemOffered: {
+        "@type": "Service",
+        name: `Routcore ${t.name}`,
+        description: t.tagline,
+      },
     },
-  ],
+  ]),
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "What's included",
-    itemListElement: [
-      "ICP definition & strategy",
-      "Prospecting engine setup",
-      "AI email personalization",
-      "Up to 100 inbox connections with automatic rotation",
-      "Unified sends-and-replies dashboard",
-      "Apollo.io, Clay and other tool integrations",
-      "24/7 autonomous operation",
-      "Deployment into your own environment",
-      "Training & handover",
-    ].map((name) => ({
+    itemListElement: DELIVERABLES.map((d) => ({
       "@type": "Offer",
-      itemOffered: { "@type": "Service", name },
+      itemOffered: { "@type": "Service", name: d.title, description: d.body },
     })),
   },
 };
