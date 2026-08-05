@@ -11,6 +11,7 @@ const footerLinks = [
       { label: "How it works", href: "/#how-it-works" },
       { label: "Pricing", href: "/#pricing" },
       { label: "Integrations", href: "/#features" },
+      { label: "Routcore (done-for-you)", href: "/routcore" },
     ],
   },
   {

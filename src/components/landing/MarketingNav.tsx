@@ -26,6 +26,7 @@ const navLinks = [
       { label: "B2B Lead Generation", href: "/solutions/b2b-lead-generation-software", desc: "End-to-end, by AI" },
     ],
   },
+  { label: "Routcore", href: "/routcore" },
   { label: "Pricing", href: "/pricing" },
   { label: "Affiliates", href: "/affiliates" },
   {

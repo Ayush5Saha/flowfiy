@@ -8,6 +8,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname === "/home" ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/pricing") ||
+    pathname.startsWith("/routcore") ||
     pathname.startsWith("/blog") ||
     pathname.startsWith("/vs") ||
     pathname.startsWith("/use-cases") ||
