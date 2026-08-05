@@ -1,12 +1,9 @@
 /**
  * Single source of truth for every fact rendered on the Routcore page.
  *
- * Pricing here supersedes the ₹30,000 / ₹0-running-cost figures in the original
- * service-overview doc: Routcore is sold as a build fee plus a monthly
- * retainer, so "zero running cost" is scoped to software fees only.
- *
- * Three channel tiers, each priced per region. Only one region's prices are
- * ever shown — see `useRegion` for how the visitor's region is resolved.
+ * Three channel tiers. No prices anywhere on the page by design — pricing is
+ * quoted on the discovery call once scope is known, and the offering is the
+ * same worldwide, so there is no domestic vs. international split either.
  */
 
 export const CONTACT = {
@@ -118,12 +115,12 @@ export const DELIVERABLES = [
   {
     title: "AI voice calling agent",
     body: "Calls your prospects with a script built around your offer, and logs every outcome.",
-    tier: "Voice tier and above",
+    tier: "Tier 2 and above",
   },
   {
     title: "LinkedIn & WhatsApp outreach",
     body: "The same engine works both channels in step with the email sequence.",
-    tier: "Full-channel tier",
+    tier: "Tier 3",
   },
   {
     title: "24/7 autonomous operation",
@@ -170,45 +167,22 @@ export const PHASES = [
   },
 ] as const;
 
-export type RegionKey = "IN" | "INTL";
-
 /**
- * Per-minute voice rate. The base rate is ₹6/min; the USD figure uses the
- * site's own INR→USD constant (1 INR ≈ 0.01195 USD, see src/lib/currency.ts),
- * so ₹6 ≈ $0.07. Voice minutes are billed on usage, separately from the
- * retainer — they are a pass-through telephony cost, not part of the plan.
+ * The three tiers, separated by how many channels the engine works.
+ *
+ * No figures live here by design: pricing is quoted on the discovery call once
+ * scope is known, and it is the same offering worldwide — there is no domestic
+ * vs. international split on the site.
  */
-export const VOICE_RATE: Record<RegionKey, { rate: string; note: string }> = {
-  IN: {
-    rate: "₹6 / minute",
-    note: "Voice calling minutes are billed separately on actual usage.",
-  },
-  INTL: {
-    // No INR equivalent here — an international reader has no use for it, and
-    // the point of the region split is that they only ever see their own currency.
-    rate: "$0.07 / minute",
-    note: "Voice calling minutes are billed separately on actual usage.",
-  },
-};
-
-/** The three channel tiers, each with both regions' prices. */
 export const TIERS = [
   {
-    id: "email",
-    name: "Email",
+    id: "tier-1",
+    name: "Tier 1",
+    channelLabel: "Email",
     tagline: "The core outbound engine, end to end.",
     channels: ["Email"],
     hasVoice: false,
     highlight: false,
-    price: {
-      IN: { setup: "₹45,000", retainer: "₹20,000" },
-      INTL: { setup: "$2,000", retainer: "$200" },
-    },
-    // Numeric mirror of `price`, for schema.org offers (which need bare numbers).
-    priceValue: {
-      IN: { setup: 45000, retainer: 20000 },
-      INTL: { setup: 2000, retainer: 200 },
-    },
     features: [
       "ICP definition & strategy session",
       "Prospecting engine, sourcing continuously",
@@ -219,22 +193,15 @@ export const TIERS = [
     ],
   },
   {
-    id: "voice",
-    name: "Email + Voice",
+    id: "tier-2",
+    name: "Tier 2",
+    channelLabel: "Email + Voice",
     tagline: "Add an AI voice agent that actually calls them.",
     channels: ["Email", "Voice"],
     hasVoice: true,
     highlight: true,
-    price: {
-      IN: { setup: "₹65,000", retainer: "₹25,000" },
-      INTL: { setup: "$2,500", retainer: "$300" },
-    },
-    priceValue: {
-      IN: { setup: 65000, retainer: 25000 },
-      INTL: { setup: 2500, retainer: 300 },
-    },
     features: [
-      "Everything in Email",
+      "Everything in Tier 1",
       "AI voice calling agent",
       "Call scripts built around your offer",
       "Calls triggered off email engagement",
@@ -242,22 +209,15 @@ export const TIERS = [
     ],
   },
   {
-    id: "omni",
-    name: "Email + Voice + LinkedIn + WhatsApp",
+    id: "tier-3",
+    name: "Tier 3",
+    channelLabel: "Email + Voice + LinkedIn + WhatsApp",
     tagline: "Every channel your buyer actually answers on.",
     channels: ["Email", "Voice", "LinkedIn", "WhatsApp"],
     hasVoice: true,
     highlight: false,
-    price: {
-      IN: { setup: "₹80,000", retainer: "₹25,000" },
-      INTL: { setup: "$3,000", retainer: "$350" },
-    },
-    priceValue: {
-      IN: { setup: 80000, retainer: 25000 },
-      INTL: { setup: 3000, retainer: 350 },
-    },
     features: [
-      "Everything in Email + Voice",
+      "Everything in Tier 2",
       "LinkedIn outreach automation",
       "WhatsApp outreach automation",
       "Coordinated multi-channel sequencing",
@@ -267,7 +227,7 @@ export const TIERS = [
 ] as const;
 
 export const PLAN_INCLUDES = [
-  "50% advance, 50% on delivery",
+  "A fixed quote before any work starts",
   "Live in about 2 days",
   "No per-send or per-lead software fees",
   "Deployed into your own environment",
@@ -312,13 +272,15 @@ export const FAQS = [
   },
   {
     q: "Which tier should I start on?",
-    a: "Most teams start on Email — it's the full engine, and it's the channel with the cleanest economics at volume. Add the voice agent when you want to reach people who don't reply to email, and go full-channel when your buyers live on LinkedIn or WhatsApp. You can upgrade later; we only charge the difference in build cost.",
+    a: "Most teams start on Tier 1 — it's the full engine, and email is the channel with the cleanest economics at volume. Move to Tier 2 when you want to reach people who never reply to email, and Tier 3 when your buyers live on LinkedIn or WhatsApp. You can upgrade later without rebuilding what's already running.",
   },
   {
-    // Deliberately no figure here — the per-minute rate is currency-specific and
-    // already shown, in the reader's own currency, on the pricing cards above.
+    q: "How much does it cost?",
+    a: "We quote a fixed price on the discovery call, once we know your scope — how many inboxes, how many sequences, which tools need integrating, which tier fits and how much custom targeting logic you need. Pricing is the same wherever you're based, and nothing is charged until you've seen the number and agreed to it.",
+  },
+  {
     q: "How is voice calling billed?",
-    a: "Separately from the retainer and charged on actual usage, at the per-minute rate shown on the pricing cards above. It's a pass-through telephony cost, so you only pay for minutes the agent actually spends on calls — nothing is metered when it isn't calling.",
+    a: "Separately from the retainer and charged on actual usage, at a per-minute rate we confirm on the discovery call. It's a pass-through telephony cost, so you only pay for minutes the agent actually spends on calls — nothing is metered when it isn't calling. This applies to Tier 2 and Tier 3, which include the voice agent.",
   },
   {
     q: "What does \"no running cost\" mean exactly?",

@@ -22,7 +22,6 @@ const schema = z.object({
   email: z.string().trim().email("A valid work email is required").max(200),
   phone: z.string().trim().max(40).optional().default(""),
   companyName: z.string().trim().max(160).optional().default(""),
-  region: z.string().trim().max(60).optional().default("Not specified"),
   packageTier: z.string().trim().max(160).optional().default("Not specified"),
   message: z.string().trim().min(1, "Please tell us what you sell and who to").max(5000),
   // Honeypot — bots fill hidden fields; humans never do. Deliberately NOT
@@ -56,7 +55,7 @@ export async function POST(req: NextRequest) {
   // Honeypot tripped — silently accept so bots don't learn they were caught.
   if (parsed.data.company) return NextResponse.json({ success: true });
 
-  const { name, email, phone, companyName, region, packageTier, message } = parsed.data;
+  const { name, email, phone, companyName, packageTier, message } = parsed.data;
 
   const resend = getResend();
   if (!resend) {
@@ -72,7 +71,7 @@ export async function POST(req: NextRequest) {
       from: SUPPORT_FROM,
       to: [ROUTCORE_INBOX],
       replyTo: email,
-      subject: `[Routcore · ${region}] ${name}${companyName ? ` — ${companyName}` : ""}`,
+      subject: `[Routcore · ${packageTier}] ${name}${companyName ? ` — ${companyName}` : ""}`,
       html: emailShell(
         "New Routcore enquiry",
         `${detailRows([
@@ -80,8 +79,7 @@ export async function POST(req: NextRequest) {
           ["Email", `<a href="mailto:${escapeHtml(email)}" style="color:#a855f7;">${escapeHtml(email)}</a>`],
           ["Phone", phone ? escapeHtml(phone) : "—"],
           ["Company", companyName ? escapeHtml(companyName) : "—"],
-          ["Region", escapeHtml(region)],
-          ["Package", escapeHtml(packageTier)],
+          ["Tier", escapeHtml(packageTier)],
         ])}
         <hr style="border:none;border-top:1px solid #27272a;margin:16px 0;" />
         <p style="color:#a1a1aa;margin-bottom:8px;">What they sell &amp; who to</p>

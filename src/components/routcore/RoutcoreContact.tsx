@@ -1,25 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Mail, Phone, Clock } from "lucide-react";
 import { EASE, Eyebrow, MaskReveal } from "@/components/landing/v2/motion";
-import { CONTACT, TIERS, type RegionKey } from "./content";
-import { useRegion } from "./useRegion";
+import { CONTACT, TIERS } from "./content";
 
-const REGION_LABEL: Record<RegionKey, string> = {
-  IN: "India",
-  INTL: "International",
-};
-
-/** Package options carry the price for the region being viewed, so the
- *  enquiry email records exactly what the prospect was quoted on screen. */
-function packageOptions(region: RegionKey) {
-  return [
-    ...TIERS.map((t) => `${t.name} — ${t.price[region].setup} + ${t.price[region].retainer}/mo`),
-    "Not sure yet — advise me",
-  ];
-}
+/** Tier options mirror the pricing cards — same names, no figures. */
+const TIER_OPTIONS = [
+  ...TIERS.map((t) => `${t.name} — ${t.channelLabel}`),
+  "Not sure yet — advise me",
+];
 
 const STEPS = [
   {
@@ -44,27 +35,16 @@ const EMPTY = {
   email: "",
   phone: "",
   companyName: "",
-  region: "" as string,
-  packageTier: "" as string,
+  packageTier: TIER_OPTIONS[0],
   message: "",
   company: "", // honeypot
 };
 
 export function RoutcoreContact() {
-  const { region, setRegion, resolved } = useRegion();
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
-
-  const options = packageOptions(region);
-
-  // Default the package to the region's first tier, and re-point it whenever
-  // the region changes — a label carrying the other region's currency would
-  // otherwise stay selected and be recorded on the enquiry.
-  useEffect(() => {
-    setForm((f) => ({ ...f, region: REGION_LABEL[region], packageTier: packageOptions(region)[0] }));
-  }, [region]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -278,34 +258,17 @@ export function RoutcoreContact() {
                   </div>
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <label className={label}>Where are you based?</label>
-                    <select
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value as RegionKey)}
-                      className={field}
-                    >
-                      {(Object.keys(REGION_LABEL) as RegionKey[]).map((r) => (
-                        <option key={r} value={r} className="bg-zinc-900">
-                          {REGION_LABEL[r]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={label}>Which package?</label>
-                    <select
-                      value={form.packageTier}
-                      onChange={(e) => setForm({ ...form, packageTier: e.target.value })}
-                      disabled={!resolved}
-                      className={field}
-                    >
-                      {options.map((b) => (
-                        <option key={b} value={b} className="bg-zinc-900">{b}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <label className={label}>Which tier are you interested in?</label>
+                  <select
+                    value={form.packageTier}
+                    onChange={(e) => setForm({ ...form, packageTier: e.target.value })}
+                    className={field}
+                  >
+                    {TIER_OPTIONS.map((t) => (
+                      <option key={t} value={t} className="bg-zinc-900">{t}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -339,7 +302,7 @@ export function RoutcoreContact() {
 
                 <p className="text-center text-[11px] leading-relaxed text-zinc-600">
                   No payment is taken here. We&apos;ll reply with a fixed quote
-                  and a call slot — 50% advance only once you decide to go ahead.
+                  and a call slot — nothing is charged until you agree to it.
                 </p>
               </form>
             )}
