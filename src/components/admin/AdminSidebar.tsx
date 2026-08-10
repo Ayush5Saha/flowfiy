@@ -23,6 +23,7 @@ import {
   Menu,
   X,
   PhoneCall,
+  Inbox,
 } from "lucide-react";
 
 const NAV_MAIN = [
@@ -35,6 +36,7 @@ const NAV_MAIN = [
   { label: "Blog",          href: "/admin/blog",          icon: Newspaper },
   { label: "Affiliates",    href: "/admin/affiliates",    icon: HandCoins },
   { label: "Sales Team",    href: "/admin/sales-team",    icon: PhoneCall },
+  { label: "Routcore",      href: "/admin/routcore",      icon: Inbox },
 ];
 
 const NAV_SYSTEM = [

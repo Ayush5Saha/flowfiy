@@ -8,12 +8,18 @@ import {
   detailRows,
 } from "@/lib/support-email";
 import { enforceRateLimit, contactRateLimit, getClientIp } from "@/lib/rate-limit";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Routcore enquiry form (/routcore#contact).
  *
  * Separate from /api/contact because these are sales enquiries for the
  * done-for-you service and route to info@ rather than support@.
+ *
+ * The enquiry is written to the database FIRST and emailed second. An inbox is
+ * not a record: before this, a Resend outage returned 502 and the lead was gone
+ * for good. Now the request only fails if BOTH the database write and the email
+ * fail — either one surviving means we still have the lead.
  */
 const ROUTCORE_INBOX = process.env.ROUTCORE_INBOX_EMAIL || "info@flowfiy.com";
 
@@ -57,9 +63,34 @@ export async function POST(req: NextRequest) {
 
   const { name, email, phone, companyName, packageTier, message } = parsed.data;
 
+  // ── 1. Persist first — this is the durable record ────────────────────────
+  let enquiryId: string | null = null;
+  try {
+    const enquiry = await prisma.routcoreEnquiry.create({
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        companyName: companyName || null,
+        packageTier: packageTier || null,
+        message,
+        ipAddress: getClientIp(req) || null,
+        userAgent: req.headers.get("user-agent")?.slice(0, 500) || null,
+      },
+      select: { id: true },
+    });
+    enquiryId = enquiry.id;
+  } catch (err) {
+    // Don't fail the request yet — the email below may still capture the lead.
+    console.error("[routcore] failed to save enquiry:", err);
+  }
+
+  // ── 2. Notify by email ───────────────────────────────────────────────────
   const resend = getResend();
   if (!resend) {
     console.error("[routcore] RESEND_API_KEY not configured");
+    // Saved but not emailed is still a captured lead — only fail if neither worked.
+    if (enquiryId) return NextResponse.json({ success: true });
     return NextResponse.json(
       { error: `Messaging is temporarily unavailable. Please email us directly at ${ROUTCORE_INBOX}.` },
       { status: 503 }
@@ -89,7 +120,16 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("[routcore] Resend error:", error);
+      // The enquiry is already stored and visible in /admin/routcore, so the
+      // lead isn't lost — don't make the prospect retype it.
+      if (enquiryId) return NextResponse.json({ success: true });
       return NextResponse.json({ error: "Failed to send your request. Please try again." }, { status: 502 });
+    }
+
+    if (enquiryId) {
+      await prisma.routcoreEnquiry
+        .update({ where: { id: enquiryId }, data: { emailSent: true } })
+        .catch((e) => console.error("[routcore] failed to flag emailSent:", e));
     }
 
     // Best-effort confirmation to the sender — never block the response on it.
@@ -111,6 +151,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[routcore] route error:", err);
+    if (enquiryId) return NextResponse.json({ success: true });
     return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
   }
 }

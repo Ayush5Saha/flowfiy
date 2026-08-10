@@ -682,3 +682,42 @@ enum CreditEntryType {
   REFUND
   ADJUST     // admin correction
 }
+
+// ─── Routcore enquiries ──────────────────────────────────────────────────────
+
+/**
+ * A submission from the Routcore landing page contact form (/routcore#contact).
+ *
+ * Standalone by design: these are inbound sales enquiries from people who have
+ * no account yet, so there is no organizationId to hang them off. Persisting
+ * them means an enquiry survives a deleted or missed email — the form also
+ * sends to info@flowfiy.com, but that inbox is not a record of anything.
+ */
+model RoutcoreEnquiry {
+  id          String                @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  companyName String?               @map("company_name")
+  packageTier String?               @map("package_tier")   // "Tier 1 — Email", "Not sure yet", …
+  message     String
+  status      RoutcoreEnquiryStatus @default(NEW)
+  notes       String?                                      // internal follow-up notes
+  ipAddress   String?               @map("ip_address")
+  userAgent   String?               @map("user_agent")
+  emailSent   Boolean               @default(false) @map("email_sent") // did the Resend notification go out?
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("routcore_enquiries")
+}
+
+enum RoutcoreEnquiryStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
