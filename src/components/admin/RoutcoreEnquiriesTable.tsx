@@ -114,7 +114,7 @@ export default function RoutcoreEnquiriesTable({ enquiries }: { enquiries: Enqui
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                {["Contact", "Company", "Tier", "Status", "Received", ""].map((h) => (
+                {["Contact", "Company", "Focus area", "Status", "Received", ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide">
                     {h}
                   </th>

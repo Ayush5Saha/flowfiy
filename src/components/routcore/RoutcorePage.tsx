@@ -7,14 +7,16 @@ import { SmoothScroll } from "@/components/landing/v2/SmoothScroll";
 import { Cursor } from "@/components/landing/v2/Cursor";
 
 import { RoutcoreHero } from "./RoutcoreHero";
+import { Manifesto } from "./Manifesto";
 import { Challenge } from "./Challenge";
-import { CoreStory } from "./CoreStory";
-import { Deliverables } from "./Deliverables";
-import { Timeline } from "./Timeline";
-import { PricingRoutcore } from "./PricingRoutcore";
+import { AreasAccordion } from "./AreasAccordion";
+import { SystemsGrid } from "./SystemsGrid";
+import { TheTest } from "./TheTest";
+import { Outcomes } from "./Outcomes";
+import { Process } from "./Process";
 import { ProvideExpect } from "./ProvideExpect";
-import { WhyUs } from "./WhyUs";
 import { RoutcoreFAQ } from "./RoutcoreFAQ";
+import { TalkMarquee } from "./TalkMarquee";
 import { RoutcoreContact } from "./RoutcoreContact";
 
 export function RoutcorePage() {
@@ -25,20 +27,22 @@ export function RoutcorePage() {
         <Cursor />
         <MarketingNav />
 
-        {/* Anchors: #hero · #challenge · #how-it-works · #included · #timeline
-            #pricing · #scope · #why-us · #faq · #contact */}
+        {/* Anchors: #hero #about #leaks #areas #systems #test #outcomes
+            #process #promise #faq #contact */}
         <RoutcoreHero />
+        <Manifesto />
         <Challenge />
-        <CoreStory />
-        <Deliverables />
-        <Timeline />
-        <PricingRoutcore />
+        <AreasAccordion />
+        <SystemsGrid />
+        <TheTest />
+        <Outcomes />
+        <Process />
         <ProvideExpect />
-        <WhyUs />
         <RoutcoreFAQ />
+        <TalkMarquee />
         <RoutcoreContact />
 
-        <MarketingFooter />
+        <MarketingFooter showProductCta={false} />
       </div>
     </SmoothScroll>
   );

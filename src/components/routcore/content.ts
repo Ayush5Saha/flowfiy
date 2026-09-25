@@ -1,301 +1,373 @@
 /**
  * Single source of truth for every fact rendered on the Routcore page.
  *
- * Three channel tiers. No prices anywhere on the page by design — pricing is
- * quoted on the discovery call once scope is known, and the offering is the
- * same worldwide, so there is no domestic vs. international split either.
+ * Routcore is not a menu of fixed packages — it's one custom AI system,
+ * built around how a business already runs. Outbound and lead follow-up
+ * are one area among several (support, admin, invoicing, operations).
+ * Deliberately no rate or charge language lives here: specifics are
+ * discussed on the consultation call, never asserted on the page. See §2
+ * of the redesign plan for the exact banned-word list this file (and every
+ * component that reads it) must stay clear of.
  */
 
 export const CONTACT = {
   email: "info@flowfiy.com",
-  phone: "+91 93946 59992",
-  phoneHref: "+919394659992",
-  phoneDisplay: "9394659992",
+  whatsappHref: "https://wa.me/919394659992",
+  founders: [
+    { name: "Ayush Saha", phone: "+91 93946 59992", phoneHref: "+919394659992" },
+    { name: "Yaswanth Alok", phone: "+91 97879 30278", phoneHref: "+919787930278" },
+  ],
 } as const;
 
-export const CHALLENGES = [
+/** Animated stats under the manifesto. `prefix`/`suffix` wrap the counted number. */
+export const STATS = [
+  { value: 24, prefix: "", suffix: "/7", label: "Always running, no leave or attrition" },
+  { value: 100, prefix: "", suffix: "%", label: "Custom built for your process" },
+  { value: 0, prefix: "", suffix: "", label: "Extra hires as your volume grows" },
+  { value: 1, prefix: "<", suffix: " min", label: "Enquiry reply time" },
+] as const;
+
+/** "Where the time leaks" — six hover rows, two columns each. */
+export const LEAKS = [
   {
     n: "01",
-    title: "Costs rise as you grow",
-    body: "Sending tools charge per inbox or per lead. Every bit of success gets taxed, so scaling volume scales your bill just as fast.",
+    what: "The same work, repeated every day",
+    means: "Your people spend their day on invoices, data entry, reports and replies software can do.",
   },
   {
     n: "02",
-    title: "Inbox management is a chore",
-    body: "Warming, rotating and protecting the deliverability of many inboxes quietly eats hours every single week.",
+    what: "Enquiries answered hours or days later",
+    means: "The business goes to whoever replied first.",
   },
   {
     n: "03",
-    title: "Replies get lost",
-    body: "Responses scatter across dozens of inboxes. Hot leads sit unread for days and slip through the cracks.",
+    what: "Follow-ups missed",
+    means: "Money already earned, never collected.",
   },
   {
     n: "04",
-    title: "The stack is fragmented",
-    body: "Prospecting in one tool, sending in another, reporting in a spreadsheet. Nothing talks to anything else.",
+    what: "Growth means hiring",
+    means: "Every jump in volume needs another person.",
   },
   {
     n: "05",
-    title: "It doesn't scale without headcount",
-    body: "More volume means more manual hours. The only lever you have left is hiring another SDR.",
+    what: "Tools that don't talk to each other",
+    means: "Hours lost copying data between systems — and the mistakes that follow.",
+  },
+  {
+    n: "06",
+    what: "The process lives in one person's head",
+    means: "Everything stops when they're away or they leave.",
   },
 ] as const;
 
-/** The five stages the core assembles through as you scroll. */
-export const STAGES = [
+/** The [01]–[06] areas accordion. */
+export const AREAS = [
   {
     n: "01",
-    kicker: "Targeting",
-    title: "We define your ideal customer",
-    body: "A working session locks your ICP — industry, role, company size, geography — plus your offer and the messaging angle that earns replies. Everything downstream inherits this definition.",
-    points: ["ICP & offer workshop", "Messaging angle locked", "Targeting rules encoded"],
+    title: "Sales & lead follow-up",
+    body: "Enquiries answered, qualified, chased and booked.",
+    points: ["Instant enquiry response", "AI voice agent", "Outreach engine", "Database reactivation"],
   },
   {
     n: "02",
-    kicker: "Sourcing",
-    title: "It finds matching prospects online",
-    body: "The engine sources prospects that fit your ICP across the internet, continuously. No manual list-building, no exports, no stale CSVs sitting in a folder.",
-    points: ["Continuous sourcing", "No manual list-building", "Fits your ICP by rule"],
+    title: "Customer support",
+    body: "The same questions answered instantly, at any hour.",
+    points: ["Support agent (WhatsApp, website, email)", "Status & update agent", "Human hand-over when it matters"],
   },
   {
     n: "03",
-    kicker: "Personalization",
-    title: "AI writes a message for each prospect",
-    body: "Every email is generated for that specific recipient — not a template with a merge tag. Core sequences and follow-ups are built alongside it, in your voice.",
-    points: ["Per-prospect generation", "Sequences & follow-ups", "Written in your voice"],
+    title: "Admin & data entry",
+    body: "Information moved between your tools without a person.",
+    points: ["Data movement", "Document generation", "CRM & sheet updates"],
   },
   {
     n: "04",
-    kicker: "Delivery",
-    title: "It reaches out on your channels",
-    body: "Email goes out through your real accounts, across up to 100 inboxes — you set a cap per inbox and the system rotates when one hits its limit, protecting the whole fleet's deliverability. Add an AI voice agent, LinkedIn and WhatsApp and the same engine works those channels in step with the email.",
-    points: ["Up to 100 inboxes", "Automatic rotation", "Voice · LinkedIn · WhatsApp"],
+    title: "Invoicing & reports",
+    body: "Invoices, payment reminders and daily numbers, handled.",
+    points: ["Invoice generation", "Payment follow-up", "Reconciliation", "Automatic reporting"],
   },
   {
     n: "05",
-    kicker: "Visibility",
-    title: "Everything lands on one dashboard",
-    body: "Every message sent and every reply received — across every inbox and every channel — in a single unified view. Nothing to reconcile, nothing missed, no lead left sitting somewhere nobody checks.",
-    points: ["Unified send log", "All replies in one place", "Live pipeline view"],
+    title: "Operations & coordination",
+    body: "Scheduling, documents, status updates, handovers.",
+    points: ["Scheduling & booking", "Proposal engine", "Internal knowledge assistant", "Monitoring agents"],
+  },
+  {
+    n: "06",
+    title: "Anything repeated",
+    body: "If your team does it the same way each time, it can be built.",
+    points: ["Tell us the task", "We map it", "We tell you honestly if it's worth automating"],
   },
 ] as const;
 
-/** `tier` marks a deliverable that only ships with a higher channel tier. */
-export const DELIVERABLES = [
+/** "Systems we've built" filterable grid. `id` doubles as the icon-map key. */
+export const SYSTEMS = [
   {
-    title: "ICP definition & strategy",
-    body: "A working session to lock your target profile, offer and messaging angle.",
-    tier: null,
+    id: "enquiry-response",
+    title: "Instant enquiry response",
+    category: "Sales & Growth",
+    body: "Every enquiry gets an instant, personal reply — day or night.",
   },
   {
-    title: "Prospecting engine setup",
-    body: "Configured to source prospects matching your ICP automatically.",
-    tier: null,
+    id: "voice-agent",
+    title: "AI voice agent",
+    category: "Sales & Growth",
+    body: "Calls your prospects and customers, in your own voice and script.",
   },
   {
-    title: "AI message personalization",
-    body: "Per-prospect message generation, plus your core sequences and follow-ups.",
-    tier: null,
+    id: "outreach-engine",
+    title: "Outreach engine",
+    category: "Sales & Growth",
+    body: "Finds and reaches the people who fit your business, on repeat.",
   },
   {
-    title: "Up to 100 inbox connections",
-    body: "With per-inbox send caps and automatic rotation to protect deliverability.",
-    tier: null,
+    id: "database-reactivation",
+    title: "Database reactivation",
+    category: "Sales & Growth",
+    body: "Old leads and past customers, followed up automatically.",
   },
   {
-    title: "Unified dashboard",
-    body: "All sends and all replies, across every inbox and channel, in one place.",
-    tier: null,
+    id: "proposal-engine",
+    title: "Proposal engine",
+    category: "Sales & Growth",
+    body: "An enquiry comes in, a tailored proposal goes out in minutes, and it's followed up until answered.",
   },
   {
-    title: "Tool integrations",
-    body: "Apollo.io, Clay and other prospecting tools connected into the pipeline.",
-    tier: null,
+    id: "support-agent",
+    title: "Support agent",
+    category: "Customer Service",
+    body: "The same questions answered instantly, on WhatsApp, website or email.",
   },
   {
-    title: "AI voice calling agent",
-    body: "Calls your prospects with a script built around your offer, and logs every outcome.",
-    tier: "Tier 2 and above",
+    id: "status-agent",
+    title: "Status & update agent",
+    category: "Customer Service",
+    body: "Customers get status updates without anyone typing them out.",
   },
   {
-    title: "LinkedIn & WhatsApp outreach",
-    body: "The same engine works both channels in step with the email sequence.",
-    tier: "Tier 3",
+    id: "document-generation",
+    title: "Document generation",
+    category: "Operations & Admin",
+    body: "Contracts, forms and paperwork, generated straight from your data.",
   },
   {
-    title: "24/7 autonomous operation",
-    body: "The system runs continuously once live, with no per-send or per-lead software fees.",
-    tier: null,
+    id: "data-movement",
+    title: "Data movement",
+    category: "Operations & Admin",
+    body: "Information moved between the tools you already use, automatically.",
   },
   {
-    title: "Deployment to your system",
-    body: "Deployed into your own environment, fully yours to run.",
-    tier: null,
+    id: "payment-follow-up",
+    title: "Payment follow-up",
+    category: "Finance",
+    body: "Unpaid invoices get chased, politely and on schedule, until they're settled.",
   },
   {
-    title: "Training & handover",
-    body: "A walkthrough plus documentation so your team can operate it confidently.",
-    tier: null,
+    id: "reconciliation",
+    title: "Reconciliation",
+    category: "Finance",
+    body: "Records matched and checked across systems, without manual cross-referencing.",
   },
   {
-    title: "Ongoing optimization",
-    body: "Covered by the retainer: deliverability monitoring, ICP and copy tuning as results land.",
-    tier: null,
+    id: "automatic-reporting",
+    title: "Automatic reporting",
+    category: "Finance",
+    body: "Daily numbers, compiled and delivered without a spreadsheet.",
+  },
+  {
+    id: "knowledge-assistant",
+    title: "Internal knowledge assistant",
+    category: "Management",
+    body: "Answers pulled from your own documents and process, instantly.",
+  },
+  {
+    id: "monitoring-agents",
+    title: "Monitoring agents",
+    category: "Management",
+    body: "Watches your systems day and night and flags what needs a human.",
   },
 ] as const;
 
-export const PHASES = [
+/** The honest-scoping test: what gets automated vs. what stays human. */
+export const TEST = {
+  automate: {
+    label: "Automate it",
+    points: [
+      "Done the same way every time",
+      "Follows rules a person could write down",
+      "Happens often enough to matter",
+    ],
+  },
+  human: {
+    label: "Keep it human",
+    points: ["Needs judgement", "Built on relationships", "Involves negotiation"],
+  },
+  footer: "We'll tell you which is which — before anything gets built.",
+} as const;
+
+/** "What it gives you" — 8-card outcomes grid. */
+export const OUTCOMES = [
+  {
+    id: "always-on",
+    title: "Runs every hour of every day",
+    body: "No shifts, no leave, no days off — the system works around the clock.",
+  },
+  {
+    id: "frees-team",
+    title: "Frees your team for real work",
+    body: "Your people move from copy-paste to the work only they can do.",
+  },
+  {
+    id: "nothing-forgotten",
+    title: "Nothing is forgotten",
+    body: "Every enquiry, follow-up and invoice is tracked until it's closed.",
+  },
+  {
+    id: "same-standard",
+    title: "The same standard every time",
+    body: "No good days or bad days — every interaction gets the same quality.",
+  },
+  {
+    id: "scales-without-hiring",
+    title: "Volume grows without hiring",
+    body: "Handle twice the enquiries without doubling the team.",
+  },
+  {
+    id: "everything-recorded",
+    title: "Everything is recorded",
+    body: "Every action is logged, so nothing depends on memory.",
+  },
+  {
+    id: "built-around-you",
+    title: "Built around your process",
+    body: "Not a generic tool — a system shaped to how you actually work.",
+  },
+  {
+    id: "stay-in-control",
+    title: "You stay in control",
+    body: "You approve what it says and does before any of it goes live.",
+  },
+] as const;
+
+/** "How growth changes" — the horizontal flow diagram under the outcomes grid. */
+export const GROWTH_FLOW = [
+  { title: "Repeat work, every day", detail: "Follow-ups · replies · data entry · invoices", emphasize: false },
+  { title: "One AI system handles it", detail: "Answered · qualified · logged · followed up, 24/7", emphasize: false },
+  { title: "Volume doubles", detail: "Your team size stays the same", emphasize: false },
+  { title: "Extra hires needed", detail: "ZERO", emphasize: true },
+] as const;
+
+/** "How we work" — four steps from first call to live system. */
+export const PROCESS = [
   {
     n: "1",
-    title: "Understanding your ICP",
-    body: "We define your ideal customer, offer and targeting.",
+    title: "Consultation call",
+    body: "We map how your business runs and where your team's time goes.",
   },
   {
     n: "2",
-    title: "Developing the system",
-    body: "We build and configure your outreach engine.",
+    title: "We define the scope",
+    body: "Exactly what gets automated and what stays with your team.",
   },
   {
     n: "3",
-    title: "Testing",
-    body: "We run test sends and validate deliverability and the dashboard.",
+    title: "You approve the plan",
+    body: "Nothing gets built until you sign it off in writing.",
   },
   {
     n: "4",
-    title: "Deploying to your system",
-    body: "We deploy the engine into your environment and hand it over.",
+    title: "We build & deploy",
+    body: "Tested with you on real cases, live inside your business, handed over with training.",
   },
 ] as const;
 
-/**
- * The three tiers, separated by how many channels the engine works.
- *
- * No figures live here by design: pricing is quoted on the discovery call once
- * scope is known, and it is the same offering worldwide — there is no domestic
- * vs. international split on the site.
- */
-export const TIERS = [
-  {
-    id: "tier-1",
-    name: "Tier 1",
-    channelLabel: "Email",
-    tagline: "The core outbound engine, end to end.",
-    channels: ["Email"],
-    hasVoice: false,
-    highlight: false,
-    features: [
-      "ICP definition & strategy session",
-      "Prospecting engine, sourcing continuously",
-      "AI-personalized email per prospect",
-      "Up to 100 inboxes with automatic rotation",
-      "Unified sends-and-replies dashboard",
-      "Apollo, Clay & tool integrations",
-    ],
-  },
-  {
-    id: "tier-2",
-    name: "Tier 2",
-    channelLabel: "Email + Voice",
-    tagline: "Add an AI voice agent that actually calls them.",
-    channels: ["Email", "Voice"],
-    hasVoice: true,
-    highlight: true,
-    features: [
-      "Everything in Tier 1",
-      "AI voice calling agent",
-      "Call scripts built around your offer",
-      "Calls triggered off email engagement",
-      "Call outcomes on the same dashboard",
-    ],
-  },
-  {
-    id: "tier-3",
-    name: "Tier 3",
-    channelLabel: "Email + Voice + LinkedIn + WhatsApp",
-    tagline: "Every channel your buyer actually answers on.",
-    channels: ["Email", "Voice", "LinkedIn", "WhatsApp"],
-    hasVoice: true,
-    highlight: false,
-    features: [
-      "Everything in Tier 2",
-      "LinkedIn outreach automation",
-      "WhatsApp outreach automation",
-      "Coordinated multi-channel sequencing",
-      "Every channel's replies in one inbox",
-    ],
-  },
+/** What the consultation call itself leaves you with. */
+export const CONSULT_POINTS = [
+  "Where your team's time goes today",
+  "What to automate first",
+  "The impact on your profit and workload",
+  "A clear scope, with no obligation",
 ] as const;
 
-export const PLAN_INCLUDES = [
-  "A fixed quote before any work starts",
-  "Live in about 2 days",
-  "No per-send or per-lead software fees",
-  "Deployed into your own environment",
-  "Training, documentation & handover",
-  "Direct access to the founders",
+/** What we need from you, to get started. */
+export const NEEDS = [
+  "An honest picture of how the work is done today",
+  "Access to the tools you already use",
+  "Your existing data, in any exportable format",
+  "One person who can approve scope and messaging",
+  "Timely feedback during testing",
 ] as const;
 
-export const PROVIDE = [
-  {
-    title: "Domains & inboxes",
-    body: "Google Workspace or equivalent. We'll recommend how many you need and exactly how to set them up.",
-  },
-  {
-    title: "Your offer & brand details",
-    body: "So the messaging is accurate, on-brand and something you'd be happy to sign your name to.",
-  },
-  {
-    title: "Access to existing tools",
-    body: "Any prospecting tools you already pay for — Apollo, Clay or others — that you'd like wired into the pipeline.",
-  },
-  {
-    title: "Timely approvals",
-    body: "Quick sign-off on the ICP and email copy so the two-day timeline actually holds.",
-  },
-] as const;
+/** What we will — and won't — promise. */
+export const PROMISE = {
+  heading: "What we will — and won't — promise",
+  body: "Speed, coverage and consistency are ours to deliver, and we stand behind them. Sales results are not — those depend on your offer and your market. We won't promise a number we can't stand behind, and if automation isn't worth it for your business, we'll tell you instead of selling you something.",
+} as const;
 
-export const EXPECT = [
-  "A fully automated outbound engine running 24/7, with no manual list-building or sending.",
-  "Consistent, personalized outreach at scale across up to 100 inboxes, deliverability protected by rotation.",
-  "Every reply in one place, so your team can act on interested prospects immediately.",
-  "A connected pipeline that works with the prospecting tools you already use.",
-] as const;
+/** The data-handling strip under Needs & Promises. */
+export const DATA_PROMISE =
+  "Your data stays yours. Used only to run the system we build for you, handled in line with India's Digital Personal Data Protection Act, 2023, and returned or deleted on written request. Systems run on your own numbers, domains and accounts — under your brand." as const;
 
 export const FAQS = [
   {
-    q: "How is this different from Flowfiy the product?",
-    a: "Flowfiy is our self-serve AI sales platform — you sign up and run it yourself. Routcore is the done-for-you version: we design, build and deploy a lead generation and outreach system into your own environment, tuned to your ICP and your offer. Same engineering, delivered as a service.",
+    q: "How is Routcore different from Flowfiy the product?",
+    a: "Flowfiy is our self-serve AI sales platform — you sign up and run it yourself. Routcore is the opposite end of the same engineering: our team designs, builds and deploys a custom AI system directly into your business, shaped around how you actually work.",
   },
   {
-    q: "What does the monthly retainer actually cover?",
-    a: "Ongoing operation and optimization of your engine — monitoring deliverability, tuning the ICP and messaging as results come in, adjusting sequences, and support when something needs changing. The build fee gets the system live; the retainer keeps it performing.",
+    q: "What kind of work can you automate?",
+    a: "Anything your team does the same way every time, that follows rules a person could write down, and happens often enough to matter — enquiry replies, follow-ups, data entry, invoicing, reporting and more. If it needs judgement, relationships or negotiation, we'll say so and leave it with your team.",
   },
   {
-    q: "Which tier should I start on?",
-    a: "Most teams start on Tier 1 — it's the full engine, and email is the channel with the cleanest economics at volume. Move to Tier 2 when you want to reach people who never reply to email, and Tier 3 when your buyers live on LinkedIn or WhatsApp. You can upgrade later without rebuilding what's already running.",
+    q: "Do we have to change the tools we already use?",
+    a: "No. Systems are built around the tools you already run your business on — we move data between them and plug into what's there, rather than asking you to switch.",
   },
   {
-    q: "How much does it cost?",
-    a: "We quote a fixed price on the discovery call, once we know your scope — how many inboxes, how many sequences, which tools need integrating, which tier fits and how much custom targeting logic you need. Pricing is the same wherever you're based, and nothing is charged until you've seen the number and agreed to it.",
+    q: "Will customers know they're talking to AI? Will it sound robotic?",
+    a: "It speaks in your tone, follows your rules, and hands over to a person the moment a conversation needs one. You approve exactly what it says before any of it goes live.",
   },
   {
-    q: "How is voice calling billed?",
-    a: "Separately from the retainer and charged on actual usage, at a per-minute rate we confirm on the discovery call. It's a pass-through telephony cost, so you only pay for minutes the agent actually spends on calls — nothing is metered when it isn't calling. This applies to Tier 2 and Tier 3, which include the voice agent.",
+    q: "How long does it take to go live?",
+    a: "It depends on scope. The written plan from your consultation call gives you a timeline before any work starts — simple systems can be live in days, larger ones take a few weeks.",
   },
   {
-    q: "What does \"no running cost\" mean exactly?",
-    a: "The system itself charges nothing per send or per lead — there's no software metering on top of your retainer. You do pay your own providers directly: domains and inboxes (e.g. Google Workspace), any third-party prospecting tools you connect like Apollo or Clay, and voice minutes if you're on a tier that includes the calling agent.",
+    q: "What happens on the consultation call?",
+    a: "We map how your business runs today, where your team's time actually goes, and what's worth automating first. You keep the written plan either way, whether or not you build with us.",
   },
   {
-    q: "Can it really be live in two days?",
-    a: "Yes, provided your domains and inboxes are ready and you turn around approvals on the ICP and copy quickly. The four phases — ICP, build, testing, deployment — are designed to run inside that window. Deliverability warming on brand-new domains takes longer and runs in parallel.",
+    q: "Do you guarantee sales results?",
+    a: "No — and be sceptical of anyone who does. Speed, coverage and consistency are ours to deliver, and we stand behind them. Sales results depend on your offer and your market, not on the system alone.",
   },
   {
-    q: "Do you guarantee a number of meetings?",
-    a: "No, and be sceptical of anyone who does. Outreach performance depends on your offer, list quality, domain reputation and email infrastructure. We optimize continuously to improve results over time, but specific reply or meeting volumes are not guaranteed.",
+    q: "Who owns the system and the data?",
+    a: "You do. It runs on your own accounts, numbers and domains, your data is handled in line with India's Digital Personal Data Protection Act, 2023, and it's returned or deleted on written request.",
   },
   {
-    q: "Who owns the system once it's built?",
-    a: "You do. It's deployed into your own environment with training and documentation, so your team can operate it independently. The retainer is for us to keep improving it, not for you to keep access.",
+    q: "Which businesses is this for?",
+    a: "Real estate, D2C and service businesses in particular — really, any business with work that repeats often enough for a system to be worth building.",
   },
+] as const;
+
+/** Contact-form "focus area" select. Still sent to the API as `packageTier`. */
+export const FOCUS_OPTIONS = [
+  "Sales & lead follow-up",
+  "Customer support",
+  "Admin & data entry",
+  "Invoicing & reports",
+  "Operations & coordination",
+  "Not sure yet — help me find out",
+] as const;
+
+/** Slow hero-bottom marquee of automatable tasks. */
+export const MARQUEE_TASKS = [
+  "Enquiry replies",
+  "Lead follow-up",
+  "Invoices",
+  "Daily reports",
+  "Data entry",
+  "Appointment booking",
+  "Customer support",
+  "Status updates",
+  "Payment reminders",
+  "Documents",
 ] as const;

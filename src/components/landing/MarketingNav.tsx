@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import {
-  Menu, X, ChevronDown,
+  Menu, X, ChevronDown, Sparkles,
   LayoutDashboard, User, CreditCard, Settings, LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -26,7 +26,11 @@ const navLinks = [
       { label: "B2B Lead Generation", href: "/solutions/b2b-lead-generation-software", desc: "End-to-end, by AI" },
     ],
   },
-  { label: "Routcore", href: "/routcore" },
+  // `cta` renders as a violet pill rather than a plain text link — Routcore is
+  // the done-for-you service, not another product page, so it shouldn't read as
+  // one more item in the list. Kept softer than the "Get started" button so the
+  // primary signup CTA still wins the eye.
+  { label: "Routcore", href: "/routcore", cta: true },
   { label: "Pricing", href: "/pricing" },
   { label: "Affiliates", href: "/affiliates" },
   {
@@ -206,6 +210,15 @@ export function MarketingNav() {
                   )}
                 </AnimatePresence>
               </div>
+            ) : item.cta ? (
+              <Link
+                key={item.href}
+                href={item.href!}
+                className="group ml-1 mr-1 inline-flex items-center gap-1.5 rounded-full border border-violet-500/35 bg-violet-500/10 px-3.5 py-1.5 text-sm font-medium text-violet-200 transition-all hover:border-violet-400/60 hover:bg-violet-500/20 hover:text-white"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-violet-300 transition-colors group-hover:text-violet-200" />
+                {item.label}
+              </Link>
             ) : (
               <Link
                 key={item.href}
@@ -327,6 +340,18 @@ export function MarketingNav() {
                       </Link>
                     ))}
                   </div>
+                ) : item.cta ? (
+                  <Link
+                    key={item.href}
+                    href={item.href!}
+                    className="my-1.5 flex items-center gap-2 rounded-lg border border-violet-500/35 bg-violet-500/10 px-3 py-2.5 text-sm font-medium text-violet-200"
+                  >
+                    <Sparkles className="w-4 h-4 text-violet-300" />
+                    {item.label}
+                    <span className="ml-auto text-[11px] font-normal text-violet-300/70">
+                      Done-for-you
+                    </span>
+                  </Link>
                 ) : (
                   <Link key={item.href} href={item.href!} className="block px-2 py-2 text-sm text-zinc-300 hover:text-white">
                     {item.label}
