@@ -1,110 +1,85 @@
-"use client";
+import { Check } from "lucide-react";
+import { ButtonLink, Eyebrow, Heading, Lead, Reveal, Section, SectionHeader, SHADOW } from "./ui";
+import { CONSULTATION, PROCESS } from "./content";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
-import { EASE, MaskReveal, useReducedMotionSafe } from "@/components/landing/v2/motion";
-import { Pill } from "./Pill";
-import { PROCESS, CONSULT_POINTS } from "./content";
+// Varying placeholder-text bar widths per plan section so the document mock
+// reads as real text rather than four identical grey bars.
+const LINE_WIDTHS: ReadonlyArray<readonly [string, string]> = [
+  ["92%", "68%"],
+  ["85%", "60%"],
+  ["95%", "72%"],
+  ["80%", "55%"],
+];
 
 export function Process() {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotionSafe();
-
-  // The connecting line draws itself as the section passes through the viewport.
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 80%", "end 60%"] });
-  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
   return (
-    <section id="process" className="relative bg-[#030305] py-28 scroll-mt-16 sm:py-36">
-      <div className="mx-auto w-full max-w-[1320px] px-6 sm:px-8">
-        <div className="max-w-2xl">
-          <Pill>How we work</Pill>
-          <h2 className="mt-5 font-black leading-[1.03] tracking-[-0.035em] text-white text-[clamp(2rem,4vw,3.25rem)]">
-            <MaskReveal>From first call to</MaskReveal>
-            <MaskReveal delay={0.08}>
-              <span className="bg-gradient-to-r from-cyan-300 to-indigo-400 bg-clip-text text-transparent">
-                live system, in four steps.
-              </span>
-            </MaskReveal>
-          </h2>
-        </div>
+    <Section id="process" tone="white">
+      <SectionHeader eyebrow={PROCESS.eyebrow} title={PROCESS.title} />
 
-        <div ref={ref} className="relative mt-16">
-          {/* Track + progress line */}
-          <div className="absolute left-[19px] top-2 bottom-2 w-px bg-white/8 lg:left-0 lg:right-0 lg:top-[19px] lg:bottom-auto lg:h-px lg:w-auto" />
-          <motion.div
-            aria-hidden
-            className="absolute left-[19px] top-2 bottom-2 w-px origin-top bg-gradient-to-b from-cyan-400 via-indigo-500 to-violet-500 lg:hidden"
-            style={reduced ? undefined : { scaleY: lineScale }}
-          />
-          <motion.div
-            aria-hidden
-            className="absolute left-0 right-0 top-[19px] hidden h-px origin-left bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-500 lg:block"
-            style={reduced ? undefined : { scaleX: lineScale }}
-          />
+      <div className="mt-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+        {PROCESS.steps.map((step, i) => (
+          <Reveal key={step.n} delay={i * 0.05} className="relative border-t border-rc-line pt-7">
+            <span
+              aria-hidden="true"
+              className="absolute -top-[5px] left-0 h-[9px] w-[9px] rounded-full border-2 border-rc-teal bg-white"
+            />
+            <p className="text-[13px] font-semibold tabular-nums text-rc-teal-deep">{step.n}</p>
+            <p className="mt-3 text-[18px] font-semibold text-rc-ink">{step.title}</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-rc-body">{step.body}</p>
+          </Reveal>
+        ))}
+      </div>
 
-          <ol className="relative grid gap-10 lg:grid-cols-4 lg:gap-8">
-            {PROCESS.map((p, i) => (
-              <motion.li
-                key={p.n}
-                className="relative pl-14 lg:pl-0 lg:pt-14"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-12%" }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: EASE }}
-              >
-                <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-[#080810] font-mono text-[13px] font-semibold text-white">
-                  <span aria-hidden className="absolute inset-0 rounded-full bg-violet-500/25 blur-md" />
-                  <span className="relative z-10">{p.n}</span>
-                </span>
-                <h3 className="text-lg font-semibold tracking-[-0.01em] text-white">{p.title}</h3>
-                <p className="mt-2.5 max-w-xs text-sm leading-relaxed text-zinc-500">{p.body}</p>
-              </motion.li>
-            ))}
-          </ol>
-        </div>
-
-        {/* Highlighted consultation-call card */}
-        <motion.div
-          className="mt-14 grid gap-8 rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600/12 via-transparent to-violet-600/10 p-8 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-14"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-8%" }}
-          transition={{ duration: 0.7, ease: EASE }}
-        >
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-violet-300">
-              The consultation call
-            </p>
-            <h3 className="mt-3 max-w-lg text-2xl font-bold leading-snug tracking-[-0.02em] text-white sm:text-3xl">
-              You walk away with a complete written plan — whether you build
-              with us or not.
-            </h3>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {CONSULT_POINTS.map((c) => (
-                <li key={c} className="flex items-start gap-2.5 text-sm text-zinc-300">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
-                  {c}
-                </li>
-              ))}
-            </ul>
+      <Reveal className="mt-20 overflow-hidden rounded-3xl bg-rc-ink">
+        <div className="grid gap-12 p-8 sm:p-12 lg:grid-cols-12 lg:items-center lg:gap-16 lg:p-14">
+          <div className="lg:col-span-6">
+            <Eyebrow onDark>{CONSULTATION.eyebrow}</Eyebrow>
+            <Heading as="h3" onDark className="mt-5 lg:text-[38px]">
+              {CONSULTATION.title}
+            </Heading>
+            <Lead onDark className="mt-5">
+              {CONSULTATION.body}
+            </Lead>
+            <ButtonLink href={CONSULTATION.cta.href} variant="onDark" arrow className="mt-8">
+              {CONSULTATION.cta.label}
+            </ButtonLink>
           </div>
 
-          <a
-            href="#contact"
-            className="group relative inline-flex w-fit shrink-0 items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white"
-          >
-            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
-            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 opacity-50 blur-lg transition-opacity duration-300 group-hover:opacity-90" />
-            <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/25 to-transparent" />
-            <span className="relative z-10 inline-flex items-center gap-2">
-              Book your consultation call
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </a>
-        </motion.div>
-      </div>
-    </section>
+          <div className="lg:col-span-6">
+            <div className="relative mx-auto w-full max-w-[420px]">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 translate-x-2 translate-y-2 rounded-xl bg-white/10"
+              />
+              <div className={`relative rounded-xl bg-white p-7 ${SHADOW}`}>
+                <p className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-rc-muted">
+                  {CONSULTATION.plan.label}
+                </p>
+                <p className="mt-1 text-[18px] font-semibold text-rc-ink">
+                  {CONSULTATION.plan.preparedFor}
+                </p>
+                <div className="mt-5 border-t border-rc-line" />
+                {CONSULTATION.plan.sections.map((section, i) => {
+                  const [w1, w2] = LINE_WIDTHS[i % LINE_WIDTHS.length];
+                  return (
+                    <div key={section} className="mt-5">
+                      <p className="text-[14px] font-semibold text-rc-ink">
+                        {i + 1}. {section}
+                      </p>
+                      <div className="mt-2.5 h-2 rounded-full bg-rc-line" style={{ width: w1 }} />
+                      <div className="mt-1.5 h-2 rounded-full bg-rc-line" style={{ width: w2 }} />
+                    </div>
+                  );
+                })}
+                <p className="mt-7 inline-flex items-center gap-1.5 rounded-full bg-rc-teal-soft px-3 py-1 text-[12px] font-medium text-rc-teal-deep">
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  {CONSULTATION.plan.footnote}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+    </Section>
   );
 }

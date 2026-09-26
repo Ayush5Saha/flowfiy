@@ -1,49 +1,56 @@
 "use client";
 
-import { MarketingNav } from "@/components/landing/MarketingNav";
-import { MarketingFooter } from "@/components/landing/MarketingFooter";
-import { Grain } from "@/components/landing/v2/motion";
-import { SmoothScroll } from "@/components/landing/v2/SmoothScroll";
-import { Cursor } from "@/components/landing/v2/Cursor";
-
-import { RoutcoreHero } from "./RoutcoreHero";
-import { Manifesto } from "./Manifesto";
-import { Challenge } from "./Challenge";
-import { AreasAccordion } from "./AreasAccordion";
-import { SystemsGrid } from "./SystemsGrid";
-import { TheTest } from "./TheTest";
-import { Outcomes } from "./Outcomes";
+import { useEffect } from "react";
+import { RoutcoreHeader } from "./RoutcoreHeader";
+import { Hero } from "./Hero";
+import { TrustStrip } from "./TrustStrip";
+import { Problem } from "./Problem";
+import { Services } from "./Services";
+import { Systems } from "./Systems";
+import { Comparison } from "./Comparison";
+import { Scoping } from "./Scoping";
 import { Process } from "./Process";
-import { ProvideExpect } from "./ProvideExpect";
-import { RoutcoreFAQ } from "./RoutcoreFAQ";
-import { TalkMarquee } from "./TalkMarquee";
-import { RoutcoreContact } from "./RoutcoreContact";
+import { Commitments } from "./Commitments";
+import { FAQ } from "./FAQ";
+import { Contact } from "./Contact";
+import { RoutcoreFooter } from "./RoutcoreFooter";
 
+/**
+ * v2: a light, calm, consultancy-grade page in Routcore's own navy + teal
+ * palette (rc-* colours). The rest of the site is dark; this page overrides
+ * the body background and restores it on unmount so navigating away doesn't
+ * leave the site stuck in light mode.
+ */
 export function RoutcorePage() {
+  useEffect(() => {
+    const previousBg = document.body.style.backgroundColor;
+    const previousScroll = document.documentElement.style.scrollBehavior;
+    document.body.style.backgroundColor = "#FFFFFF";
+    document.documentElement.style.scrollBehavior = "smooth";
+    return () => {
+      document.body.style.backgroundColor = previousBg;
+      document.documentElement.style.scrollBehavior = previousScroll;
+    };
+  }, []);
+
   return (
-    <SmoothScroll>
-      <div className="min-h-screen bg-[#030305] antialiased">
-        <Grain />
-        <Cursor />
-        <MarketingNav />
-
-        {/* Anchors: #hero #about #leaks #areas #systems #test #outcomes
-            #process #promise #faq #contact */}
-        <RoutcoreHero />
-        <Manifesto />
-        <Challenge />
-        <AreasAccordion />
-        <SystemsGrid />
-        <TheTest />
-        <Outcomes />
-        <Process />
-        <ProvideExpect />
-        <RoutcoreFAQ />
-        <TalkMarquee />
-        <RoutcoreContact />
-
-        <MarketingFooter showProductCta={false} />
-      </div>
-    </SmoothScroll>
+    <div
+      className="min-h-screen bg-white font-sans text-rc-body antialiased"
+      style={{ colorScheme: "light" }}
+    >
+      <RoutcoreHeader />
+      <Hero />
+      <TrustStrip />
+      <Problem />
+      <Services />
+      <Systems />
+      <Comparison />
+      <Scoping />
+      <Process />
+      <Commitments />
+      <FAQ />
+      <Contact />
+      <RoutcoreFooter />
+    </div>
   );
 }

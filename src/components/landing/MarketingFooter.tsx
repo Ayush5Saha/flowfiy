@@ -48,12 +48,7 @@ const socials = [
   { icon: Mail, href: "mailto:support@flowfiy.com", label: "Email" },
 ];
 
-/**
- * `showProductCta` — the CTA strip carries the Flowfiy product's price. Pages
- * selling something else (Routcore) turn it off, because a figure in their
- * footer reads as the price of what the page is selling.
- */
-export function MarketingFooter({ showProductCta = true }: { showProductCta?: boolean } = {}) {
+export function MarketingFooter() {
   return (
     <footer className="bg-[#030305] border-t border-white/5 pt-16 pb-10 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
@@ -109,20 +104,18 @@ export function MarketingFooter({ showProductCta = true }: { showProductCta?: bo
         </div>
 
         {/* CTA strip */}
-        {showProductCta && (
-          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
-            <div>
-              <p className="text-sm font-medium text-white mb-0.5">Start finding qualified leads</p>
-              <p className="text-xs text-zinc-500">$50/month for 400 credits. You only pay for qualified leads.</p>
-            </div>
-            <Link
-              href="/signup"
-              className="shrink-0 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Get started →
-            </Link>
+        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
+          <div>
+            <p className="text-sm font-medium text-white mb-0.5">Start finding qualified leads</p>
+            <p className="text-xs text-zinc-500">$50/month for 400 credits. You only pay for qualified leads.</p>
           </div>
-        )}
+          <Link
+            href="/signup"
+            className="shrink-0 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Get started →
+          </Link>
+        </div>
 
         {/* Bottom bar */}
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">

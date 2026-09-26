@@ -43,6 +43,21 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        // Routcore's own palette, taken from its capabilities PDF. A light,
+        // navy-and-teal identity, separate from Flowfiy's dark product UI.
+        rc: {
+          ink: "#0C1C2C",
+          "ink-2": "#17293A",
+          body: "#5D6E7D",
+          muted: "#647482",
+          faint: "#93A3B0",
+          line: "#E2E9EE",
+          bg: "#F4F8F9",
+          teal: "#0E9E93",
+          "teal-deep": "#0B7F77",
+          "teal-soft": "#E6F7F5",
+          aqua: "#22E7D0",
+        },
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
