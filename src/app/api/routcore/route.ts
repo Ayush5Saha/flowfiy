@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           ["Email", `<a href="mailto:${escapeHtml(email)}" style="color:#a855f7;">${escapeHtml(email)}</a>`],
           ["Phone", phone ? escapeHtml(phone) : "—"],
           ["Company", companyName ? escapeHtml(companyName) : "—"],
-          ["Tier", escapeHtml(packageTier)],
+          ["Focus area", escapeHtml(packageTier)],
         ])}
         <hr style="border:none;border-top:1px solid #27272a;margin:16px 0;" />
         <p style="color:#a1a1aa;margin-bottom:8px;">What they sell &amp; who to</p>

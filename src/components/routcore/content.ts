@@ -2,12 +2,17 @@
  * Every fact and line of copy on the Routcore page, in one place.
  * Source: the Routcore "Custom AI Systems & Workflows" capabilities overview.
  *
+ * Positioning: Routcore automates any repetitive business work, across admin,
+ * finance, operations, HR, support, reporting and sales. Sales is one area
+ * among seven, not the headline. Keep it that way when adding copy.
+ *
  * Rules for this file:
  * - No price, rate or charge language of any kind. Specifics are discussed on
  *   the consultation call, never stated on the page.
  * - No em dashes in visible copy. Short sentences, plain words.
  * - No invented numbers, clients or testimonials. The example-day panel is a
- *   labelled illustration of what the system does, not a claim about results.
+ *   labelled illustration of what a system does, not a claim about results,
+ *   and the systems list is "what we build", not a client list.
  */
 
 export const CONTACT = {
@@ -44,18 +49,18 @@ export const HERO = {
   badge: "Custom AI systems and workflows",
   titleLead: "Automate the work your team repeats",
   titleAccent: "every day.",
-  body: "Routcore designs and builds one AI system around how your business runs. It replies to enquiries, follows up, moves data between your tools and sends your reports, day and night, without adding headcount.",
+  body: "Routcore designs and builds one AI system around how your business runs. It processes documents, updates your records, chases payments, answers routine questions and sends your reports, day and night, without adding headcount.",
   primaryCta: { label: "Book a consultation call", href: "#contact" },
   secondaryCta: { label: "See what we automate", href: "#services" },
   stats: [
     { value: "24/7", label: "Always running, with no leave or attrition" },
-    { value: "< 1 min", label: "To answer every new enquiry" },
+    { value: "100%", label: "Custom built around your process" },
     { value: "Zero", label: "Extra hires as your volume grows" },
   ],
 } as const;
 
 /** Icon keys used by the example-day panel. Map them to lucide icons in the component. */
-export type DayIcon = "report" | "reminder" | "handover" | "sync" | "enquiry";
+export type DayIcon = "report" | "documents" | "onboarding" | "reminder";
 
 export const EXAMPLE_DAY = {
   title: "Today",
@@ -65,66 +70,62 @@ export const EXAMPLE_DAY = {
     {
       time: "7:00 AM",
       icon: "report",
-      title: "Daily report sent",
-      detail: "Yesterday's enquiries, visits and follow-ups, emailed to the owner",
+      title: "Daily numbers sent",
+      detail: "Yesterday's sales, orders and stock, emailed to the owner",
       channel: "Email",
     },
     {
-      time: "9:15 AM",
-      icon: "reminder",
-      title: "Payment reminder sent",
-      detail: "Invoice #1042, second reminder, polite and on schedule",
-      channel: "WhatsApp",
+      time: "9:10 AM",
+      icon: "documents",
+      title: "42 supplier bills processed",
+      detail: "Read, checked and entered into your accounts, 2 flagged for review",
+      channel: "Accounts",
     },
     {
       time: "10:30 AM",
-      icon: "handover",
-      title: "Lead qualified and handed over",
-      detail: "Requirement, location and timeline captured for Priya",
-      channel: "CRM",
+      icon: "onboarding",
+      title: "New joiner onboarded",
+      detail: "Documents collected and the first-week plan sent to Priya",
+      channel: "HR",
     },
     {
       time: "12:05 PM",
-      icon: "sync",
-      title: "Records updated",
-      detail: "38 form entries moved into your sheet, duplicates removed",
-      channel: "Sheets",
+      icon: "reminder",
+      title: "Payment reminders sent",
+      detail: "Nine overdue invoices, second reminder, polite and on schedule",
+      channel: "WhatsApp",
     },
   ],
-  // The 11:42 PM enquiry is shown as the chat card beside the panel, not as a row.
   footer: ["Every action logged"],
+  /** An approval request: the system asks the owner, then acts on the answer. */
   chat: {
-    name: "Rahul",
-    context: "New enquiry",
-    time: "11:42 PM",
+    name: "Anita",
+    initial: "A",
+    context: "Owner · approval request",
+    time: "3:40 PM",
     messages: [
-      { from: "them", text: "Hi, is the 2BHK in Whitefield still available?" },
       {
         from: "us",
-        text: "Yes, two units are left on the 7th floor. Would you like to visit this Saturday? I can book 11 AM or 4 PM.",
+        text: "Stock of 500 ml bottles will last about 3 more days. Shall I place the usual order with your regular supplier?",
       },
-      { from: "them", text: "11 works." },
+      { from: "them", text: "Yes, go ahead." },
       {
         from: "us",
-        text: "Done. You're booked for Saturday at 11 AM. I'll send a reminder on Friday evening.",
+        text: "Done. The order is placed and the supplier has confirmed delivery for Thursday. I've updated the stock sheet.",
       },
     ],
-    replyTime: "Replied in 38 seconds",
+    outcome: "Approved and ordered in 4 minutes",
   },
 } as const;
 
 // ── Trust strip ────────────────────────────────────────────────
 
-export const INDUSTRIES = ["Real estate", "D2C brands", "Service businesses"] as const;
-
-export const CHANNELS = [
-  "WhatsApp",
-  "Email",
-  "Phone calls",
-  "Website chat",
-  "Google Sheets",
-  "Your CRM",
-] as const;
+export const TRUST = {
+  functionsLabel: "Automating work across",
+  functions: ["Admin", "Finance", "Operations", "HR", "Support", "Sales"],
+  toolsLabel: "Works with",
+  tools: ["Email", "WhatsApp", "Google Sheets", "Excel", "Accounting software", "Your CRM"],
+} as const;
 
 // ── Problem ────────────────────────────────────────────────────
 
@@ -134,24 +135,24 @@ export const PROBLEM = {
   body: "The same tasks take up the same hours, week after week. This is where it usually shows.",
   rows: [
     {
-      title: "The same work, every day",
-      body: "Invoices, data entry, reports and replies done by hand, by people you hired for more than that.",
+      title: "Copy-paste admin",
+      body: "Details typed from emails, PDFs and forms into sheets and software, by hand.",
     },
     {
-      title: "Slow replies to enquiries",
-      body: "The customer goes with whoever answered first.",
+      title: "Reports built by hand",
+      body: "Someone loses hours every week pulling the same numbers together.",
     },
     {
-      title: "Missed follow-ups",
-      body: "Money already earned never gets collected.",
+      title: "Payments chased manually",
+      body: "Money already earned stays unpaid because reminders slip.",
+    },
+    {
+      title: "Customers kept waiting",
+      body: "Routine questions wait for someone to be free, and customers go elsewhere.",
     },
     {
       title: "Growth means hiring",
       body: "Every jump in volume needs another person.",
-    },
-    {
-      title: "Tools that don't talk",
-      body: "Hours spent copying data between systems, and the mistakes that come with it.",
     },
     {
       title: "Knowledge in one person's head",
@@ -160,104 +161,138 @@ export const PROBLEM = {
   ],
 } as const;
 
-// ── Services (the six areas) ───────────────────────────────────
+// ── Services (the areas we automate) ───────────────────────────
 
 export const FLOW_LABELS = { when: "When", does: "Routcore", result: "Result" } as const;
 
 export const SERVICES = {
   eyebrow: "What we automate",
-  title: "One system, working across six areas of your business.",
-  body: "We build around whichever of these apply to you, and leave the rest alone.",
+  title: "One system, working across every part of your business.",
+  body: "Admin, finance, operations, HR, support, reporting and sales. We build around whichever apply to you, and leave the rest alone.",
   cta: "Discuss this area",
   areas: [
     {
-      id: "sales",
-      n: "01",
-      title: "Sales & lead follow-up",
-      summary: "Every enquiry answered, qualified, chased and booked.",
-      flow: {
-        when: "A new enquiry arrives on WhatsApp, your website or a call",
-        does: "Replies within a minute, asks the right questions and books a meeting",
-        result: "A qualified lead in your CRM, with the full conversation",
-      },
-      examples: [
-        "Instant reply to every enquiry",
-        "AI voice agent that calls and books meetings",
-        "Personal outreach on email, LinkedIn and WhatsApp",
-        "Old enquiries and past customers re-engaged",
-      ],
-    },
-    {
-      id: "support",
-      n: "02",
-      title: "Customer support",
-      summary: "Common questions answered instantly, at any hour.",
-      flow: {
-        when: "A customer asks a question at 11 at night",
-        does: "Answers from your own policies and documents",
-        result: "Resolved, or handed to your team with the context",
-      },
-      examples: [
-        "Support agent on WhatsApp, website and email",
-        "Order and booking updates before customers ask",
-        "Hand-over to a person when it matters",
-        "Every conversation logged",
-      ],
-    },
-    {
       id: "admin",
-      n: "03",
-      title: "Admin & data entry",
-      summary: "Information moved between your tools without anyone retyping it.",
+      n: "01",
+      title: "Admin & documents",
+      summary: "Emails, forms, PDFs and bills read, checked and entered where they belong.",
       flow: {
-        when: "A form is filled in or an email arrives",
-        does: "Pulls out the details and checks them",
-        result: "Your sheet, CRM and records updated",
+        when: "A bill, form or document arrives by email or WhatsApp",
+        does: "Reads it, pulls out the details and checks them",
+        result: "Entered into your software and filed, with anything odd flagged",
       },
       examples: [
-        "Data moved between your tools",
+        "Bill and invoice processing",
+        "Data pulled from forms and PDFs",
+        "Information moved between your tools",
         "Documents generated from one record",
-        "CRM and spreadsheet updates",
-        "Duplicates and errors flagged",
       ],
     },
     {
       id: "finance",
-      n: "04",
-      title: "Invoicing & reports",
-      summary: "Invoices, reminders and your daily numbers, handled.",
+      n: "02",
+      title: "Finance & accounts",
+      summary: "Invoicing, payment reminders and reconciliation, handled on schedule.",
       flow: {
         when: "An invoice falls due",
         does: "Sends polite reminders on a schedule",
-        result: "Settled invoices marked, and the report lands with you",
+        result: "Payments matched, settled invoices marked, and you get the summary",
       },
       examples: [
-        "Invoices generated from your records",
+        "Invoices generated and sent",
         "Payment follow-up until settled",
-        "Statements reconciled against your books",
-        "Daily and monthly reports sent to you",
+        "Bank and payout reconciliation",
+        "Receipts and expenses captured",
       ],
     },
     {
       id: "operations",
-      n: "05",
-      title: "Operations & coordination",
-      summary: "Scheduling, documents, status updates and handovers.",
+      n: "03",
+      title: "Operations",
+      summary: "Orders, bookings, stock and suppliers kept moving without chasing.",
       flow: {
-        when: "A booking or request comes in",
-        does: "Checks availability and confirms it",
-        result: "Customer and team both notified",
+        when: "An order or booking comes in",
+        does: "Checks it, confirms it and assigns the work",
+        result: "Customer and team both updated, nothing missed",
       },
       examples: [
-        "Scheduling and booking",
-        "Tailored proposals out in minutes",
-        "An internal assistant that answers from your procedures",
-        "Alerts when something important changes",
+        "Order entry and confirmations",
+        "Scheduling and bookings",
+        "Stock alerts and supplier follow-up",
+        "Approvals routed, with reminders",
+      ],
+    },
+    {
+      id: "support",
+      n: "04",
+      title: "Customer support",
+      summary: "Routine questions answered instantly, at any hour.",
+      flow: {
+        when: "A customer asks where their order is at 11 at night",
+        does: "Answers from your own records and policies",
+        result: "Resolved, or handed to your team with the context",
+      },
+      examples: [
+        "Support agent on WhatsApp, website and email",
+        "Order and booking status updates",
+        "Feedback collected after every order",
+        "Hand-over to a person when it matters",
+      ],
+    },
+    {
+      id: "hr",
+      n: "05",
+      title: "HR & people",
+      summary: "Onboarding, leave and routine staff questions, handled the same way every time.",
+      flow: {
+        when: "A new person joins the team",
+        does: "Collects documents, runs the checklist and sends the first-week plan",
+        result: "Every joiner onboarded the same way, nothing forgotten",
+      },
+      examples: [
+        "Employee onboarding",
+        "Leave requests and attendance records",
+        "Interview scheduling and candidate updates",
+        "Answers to staff questions from your policies",
+      ],
+    },
+    {
+      id: "reporting",
+      n: "06",
+      title: "Reporting & management",
+      summary: "Your numbers built and sent to you, without anyone preparing them.",
+      flow: {
+        when: "It's 7 AM, or the month closes",
+        does: "Pulls the numbers from your tools and builds the report",
+        result: "The report lands in your inbox or on WhatsApp",
+      },
+      examples: [
+        "Daily and monthly reports",
+        "Dashboards that update themselves",
+        "Alerts when a number moves",
+        "Checks on the things that matter to you",
+      ],
+    },
+    {
+      id: "sales",
+      n: "07",
+      title: "Sales & follow-up",
+      summary: "Enquiries answered, followed up and logged, so none slip through.",
+      flow: {
+        when: "An enquiry arrives on WhatsApp, your website or a call",
+        does: "Replies within a minute and asks the right questions",
+        result: "Handed to your team with the full conversation",
+      },
+      examples: [
+        "Instant reply to every enquiry",
+        "Follow-ups on schedule until there's an answer",
+        "AI voice agent for calls and reminders",
+        "CRM kept up to date automatically",
       ],
     },
     {
       id: "custom",
-      n: "06",
+      n: "08",
       title: "Anything repeated",
       summary: "If your team does it the same way each time, it can be built.",
       flow: {
@@ -279,45 +314,75 @@ export const SERVICES = {
 
 export const SYSTEMS_HEADER = {
   eyebrow: "Example systems",
-  title: "Systems we've built for other businesses.",
-  body: "A sample of past work. Yours is scoped to your own process.",
+  title: "Examples of what we build.",
+  body: "A sample from across the business. Yours is scoped to your own process and tools.",
 } as const;
 
 export const SYSTEM_CATEGORIES = [
-  "Sales & growth",
+  "Admin & documents",
+  "Finance & accounts",
+  "Operations",
   "Customer service",
-  "Operations & admin",
-  "Finance",
-  "Management",
+  "HR & people",
+  "Reporting & management",
+  "Sales & follow-up",
 ] as const;
 
 export type SystemCategory = (typeof SYSTEM_CATEGORIES)[number];
 
-/** `title` and `body` are also read by the Service JSON-LD in app/routcore/page.tsx. */
+/**
+ * Three per category, so each category is one row of cards on wide screens.
+ * `title` and `body` are also read by the Service JSON-LD in app/routcore/page.tsx.
+ */
 export const SYSTEMS: ReadonlyArray<{
   title: string;
   category: SystemCategory;
   body: string;
 }> = [
   {
-    title: "Instant enquiry response",
-    category: "Sales & growth",
-    body: "Every enquiry answered within a minute on WhatsApp, phone and email, qualified in conversation, then routed to your team.",
+    title: "Document processing",
+    category: "Admin & documents",
+    body: "Bills, invoices, forms and PDFs read automatically, with the details pulled out, checked and entered where they belong.",
   },
   {
-    title: "AI voice agent",
-    category: "Sales & growth",
-    body: "Calls prospects and customers, answers their questions and books meetings into your calendar. Every call is recorded and logged.",
+    title: "Document generation",
+    category: "Admin & documents",
+    body: "Agreements, letters and paperwork produced from one record, with the same details on every document.",
   },
   {
-    title: "Outreach engine",
-    category: "Sales & growth",
-    body: "Finds the right people for what you sell and reaches them personally over email, LinkedIn and WhatsApp.",
+    title: "Data movement",
+    category: "Admin & documents",
+    body: "Information carried between your email, sheets and software without anyone retyping it.",
   },
   {
-    title: "Database reactivation",
-    category: "Sales & growth",
-    body: "Old enquiries and past customers re-engaged automatically. Usually the fastest win, because they already know you.",
+    title: "Invoicing",
+    category: "Finance & accounts",
+    body: "Invoices created from your orders or records and sent on schedule, in the same format every time.",
+  },
+  {
+    title: "Payment follow-up",
+    category: "Finance & accounts",
+    body: "Unpaid invoices chased politely, on a schedule, until they're settled.",
+  },
+  {
+    title: "Reconciliation",
+    category: "Finance & accounts",
+    body: "Bank statements and payouts checked against your own records, with the differences flagged.",
+  },
+  {
+    title: "Order processing",
+    category: "Operations",
+    body: "Orders from email, WhatsApp or your website entered, confirmed and passed to the right team.",
+  },
+  {
+    title: "Scheduling and bookings",
+    category: "Operations",
+    body: "Appointments, visits and shifts booked, confirmed and reminded, without the back-and-forth.",
+  },
+  {
+    title: "Stock and supplier follow-up",
+    category: "Operations",
+    body: "Stock levels watched, reorders raised for your approval, and suppliers followed up until delivery is confirmed.",
   },
   {
     title: "Support agent",
@@ -330,44 +395,54 @@ export const SYSTEMS: ReadonlyArray<{
     body: "Tells customers where their order, booking or request stands, before they have to ask.",
   },
   {
-    title: "Proposal engine",
-    category: "Operations & admin",
-    body: "An enquiry comes in, a tailored proposal goes out in minutes, and it's followed up until answered.",
+    title: "Feedback collection",
+    category: "Customer service",
+    body: "Feedback requested after every order or visit, with unhappy customers flagged to you straight away.",
   },
   {
-    title: "Document generation",
-    category: "Operations & admin",
-    body: "Invoices, agreements and paperwork produced from one record, with the same details on every document.",
+    title: "Employee onboarding",
+    category: "HR & people",
+    body: "Documents, checklists and first-week plans handled the same way for every new joiner.",
   },
   {
-    title: "Data movement",
-    category: "Operations & admin",
-    body: "Information carried between your tools without anyone retyping it.",
-  },
-  {
-    title: "Payment follow-up",
-    category: "Finance",
-    body: "Unpaid invoices chased politely, on a schedule, until they're settled.",
-  },
-  {
-    title: "Reconciliation",
-    category: "Finance",
-    body: "Statements and payouts checked against your own records, with the differences flagged.",
-  },
-  {
-    title: "Automatic reporting",
-    category: "Management",
-    body: "Your daily and monthly numbers built and sent to you, without anyone preparing them.",
+    title: "Leave and attendance",
+    category: "HR & people",
+    body: "Leave requests routed for approval and attendance records kept up to date, without chasing.",
   },
   {
     title: "Internal knowledge assistant",
-    category: "Management",
+    category: "HR & people",
     body: "Your team gets answers from your own documents and procedures instead of asking the owner.",
   },
   {
+    title: "Automatic reporting",
+    category: "Reporting & management",
+    body: "Your daily and monthly numbers built and sent to you, without anyone preparing them.",
+  },
+  {
+    title: "Approvals and reminders",
+    category: "Reporting & management",
+    body: "Requests routed to the right person for sign-off, with reminders until they're done.",
+  },
+  {
     title: "Monitoring agents",
-    category: "Management",
+    category: "Reporting & management",
     body: "Watch for the changes that matter to your business and alert you when something moves.",
+  },
+  {
+    title: "Enquiry response",
+    category: "Sales & follow-up",
+    body: "Every enquiry answered within a minute on WhatsApp, phone or email, then handed to your team with the details.",
+  },
+  {
+    title: "AI voice agent",
+    category: "Sales & follow-up",
+    body: "Makes and takes routine calls for confirmations, reminders and follow-ups, and logs every call.",
+  },
+  {
+    title: "CRM updates",
+    category: "Sales & follow-up",
+    body: "Calls, emails and chats logged to the right record in your CRM, so nobody updates it by hand.",
   },
 ];
 
@@ -380,29 +455,29 @@ export const COMPARISON = {
   columns: { before: "Today", after: "With Routcore" },
   rows: [
     {
-      topic: "New enquiries",
-      before: "Answered when someone is free",
-      after: "Answered within a minute, at any hour",
+      topic: "Data entry",
+      before: "Typed in by hand from emails and PDFs",
+      after: "Read, checked and entered automatically",
     },
     {
-      topic: "Follow-ups",
-      before: "Sent when someone remembers",
-      after: "Sent on schedule until there's an answer",
+      topic: "Reports",
+      before: "Built by someone, every week",
+      after: "Built and sent to you on schedule",
+    },
+    {
+      topic: "Payments due",
+      before: "Chased when someone remembers",
+      after: "Reminded on schedule until settled",
+    },
+    {
+      topic: "Customer questions",
+      before: "Answered when someone is free",
+      after: "Answered within a minute, at any hour",
     },
     {
       topic: "A busy month",
       before: "Hire, or let things slip",
       after: "The same team handles the extra volume",
-    },
-    {
-      topic: "Records",
-      before: "Spread across phones, inboxes and sheets",
-      after: "Every conversation and action logged",
-    },
-    {
-      topic: "Quality",
-      before: "Depends on who handles it",
-      after: "Same questions, same tone, same steps",
     },
     {
       topic: "Nights and holidays",
@@ -412,7 +487,7 @@ export const COMPARISON = {
     {
       topic: "Oversight",
       before: "You hear about problems late",
-      after: "Read any conversation and step in at any time",
+      after: "Every action logged, and you can step in at any time",
     },
   ],
 } as const;
@@ -495,7 +570,7 @@ export const COMMITMENTS = {
       "An honest picture of how the work is done today",
       "Access to the tools you already use",
       "Your existing data, in any exportable format",
-      "One person who can approve scope and messaging",
+      "One person who can approve the scope and each sign-off",
       "Timely feedback while we test",
     ],
   },
@@ -503,12 +578,12 @@ export const COMMITMENTS = {
     title: "What we promise",
     paragraphs: [
       "Speed, coverage and consistency are ours to deliver, and we stand behind them.",
-      "Sales results depend on your offer and your market, so we won't promise a number we can't stand behind. If automation isn't worth it for your business, we'll tell you instead of selling it to you.",
+      "Business outcomes like sales depend on your offer and your market, so we won't promise a number we can't stand behind. If automation isn't worth it for your business, we'll tell you instead of selling it to you.",
     ],
   },
   data: {
     title: "Your data stays yours.",
-    body: "It's used only to run the system we build for you, handled in line with India's Digital Personal Data Protection Act, 2023, and returned or deleted on written request. Systems run on your own numbers, domains and accounts, under your brand.",
+    body: "It's used only to run the system we build for you, handled in line with India's Digital Personal Data Protection Act, 2023, and returned or deleted on written request. Systems run on your own accounts and tools, under your brand.",
   },
   foundersTitle: "You work directly with the founders.",
 } as const;
@@ -525,19 +600,19 @@ export const FAQ_HEADER = {
 export const FAQS = [
   {
     q: "How is Routcore different from Flowfiy?",
-    a: "Flowfiy is our self-serve AI sales platform: you sign up and run it yourself. Routcore is our done-for-you practice. We design, build and deploy a custom AI system inside your business, around your own process and tools.",
+    a: "Flowfiy is our self-serve AI sales platform: you sign up and run it yourself. Routcore is our done-for-you practice. We design, build and deploy a custom AI system inside your business, around your own process and tools, for any repetitive work, not just sales.",
   },
   {
     q: "What kind of work can you automate?",
-    a: "Anything your team does the same way every time, that follows rules a person could write down, and that happens often enough to matter. Enquiry replies, follow-ups, support questions, data entry, invoices, reminders and reports are the most common. Work that needs judgement, relationships or negotiation stays with your team.",
+    a: "Anything your team does the same way every time, that follows rules a person could write down, and that happens often enough to matter. Common examples: processing bills and documents, data entry, invoicing and payment reminders, reconciliation, reports, order updates, onboarding, leave requests, support questions and enquiry follow-ups. Work that needs judgement, relationships or negotiation stays with your team.",
   },
   {
     q: "Do we have to change the tools we already use?",
-    a: "No. We build around the tools you already have, such as WhatsApp, email, Google Sheets or your CRM, and move information between them so nobody has to retype it.",
+    a: "No. We build around the tools you already use, such as email, WhatsApp, Google Sheets, Excel, your accounting software or your CRM, and move information between them so nobody has to retype it.",
   },
   {
-    q: "Will customers know they're talking to an AI?",
-    a: "The system uses your tone, your rules and messages you've approved. It hands the conversation to a person whenever it should, and you can read any conversation and step in at any time.",
+    q: "Does it talk to our customers or staff on its own?",
+    a: "Only where you want it to. Customer-facing messages use your tone, your rules and wording you've approved, and hand over to a person whenever they should. A lot of what we build runs quietly in the background, like processing documents, updating records and building reports. You can see every action it takes and step in at any time.",
   },
   {
     q: "How long does it take to go live?",
@@ -548,16 +623,16 @@ export const FAQS = [
     a: "We map how your business runs today, where your team's time goes and what to automate first. You leave with a complete written plan, and it's yours to keep whether you build with us or not.",
   },
   {
-    q: "Do you guarantee sales results?",
-    a: "No. Speed, coverage and consistency are ours to deliver, and we stand behind them. Sales results depend on your offer and your market, so we won't promise a number we can't stand behind.",
+    q: "Do you guarantee results?",
+    a: "We guarantee what's ours to deliver: speed, coverage and consistency. Business outcomes like sales depend on your offer and your market, so we won't promise a number we can't stand behind.",
   },
   {
     q: "Who owns the system and the data?",
-    a: "You do. Systems run on your own numbers, domains and accounts, under your brand. Your data is used only to run your system, handled in line with the Digital Personal Data Protection Act, 2023, and returned or deleted on written request.",
+    a: "You do. Systems run on your own accounts and tools, under your brand. Your data is used only to run your system, handled in line with the Digital Personal Data Protection Act, 2023, and returned or deleted on written request.",
   },
   {
     q: "Which businesses is this for?",
-    a: "Businesses with a steady flow of enquiries, customers or paperwork. We work across real estate, D2C brands and service businesses, and with anyone whose team repeats the same work every day.",
+    a: "Any business where people repeat the same work every day: manufacturers and distributors, retailers and D2C brands, clinics, agencies, real estate, and professional and service firms. So far our work spans real estate, D2C brands and service businesses.",
   },
 ] as const;
 
@@ -586,11 +661,13 @@ export const CONTACT_SECTION = {
 
 /** Sent to /api/routcore as `packageTier` (the API field name predates this form). */
 export const FOCUS_OPTIONS = [
-  "Sales & lead follow-up",
+  "Admin & documents",
+  "Finance & accounts",
+  "Operations",
   "Customer support",
-  "Admin & data entry",
-  "Invoicing & reports",
-  "Operations & coordination",
+  "HR & people",
+  "Reporting",
+  "Sales & follow-up",
   "Not sure yet, help me find out",
 ] as const;
 

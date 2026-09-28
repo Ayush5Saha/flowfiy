@@ -7,25 +7,29 @@ const URL = `${BASE_URL}/routcore`;
 
 // The root layout's title template ("%s | Flowfiy") appends the suffix —
 // including it here too would double it in the rendered <title>.
-const TITLE = "Routcore — Custom AI Automation Systems for Your Business";
+const TITLE = "Routcore: AI Automation for Repetitive Business Work";
 const DESCRIPTION =
-  "Routcore by Flowfiy builds custom AI systems that take repeated work off your team — instant enquiry replies, lead follow-up, AI voice agents, customer support, invoicing, data entry and reporting — running 24/7 without extra hires. Book a consultation call for a written automation plan.";
+  "Routcore by Flowfiy builds custom AI systems for repetitive business work: document processing, data entry, invoicing, payment reminders, reports, onboarding and customer support. Runs 24/7 on your own tools, without extra hires.";
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: [
+    "business process automation",
     "AI automation agency India",
     "custom AI systems for business",
-    "business process automation",
     "AI workflow automation",
-    "AI agents for business",
-    "WhatsApp automation for business",
-    "AI voice agent",
+    "back office automation",
+    "document processing automation",
+    "invoice processing automation",
+    "payment reminder automation",
+    "accounts reconciliation automation",
+    "automated business reporting",
+    "HR onboarding automation",
     "customer support automation",
-    "lead follow-up automation",
-    "invoice and payment reminder automation",
-    "done for you AI automation",
+    "WhatsApp automation for business",
+    "AI agents for business",
+    "repetitive task automation",
     "Routcore",
     "Flowfiy Routcore",
   ],
@@ -41,7 +45,7 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Routcore by Flowfiy — custom AI automation systems for your business",
+        alt: "Routcore by Flowfiy: custom AI automation for repetitive business work",
       },
     ],
   },
@@ -58,11 +62,11 @@ const serviceJsonLd = {
   "@context": "https://schema.org",
   "@type": "Service",
   "@id": `${URL}#service`,
-  name: "Routcore — Custom AI Systems & Workflows",
-  serviceType: "AI business process automation",
+  name: "Routcore: Custom AI Systems & Workflows",
+  serviceType: "Business process automation",
   url: URL,
   description:
-    "Routcore builds one custom AI system around how a business already runs — instant enquiry replies, lead follow-up, AI voice agents, customer support, admin and data entry, invoicing and reporting, and internal operations — running 24/7 without extra hires. Scoped on a consultation call and deployed into the client's own environment.",
+    "Routcore designs, builds and deploys custom AI systems that automate repetitive business work across admin, finance, operations, HR, customer support, reporting and sales, built around each client's own process and tools.",
   provider: { "@id": `${BASE_URL}/#organization` },
   areaServed: { "@type": "Place", name: "Worldwide" },
   // No `offers` field here by design: Routcore isn't a menu of fixed packages,

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, FileText, BellRing, UserCheck, RefreshCw, MessageCircle, Zap } from "lucide-react";
+import { Check, FileText, FileCheck2, UserPlus, BellRing, CircleCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { CARD, SHADOW } from "./ui";
 import { EASE, useReducedMotionSafe } from "@/components/landing/v2/motion";
@@ -9,10 +9,9 @@ import { EXAMPLE_DAY, type DayIcon } from "./content";
 
 const ICONS: Record<DayIcon, LucideIcon> = {
   report: FileText,
+  documents: FileCheck2,
+  onboarding: UserPlus,
   reminder: BellRing,
-  handover: UserCheck,
-  sync: RefreshCw,
-  enquiry: MessageCircle,
 };
 
 /**
@@ -98,7 +97,7 @@ export function HeroPanel() {
       >
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#25D366]/15 text-[13px] font-semibold text-[#128C4B]">
-            R
+            {EXAMPLE_DAY.chat.initial}
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-rc-ink">{EXAMPLE_DAY.chat.name}</p>
@@ -123,8 +122,8 @@ export function HeroPanel() {
         </div>
 
         <p className="mt-3 inline-flex items-center gap-1.5 text-[11.5px] font-medium text-rc-teal-deep">
-          <Zap className="h-3.5 w-3.5" strokeWidth={1.75} />
-          {EXAMPLE_DAY.chat.replyTime}
+          <CircleCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {EXAMPLE_DAY.chat.outcome}
         </p>
       </motion.div>
     </div>
