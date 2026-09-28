@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight, Check, ChevronDown, Loader2, MessageCircle } from "lucide-react";
 import { buttonClass, Eyebrow, Heading, Lead, Section, SHADOW } from "./ui";
 import { CONTACT, CONTACT_SECTION, FOCUS_OPTIONS } from "./content";
+import { trackMetaPixel } from "@/lib/meta-pixel";
 
 const EMPTY_FORM = {
   name: "",
@@ -45,6 +46,12 @@ export function Contact() {
         setError(data.error ?? `Something went wrong. Please email us directly at ${CONTACT.email}`);
         return;
       }
+      // The conversion the Meta ads optimise on. Fired only once the enquiry is
+      // accepted; a no-op when the visitor declined tracking or blocks the pixel.
+      trackMetaPixel("Lead", {
+        content_name: "Routcore consultation request",
+        content_category: form.packageTier || "Not specified",
+      });
       setSent(true);
       setForm(EMPTY_FORM);
     } catch {
